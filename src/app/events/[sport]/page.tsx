@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { EVENTS, MOCK_MATCHES, FOOTBALL_STANDINGS, RUN_RESULTS, AUCTION_DATA } from '@/lib/mock-data';
+import { EVENTS, MOCK_MATCHES, FOOTBALL_STANDINGS, VOLLEYBALL_STANDINGS, RUN_RESULTS, AUCTION_DATA } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -25,7 +25,6 @@ export default async function EventPage({ params }: { params: { sport: string } 
       {/* FOOTBALL SPECIFIC LAYOUT */}
       {sport === 'football' && (
         <div className="space-y-8">
-          {/* 1. Points Table Section */}
           <section className="space-y-3">
             <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
@@ -70,7 +69,6 @@ export default async function EventPage({ params }: { params: { sport: string } 
             </div>
           </section>
 
-          {/* 2. Matches Section with Tabs */}
           <section className="space-y-3">
             <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
@@ -193,50 +191,110 @@ export default async function EventPage({ params }: { params: { sport: string } 
         </Card>
       )}
 
-      {/* VOLLEYBALL LAYOUT (Minimalist Version) */}
+      {/* VOLLEYBALL LAYOUT (Simpler version) */}
       {sport === 'volleyball' && (
-        <div className="space-y-4">
-          <Tabs defaultValue="results" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 h-10">
-              <TabsTrigger value="results" className="text-[10px] font-black uppercase">Match Results</TabsTrigger>
-              <TabsTrigger value="upcoming" className="text-[10px] font-black uppercase">Upcoming</TabsTrigger>
-            </TabsList>
-            <TabsContent value="results" className="mt-4 space-y-2">
-              {sportMatches.filter(m => m.status === 'Completed').map(match => (
-                <Card key={match.id} className="border-none shadow-sm overflow-hidden bg-white">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex-1 text-right">
-                      <p className="font-bold text-sm">{match.teamA}</p>
-                    </div>
-                    <div className="px-6 flex flex-col items-center">
-                       <span className="text-xl font-black tabular-nums">{match.scoreA} - {match.scoreB}</span>
-                       <span className="text-[8px] font-black text-muted-foreground uppercase">Sets</span>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-bold text-sm">{match.teamB}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
-            <TabsContent value="upcoming" className="mt-4 space-y-2">
-              {sportMatches.filter(m => m.status === 'Upcoming' || m.status === 'Live').map(match => (
-                <Card key={match.id} className={`border-none shadow-sm ${match.status === 'Live' ? 'ring-1 ring-yellow-400' : ''}`}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-black text-primary uppercase">{match.time}</span>
-                      <p className="font-bold text-sm">{match.teamA} v {match.teamB}</p>
-                    </div>
-                    {match.status === 'Live' ? (
-                      <Badge className="bg-yellow-400 text-yellow-900 text-[9px] font-black animate-pulse">LIVE NOW</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[8px] font-black uppercase">Upcoming</Badge>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
-          </Tabs>
+        <div className="space-y-8">
+          {/* 1. Simplified Points Table */}
+          <section className="space-y-3">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+              Rankings
+            </h2>
+            <Card className="border-none shadow-sm overflow-hidden bg-white">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 h-10">
+                      <TableHead className="text-[10px] font-black uppercase">Team</TableHead>
+                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Played</TableHead>
+                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Won</TableHead>
+                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Lost</TableHead>
+                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Pts</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {VOLLEYBALL_STANDINGS.sort((a, b) => b.points - a.points).map((row, i) => (
+                      <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
+                        <TableCell className={`font-bold text-xs ${i === 0 ? 'text-primary' : ''}`}>
+                          {row.team}
+                        </TableCell>
+                        <TableCell className="text-center text-[11px] font-medium">{row.played}</TableCell>
+                        <TableCell className="text-center text-[11px] font-medium">{row.won}</TableCell>
+                        <TableCell className="text-center text-[11px] font-medium">{row.lost}</TableCell>
+                        <TableCell className={`text-center font-black ${i === 0 ? 'text-primary' : ''}`}>{row.points}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* 2. Matches Results & Upcoming */}
+          <section className="space-y-3">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+              Fixtures & Results
+            </h2>
+            <Tabs defaultValue="results" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 h-10">
+                <TabsTrigger value="results" className="text-[10px] font-black uppercase">Results</TabsTrigger>
+                <TabsTrigger value="upcoming" className="text-[10px] font-black uppercase">Upcoming</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="results" className="mt-4 space-y-2">
+                {sportMatches.filter(m => m.status === 'Completed').length > 0 ? (
+                  sportMatches.filter(m => m.status === 'Completed').map(match => (
+                    <Card key={match.id} className="border-none shadow-sm overflow-hidden bg-white">
+                      <CardContent className="p-0">
+                        <div className="p-4 flex items-center justify-between">
+                          <div className="flex-1 text-right">
+                            <p className="font-bold text-sm">{match.teamA}</p>
+                          </div>
+                          <div className="px-6 flex flex-col items-center">
+                            <span className="text-xl font-black tabular-nums bg-muted/30 px-3 py-0.5 rounded">
+                              {match.scoreA} - {match.scoreB}
+                            </span>
+                            <span className="text-[8px] font-black text-muted-foreground uppercase mt-1">Sets</span>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="font-bold text-sm">{match.teamB}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-center border-t py-1 bg-muted/10">
+                          <MatchRecapButton match={match} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-[10px] font-black uppercase text-muted-foreground border border-dashed rounded-lg">No results yet</p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="upcoming" className="mt-4 space-y-2">
+                {sportMatches.filter(m => m.status === 'Upcoming' || m.status === 'Live').length > 0 ? (
+                  sportMatches.filter(m => m.status === 'Upcoming' || m.status === 'Live').map(match => (
+                    <Card key={match.id} className={`border-none shadow-sm ${match.status === 'Live' ? 'ring-1 ring-yellow-400' : ''}`}>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-black text-primary uppercase">{match.time}</span>
+                          <p className="font-bold text-sm">{match.teamA} v {match.teamB}</p>
+                        </div>
+                        {match.status === 'Live' ? (
+                          <Badge className="bg-yellow-400 text-yellow-900 text-[9px] font-black animate-pulse">LIVE NOW</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[8px] font-black uppercase">Upcoming</Badge>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-[10px] font-black uppercase text-muted-foreground border border-dashed rounded-lg">No upcoming matches</p>
+                )}
+              </TabsContent>
+            </Tabs>
+          </section>
         </div>
       )}
 

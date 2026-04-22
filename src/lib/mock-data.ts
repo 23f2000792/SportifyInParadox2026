@@ -49,6 +49,13 @@ export const FOOTBALL_STANDINGS: Standing[] = [
   { team: 'Nova Knights', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
 ];
 
+export const VOLLEYBALL_STANDINGS: Standing[] = [
+  { team: 'Spike Squad', played: 2, won: 2, drawn: 0, lost: 0, points: 6 },
+  { team: 'Thunder Bolts', played: 1, won: 1, drawn: 0, lost: 0, points: 3 },
+  { team: 'Net Ninjas', played: 2, won: 0, drawn: 0, lost: 2, points: 0 },
+  { team: 'Volley Vipers', played: 1, won: 0, drawn: 0, lost: 1, points: 0 },
+];
+
 export const RUN_RESULTS: RunResult[] = [
   { position: 1, name: 'Alex Rivera', time: '18:45', gender: 'M', ageGroup: '18-25' },
   { position: 2, name: 'Samantha Chen', time: '19:12', gender: 'F', ageGroup: '18-25' },
