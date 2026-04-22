@@ -301,12 +301,12 @@ export default function AdminPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="grid w-full bg-muted/20 h-14 p-1.5 border border-white/10 rounded-2xl">
-          <TabsTrigger value="control" className="text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary">Scoring</TabsTrigger>
-          <TabsTrigger value="schedule" className="text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary">Schedule</TabsTrigger>
-          {!isKampusRun && <TabsTrigger value="standings" className="text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary">Standings</TabsTrigger>}
-          <TabsTrigger value="archive" className="text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary">Archives</TabsTrigger>
-          {isSuperAdmin && <TabsTrigger value="access" className="text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary hidden md:flex">Admins</TabsTrigger>}
+        <TabsList className="flex w-full overflow-x-auto no-scrollbar justify-start md:justify-center bg-muted/20 h-14 p-1.5 border border-white/10 rounded-2xl whitespace-nowrap gap-1">
+          <TabsTrigger value="control" className="flex-1 py-2 px-6 text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary min-w-[120px]">Scoring</TabsTrigger>
+          <TabsTrigger value="schedule" className="flex-1 py-2 px-6 text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary min-w-[120px]">Schedule</TabsTrigger>
+          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 py-2 px-6 text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary min-w-[120px]">Standings</TabsTrigger>}
+          <TabsTrigger value="archive" className="flex-1 py-2 px-6 text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary min-w-[120px]">Archives</TabsTrigger>
+          {isSuperAdmin && <TabsTrigger value="access" className="flex-1 py-2 px-6 text-[10px] font-black uppercase rounded-xl data-[state=active]:bg-primary min-w-[120px]">Admins</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="control" className="space-y-8">
