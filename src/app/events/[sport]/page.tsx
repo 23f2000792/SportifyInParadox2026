@@ -7,10 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Match, RunResult, Standing, GROUPS } from '@/lib/types';
 import Loading from '@/app/loading';
 import { Trophy, Zap, CircleDot, Target, Medal, MapPin, Calendar, Clock } from 'lucide-react';
@@ -32,7 +31,7 @@ export default function EventPage() {
 
   const matchesQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'matches'), where('sport', '==', sport), orderBy('matchNumber', 'asc'));
+    return query(collection(db, 'matches'), where('sport', '==', sport));
   }, [db, sport]);
 
   const standingsQuery = useMemo(() => {
@@ -42,12 +41,25 @@ export default function EventPage() {
 
   const runResultsQuery = useMemo(() => {
     if (!db || sport !== 'kampus-run') return null;
-    return query(collection(db, 'runResults'), orderBy('position', 'asc'));
+    return query(collection(db, 'runResults'));
   }, [db, sport]);
 
-  const { data: sportMatches, loading: matchesLoading } = useCollection<Match>(matchesQuery);
+  const { data: rawMatches, loading: matchesLoading } = useCollection<Match>(matchesQuery);
   const { data: standings, loading: stdLoading } = useCollection<Standing>(standingsQuery);
-  const { data: runResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
+  const { data: rawRunResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
+
+  // Client-side sorting
+  const sportMatches = useMemo(() => {
+    return [...(rawMatches || [])].sort((a, b) => {
+      const numA = parseInt(a.matchNumber) || 0;
+      const numB = parseInt(b.matchNumber) || 0;
+      return numA - numB;
+    });
+  }, [rawMatches]);
+
+  const runResults = useMemo(() => {
+    return [...(rawRunResults || [])].sort((a, b) => a.position - b.position);
+  }, [rawRunResults]);
 
   if (matchesLoading || stdLoading || runLoading) return <Loading />;
 
@@ -59,7 +71,7 @@ export default function EventPage() {
       {/* Hero Domain Section */}
       <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary/20 via-background to-background border border-white/5 p-10 md:p-16">
         <div className="absolute top-0 right-0 p-12 opacity-10 blur-sm">
-           <IconComp className="h-64 w-64 text-primary" />
+           {IconComp && <IconComp className="h-64 w-64 text-primary" />}
         </div>
         <div className="relative space-y-8">
           <Badge className="bg-primary/20 text-primary border-primary/30 uppercase text-[10px] font-black px-4 py-1.5 tracking-[0.3em]">
@@ -301,7 +313,6 @@ export default function EventPage() {
                         <span className="text-[10px] font-black uppercase text-muted-foreground/30 tracking-[0.4em]">
                           Transmission Archival M#{match.matchNumber} • {match.venue} • {match.phase}
                         </span>
-                        <MatchRecapButton match={match} />
                       </div>
                     </CardContent>
                   </Card>
