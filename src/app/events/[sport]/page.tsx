@@ -31,8 +31,8 @@ export default async function EventPage({ params }: { params: { sport: string } 
               <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
               League Standings
             </h2>
-            <div className="space-y-4">
-              {['A', 'B'].map((group) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {['A', 'B', 'C', 'D'].map((group) => (
                 <Card key={group} className="border-none shadow-sm overflow-hidden bg-white">
                   <div className="bg-muted/50 px-4 py-2 border-b">
                     <span className="text-[10px] font-black uppercase">Group {group}</span>
@@ -42,23 +42,23 @@ export default async function EventPage({ params }: { params: { sport: string } 
                       <TableHeader>
                         <TableRow className="bg-muted/30 h-10">
                           <TableHead className="text-[10px] font-black uppercase">Team</TableHead>
-                          <TableHead className="text-center text-[10px] font-black uppercase w-10">P</TableHead>
-                          <TableHead className="text-center text-[10px] font-black uppercase w-10">W</TableHead>
-                          <TableHead className="text-center text-[10px] font-black uppercase w-10">D</TableHead>
-                          <TableHead className="text-center text-[10px] font-black uppercase w-10">L</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-8 p-0">P</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-8 p-0">W</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-8 p-0">D</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-8 p-0">L</TableHead>
                           <TableHead className="text-center text-[10px] font-black uppercase w-10">Pts</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {FOOTBALL_STANDINGS.filter(s => s.group === group).sort((a, b) => b.points - a.points).map((row, i) => (
+                        {FOOTBALL_STANDINGS.filter(s => s.group === group).sort((a, b) => b.points - a.points || (b.won - a.won)).map((row, i) => (
                           <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
-                            <TableCell className={`font-bold text-xs ${i === 0 ? 'text-primary' : ''}`}>
+                            <TableCell className={`font-bold text-xs truncate max-w-[100px] ${i === 0 ? 'text-primary' : ''}`}>
                               {row.team}
                             </TableCell>
-                            <TableCell className="text-center text-[11px] font-medium">{row.played}</TableCell>
-                            <TableCell className="text-center text-[11px] font-medium">{row.won}</TableCell>
-                            <TableCell className="text-center text-[11px] font-medium">{row.drawn}</TableCell>
-                            <TableCell className="text-center text-[11px] font-medium">{row.lost}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium p-0">{row.played}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium p-0">{row.won}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium p-0">{row.drawn}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium p-0">{row.lost}</TableCell>
                             <TableCell className={`text-center font-black ${i === 0 ? 'text-primary' : ''}`}>{row.points}</TableCell>
                           </TableRow>
                         ))}
@@ -109,43 +109,54 @@ export default async function EventPage({ params }: { params: { sport: string } 
               </TabsContent>
 
               <TabsContent value="upcoming" className="space-y-2 mt-4">
-                {sportMatches.filter(m => m.status === 'Upcoming').map(match => (
-                  <Card key={match.id} className="border-none shadow-sm hover:ring-1 hover:ring-muted-foreground/10 fast-transition">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-primary uppercase mb-0.5">{match.time}</span>
-                        <p className="text-sm font-bold">{match.teamA} v {match.teamB}</p>
-                      </div>
-                      <Badge variant="outline" className="text-[8px] font-black uppercase border-muted-foreground/20 text-muted-foreground">Scheduled</Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+                {sportMatches.filter(m => m.status === 'Upcoming').length > 0 ? (
+                  sportMatches.filter(m => m.status === 'Upcoming').map(match => (
+                    <Card key={match.id} className="border-none shadow-sm hover:ring-1 hover:ring-muted-foreground/10 fast-transition">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-primary uppercase">{match.time}</span>
+                            {match.group && <span className="text-[9px] font-black text-muted-foreground uppercase bg-muted px-1 rounded">Group {match.group}</span>}
+                          </div>
+                          <p className="text-sm font-bold">{match.teamA} v {match.teamB}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[8px] font-black uppercase border-muted-foreground/20 text-muted-foreground">Scheduled</Badge>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-[10px] font-black uppercase text-muted-foreground border border-dashed rounded-lg">No upcoming fixtures</p>
+                )}
               </TabsContent>
 
               <TabsContent value="completed" className="space-y-2 mt-4">
-                {sportMatches.filter(m => m.status === 'Completed').sort((a,b) => b.time.localeCompare(a.time)).map(match => (
-                  <Card key={match.id} className="border-none shadow-sm overflow-hidden bg-white">
-                    <CardContent className="p-0">
-                      <div className="p-4 grid grid-cols-7 items-center">
-                        <div className="col-span-2 text-right">
-                          <p className="font-bold text-sm truncate">{match.teamA}</p>
-                        </div>
-                        <div className="col-span-3 flex flex-col items-center">
-                          <div className="text-xl font-black tabular-nums bg-muted/30 px-3 py-0.5 rounded">
-                            {match.scoreA} - {match.scoreB}
+                {sportMatches.filter(m => m.status === 'Completed').length > 0 ? (
+                  sportMatches.filter(m => m.status === 'Completed').sort((a,b) => b.time.localeCompare(a.time)).map(match => (
+                    <Card key={match.id} className="border-none shadow-sm overflow-hidden bg-white">
+                      <CardContent className="p-0">
+                        <div className="p-4 grid grid-cols-7 items-center">
+                          <div className="col-span-2 text-right">
+                            <p className="font-bold text-sm truncate">{match.teamA}</p>
                           </div>
-                          <span className="text-[8px] font-black uppercase text-muted-foreground/60 mt-1">Final Score</span>
+                          <div className="col-span-3 flex flex-col items-center">
+                            <div className="text-xl font-black tabular-nums bg-muted/30 px-3 py-0.5 rounded">
+                              {match.scoreA} - {match.scoreB}
+                            </div>
+                            <span className="text-[8px] font-black uppercase text-muted-foreground/60 mt-1">Final Score {match.group ? `(Group ${match.group})` : ''}</span>
+                          </div>
+                          <div className="col-span-2 text-left">
+                            <p className="font-bold text-sm truncate">{match.teamB}</p>
+                          </div>
                         </div>
-                        <div className="col-span-2 text-left">
-                          <p className="font-bold text-sm truncate">{match.teamB}</p>
+                        <div className="flex justify-center border-t py-1 bg-muted/10">
+                          <MatchRecapButton match={match} />
                         </div>
-                      </div>
-                      <div className="flex justify-center border-t py-1 bg-muted/10">
-                        <MatchRecapButton match={match} />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-[10px] font-black uppercase text-muted-foreground border border-dashed rounded-lg">No results recorded</p>
+                )}
               </TabsContent>
             </Tabs>
           </section>

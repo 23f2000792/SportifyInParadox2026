@@ -19,16 +19,34 @@ export const MOCK_MATCHES: Match[] = [
   { id: 'm8', sport: 'badminton', teamA: 'Swift Strikes', teamB: 'Feather Flyers', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '03:30 PM' },
   { id: 'm9', sport: 'football', teamA: 'Rogue Legion', teamB: 'Star Knights', scoreA: 1, scoreB: 1, status: 'Completed', time: '07:00 AM', group: 'B' },
   { id: 'm10', sport: 'football', teamA: 'Shadow Strikers', teamB: 'Rogue Legion', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '04:00 PM', group: 'B' },
+  { id: 'm11', sport: 'football', teamA: 'Galactic Warriors', teamB: 'Nebula Navigators', scoreA: 3, scoreB: 0, status: 'Completed', time: '11:30 AM', group: 'C' },
+  { id: 'm12', sport: 'football', teamA: 'Solar Flares', teamB: 'Lunar Legends', scoreA: 1, scoreB: 1, status: 'Live', time: '01:00 PM', group: 'D' },
 ];
 
 export const FOOTBALL_STANDINGS: Standing[] = [
+  // Group A
   { team: 'Avengers FC', played: 2, won: 2, drawn: 0, lost: 0, points: 6, group: 'A' },
+  { team: 'Storm Breakers', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'A' },
   { team: 'Guardians Utd', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'A' },
   { team: 'Titan Kings', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'A' },
+  
+  // Group B
   { team: 'Shadow Strikers', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'B' },
   { team: 'Star Knights', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'B' },
-  { team: 'Rogue Legion', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'B' },
+  { team: 'Rogue Legion', played: 2, won: 0, drawn: 1, lost: 1, points: 1, group: 'B' },
   { team: 'Phoenix Suns', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'B' },
+
+  // Group C
+  { team: 'Galactic Warriors', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'C' },
+  { team: 'Nebula Navigators', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'C' },
+  { team: 'Comet Crusaders', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
+  { team: 'Meteor Masters', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
+
+  // Group D
+  { team: 'Solar Flares', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'D' },
+  { team: 'Lunar Legends', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'D' },
+  { team: 'Stellar Sprinters', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
+  { team: 'Nova Knights', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
 ];
 
 export const RUN_RESULTS: RunResult[] = [
