@@ -1,8 +1,15 @@
-import { EVENTS, MOCK_MATCHES } from '@/lib/mock-data';
+
+'use client';
+
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Trophy, Zap, CircleDot, Target, ChevronRight, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { EVENTS } from '@/lib/mock-data';
+import { Match } from '@/lib/types';
+import { useMemo } from 'react';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -12,11 +19,22 @@ const ICON_MAP: Record<string, any> = {
 };
 
 export default function Home() {
-  const liveMatches = MOCK_MATCHES.filter(m => m.status === 'Live');
-  const upcomingMatches = MOCK_MATCHES.filter(m => m.status === 'Upcoming').slice(0, 5);
-  const completedMatches = MOCK_MATCHES.filter(m => m.status === 'Completed')
-    .sort((a, b) => b.time.localeCompare(a.time))
-    .slice(0, 5);
+  const db = useFirestore();
+
+  const liveMatchesQuery = useMemo(() => 
+    query(collection(db, 'matches'), where('status', '==', 'Live')), 
+  [db]);
+  const { data: liveMatches } = useCollection<Match>(liveMatchesQuery);
+
+  const upcomingMatchesQuery = useMemo(() => 
+    query(collection(db, 'matches'), where('status', '==', 'Upcoming'), orderBy('time', 'asc'), limit(5)), 
+  [db]);
+  const { data: upcomingMatches } = useCollection<Match>(upcomingMatchesQuery);
+
+  const completedMatchesQuery = useMemo(() => 
+    query(collection(db, 'matches'), where('status', '==', 'Completed'), orderBy('time', 'desc'), limit(5)), 
+  [db]);
+  const { data: completedMatches } = useCollection<Match>(completedMatchesQuery);
   
   return (
     <div className="space-y-10 max-w-5xl mx-auto">
@@ -30,10 +48,10 @@ export default function Home() {
             </span>
             <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-live">Live Control Room</h2>
           </div>
-          {liveMatches.length > 0 && <span className="text-[9px] font-bold text-muted-foreground uppercase">{liveMatches.length} Matches Active</span>}
+          {liveMatches?.length > 0 && <span className="text-[9px] font-bold text-muted-foreground uppercase">{liveMatches.length} Matches Active</span>}
         </div>
         
-        {liveMatches.length > 0 ? (
+        {liveMatches?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {liveMatches.map((match) => (
               <Card key={match.id} className="premium-card group">
@@ -102,7 +120,7 @@ export default function Home() {
           </div>
           <Card className="premium-card border border-white/5">
             <CardContent className="p-0 divide-y divide-white/5">
-              {upcomingMatches.length > 0 ? (
+              {upcomingMatches?.length > 0 ? (
                 upcomingMatches.map((match) => (
                   <div key={match.id} className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors group">
                     <div className="flex flex-col">
@@ -129,7 +147,7 @@ export default function Home() {
             <Trophy className="h-3.5 w-3.5 text-muted-foreground/30" />
           </div>
           <div className="space-y-3">
-            {completedMatches.map((match) => (
+            {completedMatches?.map((match) => (
               <Card key={match.id} className="premium-card hover:bg-white/[0.03] transition-colors border border-white/5 group">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex flex-col">

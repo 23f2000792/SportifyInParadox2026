@@ -1,25 +1,49 @@
+
 "use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EVENTS, MOCK_MATCHES } from '@/lib/mock-data';
+import { EVENTS } from '@/lib/mock-data';
 import { Save, RotateCcw, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, doc, setDoc, query, where, serverTimestamp } from 'firebase/firestore';
+import { Match } from '@/lib/types';
 
 export default function AdminPage() {
   const { toast } = useToast();
+  const db = useFirestore();
   const [selectedSport, setSelectedSport] = useState<string>('football');
+  const [selectedMatchId, setSelectedMatchId] = useState<string>('');
+  const [scoreA, setScoreA] = useState<number>(0);
+  const [scoreB, setScoreB] = useState<number>(0);
+  const [status, setStatus] = useState<string>('Live');
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const matchesQuery = useMemo(() => 
+    query(collection(db, 'matches'), where('sport', '==', selectedSport)), 
+  [db, selectedSport]);
+  const { data: matches } = useCollection<Match>(matchesQuery);
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedMatchId) return;
+
+    const matchRef = doc(db, 'matches', selectedMatchId);
+    setDoc(matchRef, {
+      scoreA,
+      scoreB,
+      status,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
     toast({
       title: "Updated",
-      description: "Match results have been synchronized.",
+      description: "Match results have been synchronized with the live broadcast.",
     });
   };
 
@@ -59,12 +83,12 @@ export default function AdminPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase">Match</Label>
-                    <Select defaultValue={MOCK_MATCHES[0].id}>
+                    <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
                       <SelectTrigger className="h-9 text-xs">
-                        <SelectValue />
+                        <SelectValue placeholder="Select match" />
                       </SelectTrigger>
                       <SelectContent>
-                        {MOCK_MATCHES.filter(m => m.sport === selectedSport).map(m => (
+                        {matches?.map(m => (
                           <SelectItem key={m.id} value={m.id}>{m.teamA} v {m.teamB}</SelectItem>
                         ))}
                       </SelectContent>
@@ -75,18 +99,28 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between gap-4 bg-muted/30 p-4 rounded-lg">
                   <div className="text-center flex-1">
                     <Label className="text-[9px] font-black uppercase block mb-2">Team A</Label>
-                    <Input type="number" defaultValue="0" className="text-center text-2xl font-black h-12 w-full" />
+                    <Input 
+                      type="number" 
+                      value={scoreA} 
+                      onChange={(e) => setScoreA(parseInt(e.target.value) || 0)}
+                      className="text-center text-2xl font-black h-12 w-full" 
+                    />
                   </div>
                   <div className="text-lg font-black text-muted-foreground/30">-</div>
                   <div className="text-center flex-1">
                     <Label className="text-[9px] font-black uppercase block mb-2">Team B</Label>
-                    <Input type="number" defaultValue="0" className="text-center text-2xl font-black h-12 w-full" />
+                    <Input 
+                      type="number" 
+                      value={scoreB} 
+                      onChange={(e) => setScoreB(parseInt(e.target.value) || 0)}
+                      className="text-center text-2xl font-black h-12 w-full" 
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase">Match Status</Label>
-                  <Select defaultValue="Live">
+                  <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger className="h-9 text-xs">
                       <SelectValue />
                     </SelectTrigger>
@@ -102,7 +136,16 @@ export default function AdminPage() {
                   <Button type="submit" className="flex-1 h-10 text-xs font-black uppercase gap-2">
                     <Save className="h-4 w-4" /> Save Score
                   </Button>
-                  <Button type="button" variant="outline" className="h-10 text-xs font-black uppercase gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="h-10 text-xs font-black uppercase gap-2"
+                    onClick={() => {
+                      setScoreA(0);
+                      setScoreB(0);
+                      setStatus('Live');
+                    }}
+                  >
                     <RotateCcw className="h-4 w-4" /> Reset
                   </Button>
                 </div>

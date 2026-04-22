@@ -1,0 +1,98 @@
+
+{
+  "entities": {
+    "SportEvent": {
+      "title": "Sport Event",
+      "description": "Information about a specific sport category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "icon": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "name", "slug", "icon", "description"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Details about a specific sports match",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sport": { "type": "string" },
+        "teamA": { "type": "string" },
+        "teamB": { "type": "string" },
+        "scoreA": { "type": "number" },
+        "scoreB": { "type": "number" },
+        "status": { "type": "string", "enum": ["Upcoming", "Live", "Completed"] },
+        "time": { "type": "string" },
+        "group": { "type": "string" },
+        "keyEvents": { "type": "array", "items": { "type": "string" } },
+        "badmintonResults": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "score": { "type": "string" },
+              "winner": { "type": "string" }
+            }
+          }
+        }
+      },
+      "required": ["id", "sport", "teamA", "teamB", "scoreA", "scoreB", "status", "time"]
+    },
+    "Standing": {
+      "title": "Standing",
+      "description": "League standing for a team in a sport",
+      "type": "object",
+      "properties": {
+        "team": { "type": "string" },
+        "played": { "type": "number" },
+        "won": { "type": "number" },
+        "drawn": { "type": "number" },
+        "lost": { "type": "number" },
+        "points": { "type": "number" },
+        "group": { "type": "string" },
+        "sport": { "type": "string" }
+      },
+      "required": ["team", "played", "won", "drawn", "lost", "points", "sport"]
+    },
+    "RunResult": {
+      "title": "Run Result",
+      "description": "Outcome for a participant in Kampus Run",
+      "type": "object",
+      "properties": {
+        "position": { "type": "number" },
+        "name": { "type": "string" },
+        "time": { "type": "string" },
+        "gender": { "type": "string", "enum": ["M", "F"] },
+        "ageGroup": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["position", "name", "time", "gender", "ageGroup", "category"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/events/{eventId}": {
+      "schema": "SportEvent",
+      "description": "Collection of available sports"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Collection of all matches"
+    },
+    "/standings/{standingId}": {
+      "schema": "Standing",
+      "description": "Collection of team standings across sports"
+    },
+    "/runResults/{resultId}": {
+      "schema": "RunResult",
+      "description": "Collection of race outcomes"
+    }
+  }
+}
