@@ -1,4 +1,4 @@
-export type SportType = 'kampus-run' | 'football' | 'volleyball' | 'badminton' | 'ipl-auction';
+export type SportType = 'kampus-run' | 'football' | 'volleyball' | 'badminton';
 
 export interface SportEvent {
   id: string;
@@ -45,11 +45,4 @@ export interface RunResult {
   gender: 'M' | 'F';
   ageGroup: string;
   category: string;
-}
-
-export interface AuctionTeam {
-  house: string;
-  squad: string[];
-  totalPoints: number;
-  remainingPurse: number;
 }

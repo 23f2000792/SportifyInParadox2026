@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { EVENTS, MOCK_MATCHES, FOOTBALL_STANDINGS, VOLLEYBALL_STANDINGS, BADMINTON_STANDINGS, RUN_RESULTS, AUCTION_DATA } from '@/lib/mock-data';
+import { EVENTS, MOCK_MATCHES, FOOTBALL_STANDINGS, VOLLEYBALL_STANDINGS, BADMINTON_STANDINGS, RUN_RESULTS } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
@@ -204,7 +204,6 @@ export default async function EventPage({ params }: { params: { sport: string } 
                             {categoryResults.length > 0 ? (
                               categoryResults.map((res) => {
                                 const isTop3 = res.position <= 3;
-                                const podiumColor = res.position === 1 ? 'text-yellow-500' : res.position === 2 ? 'text-gray-400' : res.position === 3 ? 'text-orange-400' : '';
                                 const podiumBg = res.position === 1 ? 'bg-yellow-50' : res.position === 2 ? 'bg-gray-50' : res.position === 3 ? 'bg-orange-50' : '';
 
                                 return (
@@ -492,39 +491,6 @@ export default async function EventPage({ params }: { params: { sport: string } 
               ))}
             </div>
           </section>
-        </div>
-      )}
-
-      {/* IPL AUCTION LAYOUT */}
-      {sport === 'ipl-auction' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {AUCTION_DATA.map((team, idx) => (
-            <Card key={idx} className="border-none shadow-sm bg-white">
-              <CardHeader className="p-4 bg-muted/10">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-sm font-black uppercase tracking-tight">{team.house}</CardTitle>
-                  <div className="text-right">
-                    <p className="text-[8px] text-muted-foreground uppercase font-black">Purse Left</p>
-                    <p className="text-sm font-black text-primary">₹{team.remainingPurse}Cr</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4">
-                 <div>
-                   <p className="text-[9px] font-black text-muted-foreground uppercase mb-2">Squad List</p>
-                   <div className="flex flex-wrap gap-1.5">
-                      {team.squad.map((player, pIdx) => (
-                        <Badge key={pIdx} variant="secondary" className="bg-muted text-[10px] font-bold py-0.5 px-2">{player}</Badge>
-                      ))}
-                   </div>
-                 </div>
-                 <div className="pt-3 border-t flex justify-between items-center">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase">Team Total Pts</span>
-                    <span className="text-lg font-black text-primary">{team.totalPoints}</span>
-                 </div>
-              </CardContent>
-            </Card>
-          ))}
         </div>
       )}
     </div>
