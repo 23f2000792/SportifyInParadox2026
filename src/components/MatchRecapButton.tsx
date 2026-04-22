@@ -1,18 +1,20 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { generateMatchRecap } from '@/ai/flows/ai-match-recap-tool';
 import { Match } from '@/lib/types';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
-export function MatchRecapButton({ match }: { match: Match }) {
+export const MatchRecapButton = memo(function MatchRecapButton({ match }: { match: Match }) {
   const [loading, setLoading] = useState(false);
   const [recap, setRecap] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   const handleGenerate = async () => {
+    if (loading) return;
     setLoading(true);
     setOpen(true);
     try {
@@ -45,7 +47,7 @@ export function MatchRecapButton({ match }: { match: Match }) {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none">
+        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="p-6 bg-primary text-white">
             <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase tracking-tight">
               <Sparkles className="h-5 w-5" />
@@ -74,4 +76,4 @@ export function MatchRecapButton({ match }: { match: Match }) {
       </Dialog>
     </>
   );
-}
+});

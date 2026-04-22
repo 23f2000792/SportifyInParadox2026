@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import { EVENTS, MOCK_MATCHES, FOOTBALL_STANDINGS, VOLLEYBALL_STANDINGS, BADMINTON_STANDINGS, RUN_RESULTS } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,7 +49,7 @@ export default async function EventPage({ params }: { params: { sport: string } 
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/30 h-10">
+                        <TableRow className="bg-muted/30 h-10 hover:bg-transparent">
                           <TableHead className="text-[10px] font-black uppercase">Team</TableHead>
                           <TableHead className="text-center text-[10px] font-black uppercase w-8 p-0">P</TableHead>
                           <TableHead className="text-center text-[10px] font-black uppercase w-8 p-0">W</TableHead>
@@ -59,7 +60,7 @@ export default async function EventPage({ params }: { params: { sport: string } 
                       </TableHeader>
                       <TableBody>
                         {FOOTBALL_STANDINGS.filter(s => s.group === group).sort((a, b) => b.points - a.points || (b.won - a.won)).map((row, i) => (
-                          <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
+                          <TableRow key={row.team} className={`h-10 hover:bg-muted/5 ${i === 0 ? 'bg-primary/5' : ''}`}>
                             <TableCell className={`font-bold text-xs truncate max-w-[100px] ${i === 0 ? 'text-primary' : ''}`}>
                               {row.team}
                             </TableCell>
@@ -204,10 +205,10 @@ export default async function EventPage({ params }: { params: { sport: string } 
                             {categoryResults.length > 0 ? (
                               categoryResults.map((res) => {
                                 const isTop3 = res.position <= 3;
-                                const podiumBg = res.position === 1 ? 'bg-yellow-50' : res.position === 2 ? 'bg-gray-50' : res.position === 3 ? 'bg-orange-50' : '';
+                                const podiumBg = res.position === 1 ? 'bg-yellow-50/50' : res.position === 2 ? 'bg-gray-50/50' : res.position === 3 ? 'bg-orange-50/50' : '';
 
                                 return (
-                                  <TableRow key={res.name} className={`h-12 border-muted/20 ${isTop3 ? podiumBg : ''}`}>
+                                  <TableRow key={res.name} className={`h-12 border-muted/20 hover:bg-muted/5 ${isTop3 ? podiumBg : ''}`}>
                                     <TableCell className="text-center">
                                       {res.position === 1 ? (
                                         <div className="flex flex-col items-center">
@@ -283,7 +284,7 @@ export default async function EventPage({ params }: { params: { sport: string } 
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/30 h-10">
+                        <TableRow className="bg-muted/30 h-10 hover:bg-transparent">
                           <TableHead className="text-[10px] font-black uppercase">Team</TableHead>
                           <TableHead className="text-center text-[10px] font-black uppercase w-12">Played</TableHead>
                           <TableHead className="text-center text-[10px] font-black uppercase w-12">Won</TableHead>
@@ -293,7 +294,7 @@ export default async function EventPage({ params }: { params: { sport: string } 
                       </TableHeader>
                       <TableBody>
                         {VOLLEYBALL_STANDINGS.filter(s => s.group === group).sort((a, b) => b.points - a.points).map((row, i) => (
-                          <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
+                          <TableRow key={row.team} className={`h-10 hover:bg-muted/5 ${i === 0 ? 'bg-primary/5' : ''}`}>
                             <TableCell className={`font-bold text-xs ${i === 0 ? 'text-primary' : ''}`}>
                               {row.team}
                             </TableCell>
@@ -398,7 +399,7 @@ export default async function EventPage({ params }: { params: { sport: string } 
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/30 h-10">
+                        <TableRow className="bg-muted/30 h-10 hover:bg-transparent">
                           <TableHead className="text-[10px] font-black uppercase">House</TableHead>
                           <TableHead className="text-center text-[10px] font-black uppercase w-12">P</TableHead>
                           <TableHead className="text-center text-[10px] font-black uppercase w-12">W</TableHead>
@@ -408,7 +409,7 @@ export default async function EventPage({ params }: { params: { sport: string } 
                       </TableHeader>
                       <TableBody>
                         {BADMINTON_STANDINGS.filter(s => s.group === group).sort((a, b) => b.points - a.points).map((row, i) => (
-                          <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
+                          <TableRow key={row.team} className={`h-10 hover:bg-muted/5 ${i === 0 ? 'bg-primary/5' : ''}`}>
                             <TableCell className={`font-bold text-xs ${i === 0 ? 'text-primary' : ''}`}>
                               {row.team}
                             </TableCell>
