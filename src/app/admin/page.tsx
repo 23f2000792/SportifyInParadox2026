@@ -35,12 +35,20 @@ export default function AdminPage() {
   const [newAdminUid, setNewAdminUid] = useState('');
   const [newAdminSport, setNewAdminSport] = useState('football');
 
-  const matchesQuery = useMemo(() => 
-    query(collection(db, 'matches'), where('sport', '==', selectedSport)), 
-  [db, selectedSport]);
+  // Stable Firestore Queries
+  const matchesQuery = useMemo(() => {
+    if (!db || !selectedSport) return null;
+    return query(collection(db, 'matches'), where('sport', '==', selectedSport));
+  }, [db, selectedSport]);
+
   const { data: matches } = useCollection<Match>(matchesQuery);
 
-  const { data: allAdmins } = useCollection<AdminUser>(collection(db, 'admins'));
+  const adminsQuery = useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'admins');
+  }, [db]);
+
+  const { data: allAdmins } = useCollection<AdminUser>(adminsQuery);
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -108,9 +116,9 @@ export default function AdminPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black italic tracking-tighter uppercase">Command Center</h1>
-            <Badge variant="outline" className="text-[8px] font-black uppercase border-primary/30 text-primary">
+            <LocalBadge variant="outline" className="text-[8px] font-black uppercase border-primary/30 text-primary">
               {adminProfile.role} Access
-            </Badge>
+            </LocalBadge>
           </div>
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Operator: {adminProfile.email}</p>
         </div>
@@ -159,9 +167,11 @@ export default function AdminPage() {
                         <SelectValue placeholder="Select match" />
                       </SelectTrigger>
                       <SelectContent>
-                        {matches?.map(m => (
+                        {matches?.length ? matches.map(m => (
                           <SelectItem key={m.id} value={m.id}>{m.teamA} v {m.teamB}</SelectItem>
-                        ))}
+                        )) : (
+                          <div className="p-2 text-[10px] font-black uppercase text-center opacity-30">No matches found</div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -319,7 +329,7 @@ export default function AdminPage() {
   );
 }
 
-function Badge({ children, variant = "default", className }: { children: React.ReactNode, variant?: string, className?: string }) {
+function LocalBadge({ children, variant = "default", className }: { children: React.ReactNode, variant?: string, className?: string }) {
   const styles = variant === "outline" ? "border" : "bg-primary text-white";
   return (
     <span className={cn("px-2 py-0.5 rounded-full text-[8px] font-black", styles, className)}>

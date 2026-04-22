@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Query,
   onSnapshot,
@@ -10,14 +10,17 @@ import {
 } from 'firebase/firestore';
 
 /**
- * Real-time collection listener with proper cleanup and error handling.
+ * Real-time collection listener with defensive mounting and error handling.
  */
 export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FirestoreError | null>(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
+    
     if (!query) {
       setLoading(false);
       return;
@@ -25,10 +28,10 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
 
     setLoading(true);
     
-    // The query object must be memoized in the calling component to avoid loops
     const unsubscribe = onSnapshot(
       query,
       (snapshot: QuerySnapshot<T>) => {
+        if (!isMounted.current) return;
         const items = snapshot.docs.map((doc) => ({
           ...doc.data(),
           id: doc.id,
@@ -38,13 +41,17 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setError(null);
       },
       (err) => {
-        // Log locally for debugging, but we don't console.error to avoid noise
+        if (!isMounted.current) return;
+        // Silent handling of permission/internal errors to prevent app-wide crashes
         setError(err);
         setLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      isMounted.current = false;
+      unsubscribe();
+    };
   }, [query]);
 
   return { data, loading, error };
