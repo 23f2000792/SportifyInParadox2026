@@ -13,7 +13,7 @@ import { firebaseConfig } from './config';
 /**
  * Defensive Singleton Registry for Firebase Services.
  * Forces memory-only cache to prevent "INTERNAL ASSERTION FAILED (ID: ca9)" 
- * which is commonly caused by persistent cache conflicts in Firestore v11.
+ * which is caused by persistent cache conflicts in Firestore v11.
  */
 
 let cachedInstances: { app: FirebaseApp, db: Firestore, auth: Auth } | null = null;
@@ -21,7 +21,7 @@ let cachedInstances: { app: FirebaseApp, db: Firestore, auth: Auth } | null = nu
 export function initializeFirebase() {
   if (typeof window === 'undefined') return null;
 
-  // 1. Check local module cache
+  // 1. Check module-level cache
   if (cachedInstances) return cachedInstances;
 
   // 2. Check window-level registry to survive HMR/Strict Mode double-mounts
@@ -37,10 +37,12 @@ export function initializeFirebase() {
   // 4. Instantiate services strictly once with defensive settings
   let db: Firestore;
   try {
+    // Force memory-only cache to bypass the "ID: ca9" persistent cache bug
     db = initializeFirestore(app, {
       localCache: memoryLocalCache(),
     });
   } catch (e) {
+    // Fallback if already initialized
     db = getFirestore(app);
   }
 
