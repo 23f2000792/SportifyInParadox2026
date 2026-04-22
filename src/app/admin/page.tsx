@@ -89,7 +89,7 @@ export default function AdminPage() {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminSport, setNewAdminSport] = useState('all');
 
-  // Base Queries - Removed client-side ordering to fix "sink" issues
+  // Base Queries
   const rawMatchesQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
     return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug));
@@ -100,6 +100,8 @@ export default function AdminPage() {
     return [...(rawMatches || [])].sort((a, b) => {
       const numA = parseInt(a.matchNumber) || 0;
       const numB = parseInt(b.matchNumber) || 0;
+      if (isNaN(numA)) return 1;
+      if (isNaN(numB)) return -1;
       return numA - numB;
     });
   }, [rawMatches]);
@@ -329,7 +331,7 @@ export default function AdminPage() {
                        tabsCount === 3 ? "grid-cols-3" : "grid-cols-2";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-8 pb-20 px-4 md:px-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
         <div className="space-y-2">
           <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary/70 gap-2 mb-2"><ChevronLeft className="h-3 w-3" /> Exit Domain</Button>
@@ -343,7 +345,7 @@ export default function AdminPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
         <TabsList className={cn(
-          "grid w-full bg-muted/20 h-16 p-1.5 border border-white/5 rounded-2xl overflow-x-auto no-scrollbar",
+          "grid w-full bg-muted/20 h-16 p-1.5 border border-white/5 rounded-2xl overflow-x-auto no-scrollbar scroll-smooth",
           gridColsClass
         )}>
           <TabsTrigger value="control" className="text-[10px] font-black uppercase rounded-xl">Live Scoring</TabsTrigger>
@@ -358,7 +360,7 @@ export default function AdminPage() {
             <Card className="premium-card border-primary/20">
               <CardHeader className="bg-primary/5 border-b border-white/5"><CardTitle className="text-xs font-black uppercase tracking-widest text-primary">Result Submission Domain</CardTitle></CardHeader>
               <CardContent className="p-8">
-                <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2 md:col-span-2">
                     <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Participant Identity</Label>
                     <Input value={runnerName} onChange={e => setRunnerName(e.target.value)} className="bg-white/5 h-14 border-white/10 text-xs font-black uppercase" placeholder="Full Name" required />
@@ -391,7 +393,19 @@ export default function AdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="h-14 mt-auto uppercase font-black text-[10px] tracking-widest md:col-span-6"><Plus className="h-4 w-4 mr-2" /> Commit Record</Button>
+                   {runnerCat === '5km' && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Age Group</Label>
+                      <Select value={runnerAgeGroup} onValueChange={setRunnerAgeGroup}>
+                        <SelectTrigger className="bg-white/5 h-14 text-[10px] font-black uppercase"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="18-25" className="text-[10px] font-black uppercase">18-25</SelectItem>
+                          <SelectItem value="26+" className="text-[10px] font-black uppercase">26+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  <Button type="submit" className="h-14 mt-auto uppercase font-black text-[10px] tracking-widest md:col-span-3"><Plus className="h-4 w-4 mr-2" /> Commit Record</Button>
                 </form>
               </CardContent>
             </Card>
@@ -502,6 +516,7 @@ export default function AdminPage() {
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Home Domain (House)</Label><Select value={schedTeamA} onValueChange={setSchedTeamA}><SelectTrigger className="bg-white/5 h-14 font-black text-[11px] uppercase"><SelectValue placeholder="Select House" /></SelectTrigger><SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Away Domain (House)</Label><Select value={schedTeamB} onValueChange={setSchedTeamB}><SelectTrigger className="bg-white/5 h-14 font-black text-[11px] uppercase"><SelectValue placeholder="Select House" /></SelectTrigger><SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Calendar Date</Label><Input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} className="bg-white/5 h-14 font-black text-xs" required /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Competition Day</Label><Input value={schedDay} onChange={e => setSchedDay(e.target.value)} placeholder="e.g., Saturday / Day 1" className="bg-white/5 h-14 font-black text-xs" required /></div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Reporting Time</Label><Input value={schedReportingTime} onChange={e => setSchedReportingTime(e.target.value)} placeholder="04:00 PM" className="bg-white/5 h-14 font-black text-xs" /></div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Start Vector</Label><Input placeholder="04:30 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="bg-white/5 h-14 font-black text-xs" required /></div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Venue Identity</Label><Input value={schedVenue} onChange={e => setSchedVenue(e.target.value)} placeholder="e.g., Main Ground" className="bg-white/5 h-14 font-black text-xs" required /></div>
@@ -522,14 +537,14 @@ export default function AdminPage() {
                      <div className="flex items-center gap-8 w-full">
                        <div className="text-center w-28 border-r border-white/10 pr-6">
                          <p className="text-[9px] font-black text-primary uppercase opacity-70">M#{match.matchNumber}</p>
-                         <p className="text-sm font-black text-white uppercase">{match.time}</p>
+                         <p className="text-lg font-black text-white uppercase tabular-nums">{match.time}</p>
                          <p className="text-[8px] font-black text-muted-foreground/40 uppercase mt-0.5">{match.date}</p>
                        </div>
                        <div className="flex-1">
-                         <p className="text-lg font-black uppercase italic group-hover:text-primary transition-colors tracking-tight leading-none">{match.teamA} {match.teamB !== 'Open' ? `vs ${match.teamB}` : ''}</p>
+                         <p className="text-xl font-black uppercase italic group-hover:text-primary transition-colors tracking-tight leading-none">{match.teamA} {match.teamB !== 'Open' ? `vs ${match.teamB}` : ''}</p>
                          <div className="flex items-center gap-4 mt-2">
-                           <span className="text-[9px] font-black text-muted-foreground/40 uppercase flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {match.venue}</span>
-                           <Badge variant="outline" className="text-[7px] font-black uppercase h-5 bg-primary/5 border-primary/20 text-primary/60">{match.phase}</Badge>
+                           <span className="text-[10px] font-black text-muted-foreground/40 uppercase flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {match.venue}</span>
+                           <Badge variant="outline" className="text-[8px] font-black uppercase h-5 bg-primary/5 border-primary/20 text-primary/60">{match.phase}</Badge>
                          </div>
                        </div>
                      </div>
@@ -566,8 +581,8 @@ export default function AdminPage() {
                    <Card key={group} className="premium-card border-white/5">
                      <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-[11px] font-black uppercase text-center tracking-[0.4em] text-primary">Group {group} Matrix</CardTitle></CardHeader>
                      <CardContent className="p-0">
-                       <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Team</TableHead><TableHead className="text-[9px] font-black uppercase text-center">P</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Pts</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Del</TableHead></TableRow></TableHeader>
-                         <TableBody>{groupItems.map(item => (<TableRow key={item.id} className="border-white/5 hover:bg-white/[0.01]"><TableCell className="text-xs font-black uppercase">{item.team}</TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-12 text-center text-[10px] font-black bg-white/5 mx-auto" value={item.played} onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} /></TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-14 text-center text-[10px] font-black bg-primary/10 border-primary/20 mx-auto" value={item.points} onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} /></TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'standings', item.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}
+                       <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[10px] font-black uppercase">Team</TableHead><TableHead className="text-[10px] font-black uppercase text-center">P</TableHead><TableHead className="text-[10px] font-black uppercase text-center">Pts</TableHead><TableHead className="text-right text-[10px] font-black uppercase">Del</TableHead></TableRow></TableHeader>
+                         <TableBody>{groupItems.map(item => (<TableRow key={item.id} className="border-white/5 hover:bg-white/[0.01]"><TableCell className="text-base font-black uppercase">{item.team}</TableCell><TableCell className="p-1"><Input type="number" className="h-10 w-14 text-center text-sm font-black bg-white/5 mx-auto" value={item.played} onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} /></TableCell><TableCell className="p-1"><Input type="number" className="h-10 w-16 text-center text-sm font-black bg-primary/10 border-primary/20 mx-auto" value={item.points} onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} /></TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'standings', item.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}
                          </TableBody></Table></CardContent></Card>);})}</div>
           </TabsContent>
         )}
@@ -577,15 +592,15 @@ export default function AdminPage() {
              <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><ListOrdered className="h-4 w-4" /> Transmission Archive Matrix</CardTitle></CardHeader>
              <CardContent className="p-0">
                {isKampusRun ? (
-                 <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="w-16 text-center text-[9px] font-black uppercase">Pos</TableHead><TableHead className="text-[9px] font-black uppercase">Participant</TableHead><TableHead className="text-[9px] font-black uppercase">Profile</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
-                   <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-white/5 hover:bg-white/[0.01] h-14"><TableCell className="text-center font-black">#{res.position}</TableCell><TableCell><p className="text-xs font-black uppercase">{res.name}</p></TableCell><TableCell><Badge variant="outline" className="text-[7px] font-black uppercase h-5">{res.category} | {res.gender === 'M' ? 'Male' : 'Female'}</Badge></TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
+                 <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="w-16 text-center text-[10px] font-black uppercase">Pos</TableHead><TableHead className="text-[10px] font-black uppercase">Participant</TableHead><TableHead className="text-[10px] font-black uppercase">Profile</TableHead><TableHead className="text-right text-[10px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
+                   <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-white/5 hover:bg-white/[0.01] h-16"><TableCell className="text-center font-black text-xl">#{res.position}</TableCell><TableCell><p className="text-base font-black uppercase">{res.name}</p></TableCell><TableCell><div className="flex flex-wrap gap-1"><Badge variant="outline" className="text-[8px] font-black uppercase h-5">{res.category}</Badge><Badge variant="outline" className="text-[8px] font-black uppercase h-5">{res.gender === 'M' ? 'Male' : 'Female'}</Badge></div></TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-10 w-10 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-5 w-5" /></Button></TableCell></TableRow>))}</TableBody></Table>
                ) : (
-                 <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Transmission Vector</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Score</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
+                 <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[10px] font-black uppercase">Transmission Vector</TableHead><TableHead className="text-[10px] font-black uppercase text-center">Score</TableHead><TableHead className="text-right text-[10px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
                    <TableBody>{matches?.filter(m => m.status === 'Completed').map(match => (
-                     <TableRow key={match.id} className="border-white/5 hover:bg-white/[0.01] h-16">
-                       <TableCell><p className="text-xs font-black uppercase italic">M#{match.matchNumber} | {match.teamA} vs {match.teamB}</p><p className="text-[8px] font-black opacity-30 uppercase">{match.phase}</p></TableCell>
-                       <TableCell className="text-center font-black text-lg text-primary">{match.scoreA} - {match.scoreB}</TableCell>
-                       <TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', match.id))}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                     <TableRow key={match.id} className="border-white/5 hover:bg-white/[0.01] h-20">
+                       <TableCell><p className="text-base font-black uppercase italic">M#{match.matchNumber} | {match.teamA} vs {match.teamB}</p><p className="text-[9px] font-black opacity-30 uppercase">{match.phase}</p></TableCell>
+                       <TableCell className="text-center font-black text-2xl text-primary">{match.scoreA} - {match.scoreB}</TableCell>
+                       <TableCell className="text-right"><Button size="icon" variant="ghost" className="h-10 w-10 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', match.id))}><Trash2 className="h-5 w-5" /></Button></TableCell>
                      </TableRow>
                    ))}</TableBody>
                  </Table>
