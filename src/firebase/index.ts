@@ -12,6 +12,9 @@ let auth: Auth;
 
 export function initializeFirebase() {
   if (getApps().length === 0) {
+    if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'undefined') {
+      throw new Error("Firebase API Key is missing. Please ensure your environment variables (NEXT_PUBLIC_FIREBASE_API_KEY, etc.) are set in your deployment environment or .env file.");
+    }
     app = initializeApp(firebaseConfig);
   } else {
     app = getApp();
