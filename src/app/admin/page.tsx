@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EVENTS } from '@/lib/mock-data';
-import { Save, RotateCcw, Plus, UserPlus, ShieldCheck, LogOut, ShieldAlert, Cpu, Trophy, Zap, Timer, User } from 'lucide-react';
+import { Save, Plus, ShieldCheck, LogOut, Zap, Trophy, Timer, Settings, Calendar, ListOrdered, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
-import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc } from 'firebase/firestore';
-import { Match, AdminUser, RunResult, BadmintonMatchResult } from '@/lib/types';
+import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
@@ -27,14 +28,12 @@ export default function AdminPage() {
   const { user, adminProfile, loading: userLoading } = useUser();
   
   const [selectedSport, setSelectedSport] = useState<string>('football');
-  const [selectedMatchId, setSelectedMatchId] = useState<string>('');
   
   // Scoring State
+  const [selectedMatchId, setSelectedMatchId] = useState<string>('');
   const [scoreA, setScoreA] = useState<number>(0);
   const [scoreB, setScoreB] = useState<number>(0);
   const [status, setStatus] = useState<string>('Live');
-  
-  // Badminton Specific State
   const [badmintonResults, setBadmintonResults] = useState<BadmintonMatchResult[]>([
     { type: 'MS', score: '0-0', winner: '' },
     { type: 'WS', score: '0-0', winner: '' },
@@ -43,41 +42,37 @@ export default function AdminPage() {
     { type: 'XD', score: '0-0', winner: '' },
   ]);
 
-  // Kampus Run State
-  const [runName, setRunName] = useState('');
-  const [runTime, setRunTime] = useState('');
-  const [runPos, setRunPos] = useState(1);
-  const [runCat, setRunCat] = useState('3km Male');
+  // Schedule Creation State
+  const [schedTeamA, setSchedTeamA] = useState('');
+  const [schedTeamB, setSchedTeamB] = useState('');
+  const [schedTime, setSchedTime] = useState('');
+  const [schedGroup, setSchedGroup] = useState('A');
+  const [schedPhase, setSchedPhase] = useState<MatchPhase>('group');
 
-  // Admin Management State
-  const [newAdminEmail, setNewAdminEmail] = useState('');
-  const [newAdminUid, setNewAdminUid] = useState('');
-  const [newAdminSport, setNewAdminSport] = useState('football');
+  // Standing Management State
+  const [stdHouse, setStdHouse] = useState(HOUSES[0]);
+  const [stdGroup, setStdGroup] = useState('A');
+  const [stdPlayed, setStdPlayed] = useState(0);
+  const [stdWon, setStdWon] = useState(0);
+  const [stdDrawn, setStdDrawn] = useState(0);
+  const [stdLost, setStdLost] = useState(0);
+  const [stdPoints, setStdPoints] = useState(0);
 
-  // Stable Firestore Queries
+  // Firestore Queries
   const matchesQuery = useMemo(() => {
     if (!db || !selectedSport) return null;
-    return query(collection(db, 'matches'), where('sport', '==', selectedSport));
+    return query(collection(db, 'matches'), where('sport', '==', selectedSport), orderBy('time', 'asc'));
   }, [db, selectedSport]);
-
   const { data: matches } = useCollection<Match>(matchesQuery);
 
-  const runResultsQuery = useMemo(() => {
-    if (!db) return null;
-    return collection(db, 'runResults');
-  }, [db]);
-  const { data: runResults } = useCollection<RunResult>(runResultsQuery);
-
-  const adminsQuery = useMemo(() => {
-    if (!db) return null;
-    return collection(db, 'admins');
-  }, [db]);
-  const { data: allAdmins } = useCollection<AdminUser>(adminsQuery);
+  const standingsQuery = useMemo(() => {
+    if (!db || !selectedSport) return null;
+    return query(collection(db, 'standings'), where('sport', '==', selectedSport));
+  }, [db, selectedSport]);
+  const { data: standings } = useCollection<Standing>(standingsQuery);
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/admin/login');
-    }
+    if (!userLoading && !user) router.push('/admin/login');
   }, [user, userLoading, router]);
 
   const activeMatch = useMemo(() => matches?.find(m => m.id === selectedMatchId), [matches, selectedMatchId]);
@@ -87,61 +82,60 @@ export default function AdminPage() {
       setScoreA(activeMatch.scoreA);
       setScoreB(activeMatch.scoreB);
       setStatus(activeMatch.status);
-      if (activeMatch.badmintonResults) {
-        setBadmintonResults(activeMatch.badmintonResults);
-      }
+      if (activeMatch.badmintonResults) setBadmintonResults(activeMatch.badmintonResults);
     }
   }, [activeMatch]);
 
-  if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div></div>;
+  if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin" /></div>;
   if (!user || !adminProfile) return null;
 
   const isSuperAdmin = adminProfile.role === 'super-admin';
 
+  const handleCreateMatch = (e: React.FormEvent) => {
+    e.preventDefault();
+    addDoc(collection(db, 'matches'), {
+      sport: selectedSport,
+      teamA: schedTeamA,
+      teamB: schedTeamB,
+      scoreA: 0,
+      scoreB: 0,
+      status: 'Upcoming',
+      phase: schedPhase,
+      group: schedPhase === 'group' ? schedGroup : null,
+      time: schedTime,
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: "Schedule Updated", description: "New match transmission scheduled." });
+    setSchedTeamA(''); setSchedTeamB('');
+  };
+
   const handleUpdateMatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMatchId) return;
-
-    const matchRef = doc(db, 'matches', selectedMatchId);
-    const updateData: any = {
+    setDoc(doc(db, 'matches', selectedMatchId), {
       scoreA: Number(scoreA),
       scoreB: Number(scoreB),
       status,
+      badmintonResults: selectedSport === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
-    };
-
-    if (selectedSport === 'badminton') {
-      updateData.badmintonResults = badmintonResults;
-    }
-
-    setDoc(matchRef, updateData, { merge: true });
-    toast({ title: "Broadcast Updated", description: "Match data synchronized successfully." });
+    }, { merge: true });
+    toast({ title: "Transmission Synchronized" });
   };
 
-  const handleAddRunResult = (e: React.FormEvent) => {
+  const handleUpsertStanding = (e: React.FormEvent) => {
     e.preventDefault();
-    addDoc(collection(db, 'runResults'), {
-      name: runName,
-      time: runTime,
-      position: Number(runPos),
-      category: runCat,
-      updatedAt: serverTimestamp(),
+    const id = `${selectedSport}_${stdHouse}`;
+    setDoc(doc(db, 'standings', id), {
+      team: stdHouse,
+      sport: selectedSport,
+      group: stdGroup,
+      played: Number(stdPlayed),
+      won: Number(stdWon),
+      drawn: Number(stdDrawn),
+      lost: Number(stdLost),
+      points: Number(stdPoints),
     });
-    toast({ title: "Result Recorded", description: `${runName} added to ${runCat}` });
-    setRunName(''); setRunTime('');
-  };
-
-  const handleAddAdmin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAdminUid || !newAdminEmail) return;
-    setDoc(doc(db, 'admins', newAdminUid), {
-      uid: newAdminUid,
-      email: newAdminEmail,
-      role: 'admin',
-      assignedSport: newAdminSport,
-    });
-    toast({ title: "Admin Registered", description: `Access granted to ${newAdminEmail}` });
-    setNewAdminEmail(''); setNewAdminUid('');
+    toast({ title: "Standing Saved", description: `${stdHouse} matrix updated.` });
   };
 
   const handleLogout = async () => {
@@ -150,228 +144,204 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="flex justify-between items-center">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black italic tracking-tighter uppercase">Paradox Command</h1>
-            <Badge variant="outline" className="text-[8px] font-black uppercase border-primary/30 text-primary">
-              {adminProfile.role}
-            </Badge>
-          </div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Operator: {adminProfile.email}</p>
+          <h1 className="text-2xl font-black italic uppercase flex items-center gap-2">
+            Paradox Command <Badge className="bg-primary/20 text-primary border-primary/30 uppercase text-[9px]">{adminProfile.role}</Badge>
+          </h1>
+          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Operator: {adminProfile.email}</p>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-[9px] font-black uppercase gap-2 hover:bg-destructive/10 hover:text-destructive w-fit">
-          <LogOut className="h-3.5 w-3.5" /> Terminate Session
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-[9px] font-black uppercase gap-2">
+          <LogOut className="h-3 w-3" /> Terminate
         </Button>
       </div>
 
-      <Tabs defaultValue="scores" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-muted/50 h-12 p-1">
-          <TabsTrigger value="scores" className="text-[10px] font-black uppercase">Live Control</TabsTrigger>
-          <TabsTrigger value="schedule" className="text-[10px] font-black uppercase">Archive</TabsTrigger>
-          <TabsTrigger value="management" className="text-[10px] font-black uppercase">Access</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="premium-card md:col-span-1 h-fit">
+          <CardHeader className="p-4 border-b border-white/5">
+            <CardTitle className="text-[10px] font-black uppercase flex items-center gap-2"><Settings className="h-3 w-3" /> Domain</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <Select value={selectedSport} onValueChange={setSelectedSport}>
+              <SelectTrigger className="bg-white/5 border-none h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EVENTS.map(e => <SelectItem key={e.id} value={e.slug}>{e.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="scores" className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Sport & Match Selection */}
-            <Card className="premium-card lg:col-span-1">
-              <CardHeader className="p-4 border-b border-white/5">
-                <CardTitle className="text-xs font-black uppercase flex items-center gap-2">
-                  <Zap className="h-3.5 w-3.5 text-primary" /> Target Selection
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Division</Label>
-                  <Select value={selectedSport} onValueChange={setSelectedSport}>
-                    <SelectTrigger className="h-10 bg-white/5">
-                      <SelectValue />
+        <Tabs defaultValue="scoring" className="md:col-span-3">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50 h-12 p-1">
+            <TabsTrigger value="scoring" className="text-[9px] font-black uppercase">Live</TabsTrigger>
+            <TabsTrigger value="schedule" className="text-[9px] font-black uppercase">Schedule</TabsTrigger>
+            <TabsTrigger value="standings" className="text-[9px] font-black uppercase">League</TabsTrigger>
+            <TabsTrigger value="access" className="text-[9px] font-black uppercase">Personnel</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="scoring" className="space-y-6 pt-6">
+            <Card className="premium-card">
+              <CardContent className="p-6 space-y-8">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Select Target Match</Label>
+                  <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+                    <SelectTrigger className="bg-white/5 border-none h-12">
+                      <SelectValue placeholder="Targeting..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {EVENTS.map(e => <SelectItem key={e.id} value={e.slug}>{e.name}</SelectItem>)}
+                      {matches?.filter(m => m.status !== 'Completed').map(m => (
+                        <SelectItem key={m.id} value={m.id}>{m.teamA} vs {m.teamB} ({m.phase})</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-                {selectedSport !== 'kampus-run' && (
-                  <div className="space-y-1.5">
-                    <Label className="text-[9px] font-black uppercase opacity-50">Match Stream</Label>
-                    <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
-                      <SelectTrigger className="h-10 bg-white/5">
-                        <SelectValue placeholder="Select Match" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {matches?.map(m => <SelectItem key={m.id} value={m.id}>{m.teamA} vs {m.teamB}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
-            {/* Main Input Form */}
-            <Card className="premium-card lg:col-span-2">
-              <CardContent className="p-6">
-                {selectedSport === 'kampus-run' ? (
-                  <form onSubmit={handleAddRunResult} className="space-y-6">
-                    <h3 className="text-sm font-black uppercase italic">Race Result Entry</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase">Participant Name</Label>
-                        <Input value={runName} onChange={e => setRunName(e.target.value)} className="bg-white/5" required />
+                {selectedMatchId && (
+                  <form onSubmit={handleUpdateMatch} className="space-y-8">
+                    <div className="flex items-center justify-between gap-6">
+                      <div className="flex-1 space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-center block opacity-40">{activeMatch?.teamA}</Label>
+                        <Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-white/5 border-none" />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase">Finish Time (MM:SS)</Label>
-                        <Input value={runTime} onChange={e => setRunTime(e.target.value)} placeholder="12:45" className="bg-white/5" required />
+                      <div className="text-2xl font-black opacity-20">:</div>
+                      <div className="flex-1 space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-center block opacity-40">{activeMatch?.teamB}</Label>
+                        <Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-white/5 border-none" />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase">Category</Label>
-                        <Select value={runCat} onValueChange={setRunCat}>
-                          <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase opacity-50">Transmission Status</Label>
+                        <Select value={status} onValueChange={setStatus}>
+                          <SelectTrigger className="bg-white/5 border-none"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="3km Male">3km Male</SelectItem>
-                            <SelectItem value="3km Female">3km Female</SelectItem>
-                            <SelectItem value="5km Male 18-25">5km Male 18-25</SelectItem>
-                            <SelectItem value="5km Female 18-25">5km Female 18-25</SelectItem>
+                            <SelectItem value="Upcoming">Upcoming</SelectItem>
+                            <SelectItem value="Live">Live Stream</SelectItem>
+                            <SelectItem value="Completed">Archive</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase">Position</Label>
-                        <Input type="number" value={runPos} onChange={e => setRunPos(Number(e.target.value))} className="bg-white/5" />
-                      </div>
                     </div>
-                    <Button type="submit" className="w-full h-12 text-[10px] font-black uppercase gap-2">
-                      <Save className="h-4 w-4" /> Commit Result
+
+                    <Button type="submit" className="w-full h-12 font-black uppercase text-[10px] gap-2 shadow-xl shadow-primary/20">
+                      <ShieldCheck className="h-4 w-4" /> Broadcast Update
                     </Button>
                   </form>
-                ) : selectedMatchId ? (
-                  <form onSubmit={handleUpdateMatch} className="space-y-8">
-                    <div className="flex items-center justify-between bg-black/40 p-6 rounded-xl border border-white/5">
-                      <div className="text-center flex-1 space-y-2">
-                        <Label className="text-[10px] font-black uppercase opacity-40">{activeMatch?.teamA}</Label>
-                        <Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-4xl font-black h-16 bg-white/5 border-none" />
-                      </div>
-                      <div className="text-xl font-black text-muted-foreground/20 italic mx-4">:</div>
-                      <div className="text-center flex-1 space-y-2">
-                        <Label className="text-[10px] font-black uppercase opacity-40">{activeMatch?.teamB}</Label>
-                        <Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-4xl font-black h-16 bg-white/5 border-none" />
-                      </div>
-                    </div>
-
-                    {selectedSport === 'badminton' && (
-                      <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase text-primary">Sub-Match Breakdown</Label>
-                        <div className="grid grid-cols-1 gap-3">
-                          {badmintonResults.map((res, i) => (
-                            <div key={res.type} className="grid grid-cols-3 gap-3 items-center bg-white/5 p-3 rounded-lg">
-                              <span className="text-[10px] font-black">{res.type}</span>
-                              <Input 
-                                placeholder="Score (e.g. 21-15, 21-18)" 
-                                value={res.score} 
-                                onChange={e => {
-                                  const newRes = [...badmintonResults];
-                                  newRes[i].score = e.target.value;
-                                  setBadmintonResults(newRes);
-                                }}
-                                className="h-8 text-[10px] bg-black/20 border-white/10"
-                              />
-                              <Select 
-                                value={res.winner} 
-                                onValueChange={val => {
-                                  const newRes = [...badmintonResults];
-                                  newRes[i].winner = val;
-                                  setBadmintonResults(newRes);
-                                }}
-                              >
-                                <SelectTrigger className="h-8 text-[10px] bg-black/20 border-white/10">
-                                  <SelectValue placeholder="Winner" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value={activeMatch?.teamA || 'Team A'}>{activeMatch?.teamA}</SelectItem>
-                                  <SelectItem value={activeMatch?.teamB || 'Team B'}>{activeMatch?.teamB}</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase">Transmission Status</Label>
-                      <Select value={status} onValueChange={setStatus}>
-                        <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Upcoming">Upcoming</SelectItem>
-                          <SelectItem value="Live">Live Stream</SelectItem>
-                          <SelectItem value="Completed">Archived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button type="submit" className="w-full h-12 text-[10px] font-black uppercase gap-2 shadow-lg shadow-primary/20">
-                      <ShieldCheck className="h-4 w-4" /> Synchronize Matrix
-                    </Button>
-                  </form>
-                ) : (
-                  <div className="p-20 text-center space-y-4 opacity-30">
-                    <Cpu className="h-12 w-12 mx-auto animate-pulse" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Select match target to initialize control link</p>
-                  </div>
                 )}
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="management" className="pt-6 space-y-6">
-          <Card className="premium-card">
-            <CardHeader className="p-6 border-b border-white/5">
-              <CardTitle className="text-sm font-black uppercase flex items-center gap-2">
-                <UserPlus className="h-4 w-4 text-primary" /> Authority Delegation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-8">
-              {isSuperAdmin ? (
-                <>
-                  <form onSubmit={handleAddAdmin} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div className="space-y-1.5">
-                      <Label className="text-[9px] font-black uppercase">UID</Label>
-                      <Input placeholder="Firebase UID" value={newAdminUid} onChange={e => setNewAdminUid(e.target.value)} className="bg-white/5" required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[9px] font-black uppercase">Email</Label>
-                      <Input type="email" placeholder="operator@paradox" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} className="bg-white/5" required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[9px] font-black uppercase">Division</Label>
-                      <Select value={newAdminSport} onValueChange={setNewAdminSport}>
-                        <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
-                        <SelectContent>{EVENTS.map(e => <SelectItem key={e.id} value={e.slug}>{e.name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <Button type="submit" className="h-10 font-black uppercase text-[9px] gap-2"><ShieldCheck className="h-3 w-3" /> Authorize</Button>
-                  </form>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {allAdmins?.map(admin => (
-                      <div key={admin.uid} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                        <div className="space-y-1">
-                          <p className="text-xs font-black">{admin.email}</p>
-                          <div className="flex gap-2"><span className="text-[8px] font-black uppercase text-primary">{admin.role}</span><span className="text-[8px] font-black uppercase text-muted-foreground/40">• {admin.assignedSport}</span></div>
-                        </div>
-                      </div>
-                    ))}
+          <TabsContent value="schedule" className="pt-6">
+            <Card className="premium-card">
+              <CardHeader><CardTitle className="text-xs font-black uppercase italic">Deployment Module</CardTitle></CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateMatch} className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5 col-span-1">
+                    <Label className="text-[9px] font-black uppercase">Home House</Label>
+                    <Select value={schedTeamA} onValueChange={setSchedTeamA}>
+                      <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                      <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
-                </>
-              ) : (
-                <div className="text-center p-10 opacity-40"><ShieldAlert className="h-10 w-10 mx-auto mb-4" /><p className="text-xs font-black uppercase">Insufficient privileges for personnel management</p></div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  <div className="space-y-1.5 col-span-1">
+                    <Label className="text-[9px] font-black uppercase">Away House</Label>
+                    <Select value={schedTeamB} onValueChange={setSchedTeamB}>
+                      <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                      <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase">Phase</Label>
+                    <Select value={schedPhase} onValueChange={(v: any) => setSchedPhase(v)}>
+                      <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="group">Group Stage</SelectItem>
+                        <SelectItem value="semi-final">Semi Final</SelectItem>
+                        <SelectItem value="third-place">3rd Place</SelectItem>
+                        <SelectItem value="final">Final</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase">Group (If Group Stage)</Label>
+                    <Select value={schedGroup} onValueChange={setSchedGroup} disabled={schedPhase !== 'group'}>
+                      <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                      <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g}>Group {g}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-[9px] font-black uppercase">Transmission Time</Label>
+                    <Input placeholder="e.g., 14:00 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="bg-white/5" />
+                  </div>
+                  <Button type="submit" className="col-span-2 h-12 uppercase font-black text-[10px] gap-2">
+                    <Calendar className="h-4 w-4" /> Deploy Match
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="standings" className="pt-6 space-y-6">
+            <Card className="premium-card">
+              <CardHeader><CardTitle className="text-xs font-black uppercase italic">League Matrix Manager</CardTitle></CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpsertStanding} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-[9px] font-black uppercase">Target House</Label>
+                    <Select value={stdHouse} onValueChange={setStdHouse}>
+                      <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                      <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-[9px] font-black uppercase">Assigned Group</Label>
+                    <Select value={stdGroup} onValueChange={setStdGroup}>
+                      <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                      <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g}>Group {g}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black">Played</Label><Input type="number" value={stdPlayed} onChange={e => setStdPlayed(Number(e.target.value))} className="bg-white/5" /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black">Won</Label><Input type="number" value={stdWon} onChange={e => setStdWon(Number(e.target.value))} className="bg-white/5" /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black">Points</Label><Input type="number" value={stdPoints} onChange={e => setStdPoints(Number(e.target.value))} className="bg-white/5" /></div>
+                  <Button type="submit" className="h-10 mt-auto uppercase font-black text-[10px]"><Plus className="h-3 w-3 mr-2" /> Sync</Button>
+                </form>
+
+                <div className="mt-8 overflow-hidden border border-white/5 rounded-xl">
+                  <Table>
+                    <TableHeader className="bg-white/5">
+                      <TableRow><TableHead className="text-[9px] font-black">House</TableHead><TableHead className="text-[9px] font-black">Grp</TableHead><TableHead className="text-[9px] font-black">Pts</TableHead></TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {standings?.sort((a,b) => a.group.localeCompare(b.group) || b.points - a.points).map(s => (
+                        <TableRow key={s.id} className="border-white/5 h-10">
+                          <TableCell className="text-[10px] font-black">{s.team}</TableCell>
+                          <TableCell className="text-[10px] font-black text-primary">{s.group}</TableCell>
+                          <TableCell className="text-[10px] font-black">{s.points}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="access" className="pt-6">
+             <Card className="premium-card">
+              <CardHeader><CardTitle className="text-xs font-black uppercase">Authority Management</CardTitle></CardHeader>
+              <CardContent className="text-center p-12 opacity-30">
+                <Users className="h-12 w-12 mx-auto mb-4" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Global Personnel controls reserved for Root Admin</p>
+              </CardContent>
+             </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

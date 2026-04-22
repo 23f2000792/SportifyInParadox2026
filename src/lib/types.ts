@@ -1,5 +1,6 @@
 
 export type SportType = 'kampus-run' | 'football' | 'volleyball' | 'badminton';
+export type MatchPhase = 'group' | 'semi-final' | 'third-place' | 'final';
 
 export interface SportEvent {
   id: string;
@@ -23,22 +24,24 @@ export interface Match {
   scoreA: number;
   scoreB: number;
   status: 'Upcoming' | 'Live' | 'Completed';
+  phase: MatchPhase;
   time: string;
-  group?: string;
+  group?: string; // A, B, C, D
   keyEvents?: string[];
   badmintonResults?: BadmintonMatchResult[];
   updatedAt?: any;
 }
 
 export interface Standing {
-  team: string;
+  id?: string;
+  team: string; // House Name
+  sport: SportType;
+  group: string; // A, B, C, D
   played: number;
   won: number;
   drawn: number;
   lost: number;
   points: number;
-  group?: string;
-  sport: string;
 }
 
 export interface RunResult {
@@ -59,3 +62,11 @@ export interface AdminUser {
   role: UserRole;
   assignedSport?: string;
 }
+
+export const HOUSES = [
+  'Sundarbans', 'Nallamala', 'Gir', 'Bandipur', 
+  'Kaziranga', 'Corbett', 'Wayanad', 'Nilgiri', 
+  'Saranda', 'Namdapha', 'Pichavaram', 'Kanha'
+];
+
+export const GROUPS = ['A', 'B', 'C', 'D'];
