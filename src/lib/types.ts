@@ -1,3 +1,4 @@
+
 export type SportType = 'kampus-run' | 'football' | 'volleyball' | 'badminton';
 
 export interface SportEvent {
@@ -45,4 +46,13 @@ export interface RunResult {
   gender: 'M' | 'F';
   ageGroup: string;
   category: string;
+}
+
+export type UserRole = 'admin' | 'super-admin';
+
+export interface AdminUser {
+  uid: string;
+  email: string;
+  role: UserRole;
+  assignedSport?: string;
 }

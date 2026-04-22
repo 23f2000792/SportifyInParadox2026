@@ -72,6 +72,18 @@
         "category": { "type": "string" }
       },
       "required": ["position", "name", "time", "gender", "ageGroup", "category"]
+    },
+    "AdminUser": {
+      "title": "Admin User",
+      "description": "System administrator with role-based permissions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "super-admin"] },
+        "assignedSport": { "type": "string", "description": "The sport slug this admin manages" }
+      },
+      "required": ["uid", "email", "role"]
     }
   },
   "auth": {
@@ -93,6 +105,10 @@
     "/runResults/{resultId}": {
       "schema": "RunResult",
       "description": "Collection of race outcomes"
+    },
+    "/admins/{uid}": {
+      "schema": "AdminUser",
+      "description": "System administrators mapping"
     }
   }
 }
