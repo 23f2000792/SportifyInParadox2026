@@ -18,7 +18,7 @@ export function Navbar() {
 
   return (
     <>
-      {/* Top Bar: Brand & Live Indicator */}
+      {/* Universal Top Bar */}
       <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md h-14 flex items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white text-[11px] font-black italic shadow-[0_0_15px_rgba(147,51,234,0.4)] group-hover:scale-110 transition-transform">
@@ -40,37 +40,14 @@ export function Navbar() {
               "p-2 rounded-xl transition-all hover:bg-white/5",
               pathname.startsWith("/admin") ? "text-primary bg-primary/5" : "text-muted-foreground"
             )}
-            title="Admin"
           >
             <Settings className="h-5 w-5" />
           </Link>
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/90 backdrop-blur-xl border-t border-white/5 h-16 flex items-center justify-around px-2 pb-safe">
-        <Link href="/" className={cn("flex flex-col items-center gap-1 px-3", pathname === "/" ? "text-primary" : "text-muted-foreground")}>
-          <Home className="h-5 w-5" />
-          <span className="text-[8px] font-black uppercase">Home</span>
-        </Link>
-        {EVENTS.map((event) => {
-          const IconComp = ICON_MAP[event.icon];
-          const isActive = pathname === `/events/${event.slug}`;
-          return (
-            <Link
-              key={event.id}
-              href={`/events/${event.slug}`}
-              className={cn("flex flex-col items-center gap-1 px-3", isActive ? "text-primary" : "text-muted-foreground")}
-            >
-              {IconComp && <IconComp className="h-5 w-5" />}
-              <span className="text-[8px] font-black uppercase">{event.name.split(' ')[0]}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Desktop Navigation Tabs */}
-      <nav className="hidden md:flex w-full border-b border-white/5 bg-background/40 backdrop-blur-sm overflow-x-auto no-scrollbar scroll-smooth">
+      {/* Desktop Top Navigation (Horizontal) */}
+      <nav className="hidden md:flex w-full border-b border-white/5 bg-background/40 backdrop-blur-sm overflow-x-auto no-scrollbar">
         <div className="container mx-auto max-w-5xl flex items-center px-4">
           <Link
             href="/"
@@ -104,6 +81,28 @@ export function Navbar() {
             );
           })}
         </div>
+      </nav>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/90 backdrop-blur-xl border-t border-white/5 h-16 flex items-center justify-around px-2 pb-safe">
+        <Link href="/" className={cn("flex flex-col items-center gap-1 px-3", pathname === "/" ? "text-primary" : "text-muted-foreground")}>
+          <Home className="h-5 w-5" />
+          <span className="text-[8px] font-black uppercase">Home</span>
+        </Link>
+        {EVENTS.map((event) => {
+          const IconComp = ICON_MAP[event.icon];
+          const isActive = pathname === `/events/${event.slug}`;
+          return (
+            <Link
+              key={event.id}
+              href={`/events/${event.slug}`}
+              className={cn("flex flex-col items-center gap-1 px-3", isActive ? "text-primary" : "text-muted-foreground")}
+            >
+              {IconComp && <IconComp className="h-5 w-5" />}
+              <span className="text-[8px] font-black uppercase">{event.name.split(' ')[0]}</span>
+            </Link>
+          );
+        })}
       </nav>
     </>
   );
