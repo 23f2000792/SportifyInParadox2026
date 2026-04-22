@@ -4,27 +4,27 @@
 
 @layer base {
   :root {
-    /* Refined High-Contrast Theme */
+    /* Premium Minimalistic Palette */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     
     --primary: 263 70% 50%;
     --primary-foreground: 0 0% 100%;
     
-    --accent: 199 89% 48%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 215 20% 65%;
+    --accent-foreground: 240 10% 3.9%;
     
-    --card: 240 10% 6%;
+    --card: 240 10% 5%;
     --card-foreground: 0 0% 98%;
     
     --popover: 240 10% 5%;
     --popover-foreground: 0 0% 98%;
     
-    --secondary: 240 10% 12%;
+    --secondary: 240 10% 10%;
     --secondary-foreground: 0 0% 98%;
     
-    --muted: 240 10% 10%;
-    --muted-foreground: 240 5% 75%;
+    --muted: 240 5% 10%;
+    --muted-foreground: 240 5% 65%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
@@ -63,18 +63,18 @@
 }
 
 .premium-card {
-  @apply relative overflow-hidden bg-card border border-white/5 shadow-lg transition-all duration-300 rounded-2xl;
-  background: linear-gradient(165deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.4) 100%);
+  @apply relative overflow-hidden bg-card border border-white/[0.03] shadow-sm transition-all duration-500 rounded-2xl;
+  background: linear-gradient(180deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.3) 100%);
 }
 
 .premium-card:hover {
-  @apply border-primary/40 -translate-y-0.5 shadow-primary/5;
+  @apply border-white/[0.08] shadow-lg shadow-black/20;
 }
 
 .premium-card::before {
   content: '';
-  @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
-  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.08), transparent 70%);
+  @apply absolute inset-0 opacity-0 transition-opacity duration-700 pointer-events-none;
+  background: radial-gradient(circle at 50% 0%, hsla(var(--primary), 0.05), transparent 70%);
 }
 
 .premium-card:hover::before {
@@ -82,9 +82,5 @@
 }
 
 .broadcast-glow {
-  text-shadow: 0 0 10px hsla(var(--primary), 0.5);
-}
-
-.accent-glow {
-  text-shadow: 0 0 10px hsla(var(--accent), 0.5);
+  text-shadow: 0 0 15px hsla(var(--primary), 0.3);
 }
