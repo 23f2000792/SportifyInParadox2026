@@ -12,7 +12,8 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Match, RunResult, Standing, GROUPS } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, Medal, MapPin, Calendar, Clock, Activity } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, Medal, MapPin, Calendar, Clock, Activity, ChevronDown } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -69,7 +70,6 @@ export default function EventPage() {
 
   return (
     <div className="space-y-10 max-w-6xl mx-auto pb-20 px-4 md:px-0">
-      {/* High-Impact Hero */}
       <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary/30 via-background to-background border border-white/5 p-8 md:p-14 shadow-2xl">
         <div className="absolute -top-10 -right-10 opacity-5 blur-xl">
            {IconComp && <IconComp className="h-64 w-64 text-primary" />}
@@ -234,7 +234,7 @@ export default function EventPage() {
                       </div>
                       
                       {sport === 'badminton' && match.badmintonResults && (
-                        <div className="mt-12 pt-10 border-t border-white/10 grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div className="mt-12 pt-10 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-3">
                           {match.badmintonResults.map((sub, idx) => (
                             <div key={idx} className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
                               <p className="text-[8px] font-black text-primary uppercase tracking-[0.2em] mb-2">{sub.type}</p>
@@ -317,6 +317,28 @@ export default function EventPage() {
                           </p>
                         </div>
                       </div>
+
+                      {sport === 'badminton' && match.badmintonResults && (
+                        <Accordion type="single" collapsible className="w-full px-8 pb-4">
+                          <AccordionItem value="details" className="border-none">
+                            <AccordionTrigger className="text-[10px] font-black uppercase text-primary/60 hover:no-underline py-2">
+                              Match Scores
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                                {match.badmintonResults.map((sub, idx) => (
+                                  <div key={idx} className="bg-white/5 rounded-xl p-3 border border-white/5 text-center">
+                                    <p className="text-[8px] font-black text-primary uppercase mb-1">{sub.type}</p>
+                                    <p className="text-sm font-black text-white">{sub.score}</p>
+                                    {sub.winner && <p className="text-[7px] font-black text-accent uppercase mt-1">Winner: {sub.winner}</p>}
+                                  </div>
+                                ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      )}
+
                       <div className="flex flex-col md:flex-row items-center justify-between px-8 py-4 border-t border-white/5 bg-white/[0.03]">
                         <span className="text-[9px] font-black uppercase text-muted-foreground/20 tracking-[0.3em]">
                           M#{match.matchNumber} RESULT • {match.venue.toUpperCase()} • {match.phase.toUpperCase()}

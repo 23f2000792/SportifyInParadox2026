@@ -1,4 +1,3 @@
-
 export type SportType = 'kampus-run' | 'football' | 'volleyball' | 'badminton';
 export type MatchPhase = 'group' | 'semi-final' | 'third-place' | 'final' | 'race';
 
@@ -11,7 +10,7 @@ export interface SportEvent {
 }
 
 export interface BadmintonMatchResult {
-  type: 'MS' | 'WS' | 'MD' | 'WD' | 'XD';
+  type: 'MS' | 'WS' | 'MD' | 'XD';
   score: string;
   winner: string;
 }
@@ -31,9 +30,9 @@ export interface Match {
   date: string;
   day: string;
   venue: string;
-  courtNumber?: string; // For Badminton, Volleyball
-  groundNumber?: string; // For Football
-  group?: string; // A, B, C, D
+  courtNumber?: string;
+  groundNumber?: string;
+  group?: string;
   keyEvents?: string[];
   badmintonResults?: BadmintonMatchResult[];
   updatedAt?: any;
@@ -41,9 +40,9 @@ export interface Match {
 
 export interface Standing {
   id: string;
-  team: string; // House Name
+  team: string;
   sport: SportType;
-  group: string; // A, B, C, D
+  group: string;
   played: number;
   won: number;
   drawn: number;
@@ -58,8 +57,8 @@ export interface RunResult {
   name: string;
   time: string;
   gender: 'M' | 'F';
-  ageGroup: string; // Open, 18-25, 26+
-  category: string; // 3km, 5km
+  ageGroup: string;
+  category: string;
   updatedAt?: any;
 }
 

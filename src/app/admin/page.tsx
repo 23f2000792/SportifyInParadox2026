@@ -37,7 +37,6 @@ export default function AdminPage() {
   const [editMatchId, setEditMatchId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('control');
 
-  // Match Scoring State
   const [selectedMatchId, setSelectedMatchId] = useState<string>('');
   const [scoreA, setScoreA] = useState<number>(0);
   const [scoreB, setScoreB] = useState<number>(0);
@@ -46,11 +45,9 @@ export default function AdminPage() {
     { type: 'MS', score: '0-0', winner: '' },
     { type: 'WS', score: '0-0', winner: '' },
     { type: 'MD', score: '0-0', winner: '' },
-    { type: 'WD', score: '0-0', winner: '' },
     { type: 'XD', score: '0-0', winner: '' },
   ]);
 
-  // Schedule Creation State
   const [schedMatchNumber, setSchedMatchNumber] = useState('');
   const [schedTeamA, setSchedTeamA] = useState('');
   const [schedTeamB, setSchedTeamB] = useState('');
@@ -64,14 +61,12 @@ export default function AdminPage() {
   const [schedGroup, setSchedGroup] = useState('A');
   const [schedPhase, setSchedPhase] = useState<MatchPhase>('group');
 
-  // Kampus Run Specific Schedule State
   const [run3kReporting, setRun3kReporting] = useState('');
   const [run3kStart, setRun3kStart] = useState('');
   const [run5kReporting, setRun5kReporting] = useState('');
   const [run5kStart, setRun5kStart] = useState('');
   const [runDate, setRunDate] = useState('');
 
-  // Kampus Run Result Entry State
   const [runnerName, setRunnerName] = useState('');
   const [runnerPos, setRunnerPos] = useState<number>(1);
   const [runnerTime, setRunnerTime] = useState('');
@@ -79,16 +74,13 @@ export default function AdminPage() {
   const [runnerGender, setRunnerGender] = useState<'M' | 'F'>('M');
   const [runnerAgeGroup, setRunnerAgeGroup] = useState('Open');
 
-  // League Table State
   const [newStandingTeam, setNewStandingTeam] = useState('');
   const [newStandingGroup, setNewStandingGroup] = useState('A');
 
-  // Personnel Security State
   const [newAdminUid, setNewAdminUid] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminSport, setNewAdminSport] = useState('all');
 
-  // Base Queries
   const rawMatchesQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
     return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug));
@@ -159,7 +151,7 @@ export default function AdminPage() {
       badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
     });
-    toast({ title: "Score Updated" });
+    toast({ title: "Scores Updated" });
   };
 
   const handleCreateOrUpdateSchedule = (e: React.FormEvent) => {
@@ -195,7 +187,6 @@ export default function AdminPage() {
       });
       toast({ title: "Match Added" });
     }
-    // Reset
     setSchedMatchNumber(''); setSchedTeamA(''); setSchedTeamB(''); setSchedTime(''); setSchedReportingTime(''); setSchedDate(''); setSchedDay(''); setSchedVenue(''); setSchedCourtNumber(''); setSchedGroundNumber('');
   };
 
@@ -228,7 +219,7 @@ export default function AdminPage() {
       addDoc(collection(db, 'matches'), { ...common, teamA: '5km Run', teamB: 'Open', matchNumber: '5km-race', time: run5kStart, reportingTime: run5kReporting, scoreA: 0, scoreB: 0 });
     }
 
-    toast({ title: "Race Times Saved" });
+    toast({ title: "Race Schedule Saved" });
   };
 
   const handleUpdateStanding = (standingId: string, field: string, value: number) => {
@@ -439,8 +430,8 @@ export default function AdminPage() {
                     </div>
                     {selectedSportSlug === 'badminton' && (
                       <div className="space-y-5 pt-6 border-t border-white/5">
-                        <h4 className="text-[9px] font-black uppercase tracking-widest text-primary/60">Set Breakdown</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <h4 className="text-[9px] font-black uppercase tracking-widest text-primary/60">Set Scores</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {badmintonResults.map((res, idx) => (
                             <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-3">
                               <p className="text-[8px] font-black text-primary uppercase tracking-tighter opacity-70">{res.type}</p>
@@ -468,7 +459,7 @@ export default function AdminPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20 rounded-xl">Update Score</Button>
+                    <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20 rounded-xl">Update Match</Button>
                   </form>
                 )}
               </CardContent>
@@ -479,7 +470,7 @@ export default function AdminPage() {
         <TabsContent value="schedule" className="space-y-6">
            {isKampusRun ? (
              <Card className="premium-card border-white/5">
-               <CardHeader className="bg-primary/5 border-b border-white/5 py-4"><CardTitle className="text-[10px] font-black uppercase italic tracking-widest text-primary">Race Times</CardTitle></CardHeader>
+               <CardHeader className="bg-primary/5 border-b border-white/5 py-4"><CardTitle className="text-[10px] font-black uppercase italic tracking-widest text-primary">Race Schedule</CardTitle></CardHeader>
                <CardContent className="p-6">
                  <form onSubmit={handleSaveRunSchedule} className="space-y-8">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -501,7 +492,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                    </div>
-                   <Button type="submit" className="w-full h-14 uppercase font-black tracking-[0.2em] rounded-xl shadow-lg shadow-primary/20">Save Race Times</Button>
+                   <Button type="submit" className="w-full h-14 uppercase font-black tracking-[0.2em] rounded-xl shadow-lg shadow-primary/20">Save Schedule</Button>
                  </form>
                </CardContent>
              </Card>
