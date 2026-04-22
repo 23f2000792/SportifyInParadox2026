@@ -78,6 +78,7 @@ export default function AdminPage() {
   const [runnerTime, setRunnerTime] = useState('');
   const [runnerCat, setRunnerCat] = useState('3km');
   const [runnerGender, setRunnerGender] = useState<'M' | 'F'>('M');
+  const [runnerAgeGroup, setRunnerAgeGroup] = useState('Open');
 
   // League Table State
   const [newStandingTeam, setNewStandingTeam] = useState('');
@@ -244,7 +245,7 @@ export default function AdminPage() {
       time: runnerTime,
       category: runnerCat,
       gender: runnerGender,
-      ageGroup: 'Open',
+      ageGroup: runnerCat === '5km' ? runnerAgeGroup : 'Open',
       updatedAt: serverTimestamp(),
     });
     setRunnerName(''); setRunnerTime('');
@@ -359,8 +360,8 @@ export default function AdminPage() {
                     <Input placeholder="00:00.0" value={runnerTime} onChange={e => setRunnerTime(e.target.value)} className="bg-white/5 h-12 border-white/10 text-xs font-black" required />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Category</Label>
-                    <Select value={runnerCat} onValueChange={setRunnerCat}>
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Distance</Label>
+                    <Select value={runnerCat} onValueChange={(v: any) => { setRunnerCat(v); if(v === '3km') setRunnerAgeGroup('Open'); }}>
                       <SelectTrigger className="bg-white/5 border-white/10 h-12 text-[10px] font-black uppercase rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="3km" className="text-[10px] font-black uppercase">3KM</SelectItem>
@@ -373,11 +374,23 @@ export default function AdminPage() {
                     <Select value={runnerGender} onValueChange={(v: any) => setRunnerGender(v)}>
                       <SelectTrigger className="bg-white/5 border-white/10 h-12 text-[10px] font-black uppercase rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="M" className="text-[10px] font-black uppercase">M</SelectItem>
-                        <SelectItem value="F" className="text-[10px] font-black uppercase">F</SelectItem>
+                        <SelectItem value="M" className="text-[10px] font-black uppercase">Male</SelectItem>
+                        <SelectItem value="F" className="text-[10px] font-black uppercase">Female</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  {runnerCat === '5km' && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Age Group</Label>
+                      <Select value={runnerAgeGroup} onValueChange={setRunnerAgeGroup}>
+                        <SelectTrigger className="bg-white/5 border-white/10 h-12 text-[10px] font-black uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="18-25" className="text-[10px] font-black uppercase">18-25</SelectItem>
+                          <SelectItem value="26+" className="text-[10px] font-black uppercase">26+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <Button type="submit" className="h-12 mt-auto uppercase font-black text-[10px] tracking-widest shadow-xl shadow-primary/20 rounded-xl md:col-span-1"><Plus className="h-4 w-4 mr-2" /> Log Entry</Button>
                 </form>
               </CardContent>
@@ -519,8 +532,8 @@ export default function AdminPage() {
              <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><ListOrdered className="h-4 w-4" /> Historical Transmission Vectors</CardTitle></CardHeader>
              <CardContent className="p-0">
                {isKampusRun ? (
-                 <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="w-16 text-center text-[9px] font-black uppercase">Pos</TableHead><TableHead className="text-[9px] font-black uppercase">Participant</TableHead><TableHead className="text-[9px] font-black uppercase">Time</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
-                   <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-white/5 hover:bg-white/[0.01] h-14"><TableCell className="text-center font-black">#{res.position}</TableCell><TableCell><p className="text-xs font-black uppercase">{res.name}</p><p className="text-[8px] font-black opacity-40 uppercase">{res.category} • {res.gender}</p></TableCell><TableCell className="text-xs font-black tabular-nums opacity-60">{res.time}</TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
+                 <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="w-16 text-center text-[9px] font-black uppercase">Pos</TableHead><TableHead className="text-[9px] font-black uppercase">Participant</TableHead><TableHead className="text-[9px] font-black uppercase">Profile</TableHead><TableHead className="text-[9px] font-black uppercase">Time</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
+                   <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-white/5 hover:bg-white/[0.01] h-14"><TableCell className="text-center font-black">#{res.position}</TableCell><TableCell><p className="text-xs font-black uppercase">{res.name}</p></TableCell><TableCell><Badge variant="outline" className="text-[7px] font-black uppercase h-5">{res.category} | {res.gender === 'M' ? 'Male' : 'Female'} {res.ageGroup !== 'Open' ? `| ${res.ageGroup}` : ''}</Badge></TableCell><TableCell className="text-xs font-black tabular-nums opacity-60">{res.time}</TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
                ) : (
                  <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Transmission Profile</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Final Score</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
                    <TableBody>{matches?.filter(m => m.status === 'Completed').map(match => (
