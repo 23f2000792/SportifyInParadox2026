@@ -39,7 +39,7 @@ export interface Match {
 }
 
 export interface Standing {
-  id?: string;
+  id: string;
   team: string; // House Name
   sport: SportType;
   group: string; // A, B, C, D
@@ -48,6 +48,7 @@ export interface Standing {
   drawn: number;
   lost: number;
   points: number;
+  updatedAt?: any;
 }
 
 export interface RunResult {
@@ -58,6 +59,7 @@ export interface RunResult {
   gender: 'M' | 'F';
   ageGroup: string;
   category: string;
+  updatedAt?: any;
 }
 
 export type UserRole = 'admin' | 'super-admin';

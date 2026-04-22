@@ -11,14 +11,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EVENTS } from '@/lib/mock-data';
-import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, Settings, ListOrdered, Users, UserPlus, Trash2, Edit2, X, MapPin, Hash, Calendar as CalendarIcon } from 'lucide-react';
+import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, Settings, ListOrdered, Users, UserPlus, Trash2, Edit2, X, MapPin, Hash, Calendar, ChevronLeft, ChevronRight, Zap, CircleDot, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, orderBy, updateDoc } from 'firebase/firestore';
-import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase } from '@/lib/types';
+import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase, SportType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
+
+const ICON_MAP: Record<string, any> = {
+  Zap: Zap,
+  Trophy: Trophy,
+  CircleDot: CircleDot,
+  Target: Target,
+};
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -27,9 +34,12 @@ export default function AdminPage() {
   const router = useRouter();
   const { user, adminProfile, loading: userLoading } = useUser();
   
-  const [selectedSport, setSelectedSport] = useState<string>('football');
+  const [selectedSportSlug, setSelectedSportSlug] = useState<SportType | null>(null);
   const [editMatchId, setEditMatchId] = useState<string | null>(null);
   
+  // Dashboard Tabs State
+  const [activeTab, setActiveTab] = useState('control');
+
   // Match Scoring State
   const [selectedMatchId, setSelectedMatchId] = useState<string>('');
   const [scoreA, setScoreA] = useState<number>(0);
@@ -56,6 +66,11 @@ export default function AdminPage() {
   const [schedGroup, setSchedGroup] = useState('A');
   const [schedPhase, setSchedPhase] = useState<MatchPhase>('group');
 
+  // League Table State
+  const [newStandingTeam, setNewStandingTeam] = useState('');
+  const [newStandingGroup, setNewStandingGroup] = useState('A');
+  const [editStandingId, setEditStandingId] = useState<string | null>(null);
+
   // Personnel State
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminUid, setNewAdminUid] = useState('');
@@ -70,10 +85,16 @@ export default function AdminPage() {
 
   // Queries
   const matchesQuery = useMemo(() => {
-    if (!db || !selectedSport) return null;
-    return query(collection(db, 'matches'), where('sport', '==', selectedSport), orderBy('matchNumber', 'asc'));
-  }, [db, selectedSport]);
+    if (!db || !selectedSportSlug) return null;
+    return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug), orderBy('matchNumber', 'asc'));
+  }, [db, selectedSportSlug]);
   const { data: matches } = useCollection<Match>(matchesQuery);
+
+  const standingsQuery = useMemo(() => {
+    if (!db || !selectedSportSlug) return null;
+    return query(collection(db, 'standings'), where('sport', '==', selectedSportSlug));
+  }, [db, selectedSportSlug]);
+  const { data: standings } = useCollection<Standing>(standingsQuery);
 
   const runResultsQuery = useMemo(() => {
     if (!db) return null;
@@ -97,29 +118,25 @@ export default function AdminPage() {
     if (activeMatch) {
       setScoreA(activeMatch.scoreA);
       setScoreB(activeMatch.scoreB);
-      setStatus(matchStatusMap(activeMatch.status));
+      setStatus(activeMatch.status as any);
       if (activeMatch.badmintonResults) setBadmintonResults(activeMatch.badmintonResults);
     }
   }, [activeMatch]);
-
-  const matchStatusMap = (s: string): 'Upcoming' | 'Live' | 'Completed' => {
-    if (s === 'Upcoming' || s === 'Live' || s === 'Completed') return s;
-    return 'Upcoming';
-  };
 
   if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin text-primary" /></div>;
   if (!user || !adminProfile) return null;
 
   const isSuperAdmin = adminProfile.role === 'super-admin';
+  const currentSport = EVENTS.find(e => e.slug === selectedSportSlug);
 
   const handleUpdateMatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedMatchId) return;
+    if (!selectedMatchId || !db) return;
     updateDoc(doc(db, 'matches', selectedMatchId), {
       scoreA: Number(scoreA),
       scoreB: Number(scoreB),
       status,
-      badmintonResults: selectedSport === 'badminton' ? badmintonResults : null,
+      badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
     });
     toast({ title: "Score Synchronized" });
@@ -127,9 +144,10 @@ export default function AdminPage() {
 
   const handleCreateOrUpdateSchedule = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db || !selectedSportSlug) return;
     const data = {
       matchNumber: schedMatchNumber,
-      sport: selectedSport,
+      sport: selectedSportSlug,
       teamA: schedTeamA,
       teamB: schedTeamB,
       phase: schedPhase,
@@ -138,8 +156,8 @@ export default function AdminPage() {
       date: schedDate,
       day: schedDay,
       venue: schedVenue,
-      courtNumber: (selectedSport === 'badminton' || selectedSport === 'volleyball') ? schedCourtNumber : null,
-      groundNumber: selectedSport === 'football' ? schedGroundNumber : null,
+      courtNumber: (selectedSportSlug === 'badminton' || selectedSportSlug === 'volleyball') ? schedCourtNumber : null,
+      groundNumber: selectedSportSlug === 'football' ? schedGroundNumber : null,
       updatedAt: serverTimestamp(),
     };
 
@@ -161,32 +179,35 @@ export default function AdminPage() {
     setSchedMatchNumber(''); setSchedTeamA(''); setSchedTeamB(''); setSchedTime(''); setSchedDate(''); setSchedDay(''); setSchedVenue(''); setSchedCourtNumber(''); setSchedGroundNumber('');
   };
 
-  const handleDeleteMatch = (id: string) => {
-    if (confirm("Permanently terminate this match transmission?")) {
-      deleteDoc(doc(db, 'matches', id));
-      toast({ title: "Transmission Terminated" });
-    }
+  const handleUpdateStanding = (standingId: string, field: string, value: number) => {
+    if (!db) return;
+    updateDoc(doc(db, 'standings', standingId), {
+      [field]: Number(value),
+      updatedAt: serverTimestamp(),
+    });
   };
 
-  const handleEditMatch = (match: Match) => {
-    setEditMatchId(match.id);
-    setSchedMatchNumber(match.matchNumber);
-    setSchedTeamA(match.teamA);
-    setSchedTeamB(match.teamB);
-    setSchedTime(match.time);
-    setSchedDate(match.date);
-    setSchedDay(match.day);
-    setSchedVenue(match.venue);
-    setSchedCourtNumber(match.courtNumber || '');
-    setSchedGroundNumber(match.groundNumber || '');
-    setSchedPhase(match.phase);
-    if (match.group) setSchedGroup(match.group);
-    // Switch tab to schedule
-    document.querySelector('[data-value="schedule"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  const handleAddStanding = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !selectedSportSlug || !newStandingTeam) return;
+    addDoc(collection(db, 'standings'), {
+      team: newStandingTeam,
+      sport: selectedSportSlug,
+      group: newStandingGroup,
+      played: 0,
+      won: 0,
+      drawn: 0,
+      lost: 0,
+      points: 0,
+      updatedAt: serverTimestamp(),
+    });
+    setNewStandingTeam('');
+    toast({ title: "Team Added to Group Stage" });
   };
 
   const handleAddRunResult = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db) return;
     addDoc(collection(db, 'runResults'), {
       name: runnerName,
       position: Number(runnerPos),
@@ -202,7 +223,7 @@ export default function AdminPage() {
 
   const handleAddPersonnel = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAdminUid || !newAdminEmail) return;
+    if (!db || !newAdminUid || !newAdminEmail) return;
     setDoc(doc(db, 'admins', newAdminUid), {
       uid: newAdminUid,
       email: newAdminEmail,
@@ -213,359 +234,496 @@ export default function AdminPage() {
     toast({ title: "Admin Identity Registered" });
   };
 
+  // If no sport is selected, show the selection grid
+  if (!selectedSportSlug) {
+    return (
+      <div className="space-y-12 max-w-5xl mx-auto py-10">
+        <div className="flex justify-between items-center border-b border-white/5 pb-8">
+          <div className="space-y-2 text-left">
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">Command Hub</h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-primary">Paradox 2026 Admin Authorization</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => signOut(auth)} className="bg-white/5 border-white/10 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 text-[9px] font-black uppercase tracking-widest gap-2">
+            <LogOut className="h-3 w-3" /> Terminate Auth
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {EVENTS.map((event) => {
+            const IconComp = ICON_MAP[event.icon];
+            return (
+              <Button 
+                key={event.id}
+                variant="ghost" 
+                className="p-0 h-auto group"
+                onClick={() => setSelectedSportSlug(event.slug)}
+              >
+                <Card className="premium-card w-full h-48 overflow-hidden border-white/5 hover:border-primary/50 transition-all duration-500">
+                  <CardContent className="p-0 flex h-full">
+                    <div className="w-1/3 bg-primary/10 flex items-center justify-center border-r border-white/5 group-hover:bg-primary/20 transition-colors">
+                      <IconComp className="h-12 w-12 text-primary" />
+                    </div>
+                    <div className="w-2/3 p-8 flex flex-col justify-center text-left space-y-2">
+                      <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">Manage {event.name}</h2>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-relaxed">{event.description}</p>
+                      <div className="pt-4 flex items-center text-[10px] font-black uppercase text-primary gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Initialize Protocols <ChevronRight className="h-3 w-3" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Button>
+            );
+          })}
+        </div>
+
+        {isSuperAdmin && (
+          <Card className="premium-card border-primary/20 bg-primary/5 mt-10">
+            <CardHeader><CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Global Systems</CardTitle></CardHeader>
+            <CardContent>
+              <Button variant="secondary" className="w-full uppercase font-black text-[10px] tracking-widest" onClick={() => { setSelectedSportSlug('football'); setActiveTab('access'); }}>Access Personnel Matrix</Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  // Dashboard for selected sport
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black italic uppercase flex items-center gap-3 tracking-tighter">
-            Paradox Command <Badge className="bg-primary/20 text-primary border-primary/30 uppercase text-[9px] tracking-widest">{adminProfile.role}</Badge>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
+        <div className="space-y-2">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary/70 gap-2 mb-2">
+            <ChevronLeft className="h-3 w-3" /> Exit Domain
+          </Button>
+          <h1 className="text-4xl font-black italic uppercase flex items-center gap-4 tracking-tighter">
+            {currentSport?.name} Control <Badge className="bg-primary/20 text-primary border-primary/30 uppercase text-[9px] tracking-widest px-2 py-0">{adminProfile.role}</Badge>
           </h1>
-          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest opacity-60">Identity: {adminProfile.email}</p>
+          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.3em] opacity-60">Identity Vector: {adminProfile.email}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => signOut(auth)} className="text-[9px] font-black uppercase gap-2 bg-white/5 border-white/10 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all">
-          <LogOut className="h-3.5 w-3.5" /> Terminate Auth Session
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-live/10 border border-live/20 rounded-full">
+            <div className="h-1.5 w-1.5 rounded-full bg-live animate-pulse" />
+            <span className="text-[9px] font-black text-live uppercase tracking-widest">Active Broadcasting</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => signOut(auth)} className="text-[9px] font-black uppercase gap-2 bg-white/5 border-white/10 hover:bg-destructive/10 hover:text-destructive transition-all">
+            <LogOut className="h-3 w-3" /> Terminate Session
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <Card className="premium-card lg:col-span-3 h-fit border-white/5">
-          <CardHeader className="p-4 border-b border-white/5 bg-white/[0.02]">
-            <CardTitle className="text-[10px] font-black uppercase flex items-center gap-2 tracking-widest opacity-50"><Settings className="h-3.5 w-3.5" /> Sector Switch</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-2">
-            {EVENTS.map(e => (
-              <Button 
-                key={e.id}
-                variant="ghost" 
-                className={cn(
-                  "w-full justify-start text-[10px] font-black uppercase h-11 tracking-wider gap-3 transition-all",
-                  selectedSport === e.slug ? "bg-primary text-white shadow-lg shadow-primary/20" : "hover:bg-white/5 text-muted-foreground"
-                )}
-                onClick={() => setSelectedSport(e.slug)}
-              >
-                {e.name}
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 bg-muted/20 h-14 p-1.5 border border-white/5 rounded-2xl">
+          <TabsTrigger value="control" className="text-[9px] font-black uppercase rounded-xl">Live Scoring</TabsTrigger>
+          <TabsTrigger value="schedule" className="text-[9px] font-black uppercase rounded-xl">Schedule</TabsTrigger>
+          <TabsTrigger value="standings" className="text-[9px] font-black uppercase rounded-xl">League Table</TabsTrigger>
+          <TabsTrigger value="archive" className="text-[9px] font-black uppercase rounded-xl">Archives</TabsTrigger>
+          {isSuperAdmin && <TabsTrigger value="access" className="text-[9px] font-black uppercase rounded-xl hidden md:flex">Security</TabsTrigger>}
+        </TabsList>
 
-        <Tabs defaultValue="control" className="lg:col-span-9">
-          <TabsList className="grid w-full grid-cols-4 bg-muted/30 h-12 p-1 border border-white/5 rounded-xl">
-            <TabsTrigger value="control" className="text-[9px] font-black uppercase">Live Control</TabsTrigger>
-            <TabsTrigger value="schedule" className="text-[9px] font-black uppercase">Schedule</TabsTrigger>
-            <TabsTrigger value="archive" className="text-[9px] font-black uppercase">Database</TabsTrigger>
-            {isSuperAdmin && <TabsTrigger value="access" className="text-[9px] font-black uppercase">Security</TabsTrigger>}
-          </TabsList>
-
-          <TabsContent value="control" className="space-y-6 pt-6">
-            {selectedSport === 'kampus-run' ? (
-              <Card className="premium-card border-primary/20">
-                <CardHeader className="bg-primary/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary">Race Result Terminal</CardTitle></CardHeader>
-                <CardContent className="p-6">
-                  <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[10px] font-black uppercase">Participant Identity</Label>
-                      <Input value={runnerName} onChange={e => setRunnerName(e.target.value)} className="bg-white/5 h-11 border-white/10" placeholder="Full Name" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Rank</Label>
-                      <Input type="number" value={runnerPos} onChange={e => setRunnerPos(Number(e.target.value))} className="bg-white/5 h-11 border-white/10" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Chrono Time</Label>
-                      <Input placeholder="00:00.0" value={runnerTime} onChange={e => setRunnerTime(e.target.value)} className="bg-white/5 h-11 border-white/10" required />
-                    </div>
-                    <Button type="submit" className="h-11 mt-auto uppercase font-black text-[10px] tracking-widest shadow-xl shadow-primary/20"><Plus className="h-4 w-4 mr-2" /> Log Entry</Button>
-                  </form>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="premium-card border-white/5">
-                <CardContent className="p-8 space-y-8">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase opacity-50 tracking-[0.2em]">Target Broadcast</Label>
-                    <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
-                      <SelectTrigger className="bg-white/5 border-white/10 h-14 text-sm font-black uppercase">
-                        <SelectValue placeholder="Selecting match vector..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {matches?.filter(m => m.status !== 'Completed').map(m => (
-                          <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">M#{m.matchNumber} | {m.teamA} vs {m.teamB}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+        <TabsContent value="control" className="space-y-6">
+          {selectedSportSlug === 'kampus-run' ? (
+            <Card className="premium-card border-primary/20">
+              <CardHeader className="bg-primary/5 border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary">Race Result Injection Terminal</CardTitle></CardHeader>
+              <CardContent className="p-8">
+                <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Participant Identity</Label>
+                    <Input value={runnerName} onChange={e => setRunnerName(e.target.value)} className="bg-white/5 h-12 border-white/10 text-xs font-black uppercase" placeholder="Full Name" required />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Rank Vector</Label>
+                    <Input type="number" value={runnerPos} onChange={e => setRunnerPos(Number(e.target.value))} className="bg-white/5 h-12 border-white/10 text-xs font-black" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Chrono Record</Label>
+                    <Input placeholder="00:00.0" value={runnerTime} onChange={e => setRunnerTime(e.target.value)} className="bg-white/5 h-12 border-white/10 text-xs font-black" required />
+                  </div>
+                  <Button type="submit" className="h-12 mt-auto uppercase font-black text-[10px] tracking-widest shadow-xl shadow-primary/20 rounded-xl"><Plus className="h-4 w-4 mr-2" /> Log Entry</Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="premium-card border-white/5">
+              <CardContent className="p-10 space-y-10">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase opacity-50 tracking-[0.3em] ml-1">Target Broadcast Match</Label>
+                  <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+                    <SelectTrigger className="bg-white/5 border-white/10 h-16 text-sm font-black uppercase rounded-2xl">
+                      <SelectValue placeholder="Selecting match vector..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {matches?.filter(m => m.status !== 'Completed').map(m => (
+                        <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">M#{m.matchNumber} | {m.teamA} vs {m.teamB}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  {selectedMatchId && (
-                    <form onSubmit={handleUpdateMatch} className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                      <div className="flex items-center justify-between gap-8">
-                        <div className="flex-1 space-y-3">
-                          <Label className="text-[9px] font-black uppercase text-center block opacity-40 tracking-widest">{activeMatch?.teamA}</Label>
-                          <Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-5xl font-black h-24 bg-white/5 border-white/10 shadow-inner" />
-                        </div>
-                        <div className="text-3xl font-black opacity-10">:</div>
-                        <div className="flex-1 space-y-3">
-                          <Label className="text-[9px] font-black uppercase text-center block opacity-40 tracking-widest">{activeMatch?.teamB}</Label>
-                          <Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-5xl font-black h-24 bg-white/5 border-white/10 shadow-inner" />
-                        </div>
+                {selectedMatchId && (
+                  <form onSubmit={handleUpdateMatch} className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <div className="flex items-center justify-between gap-12">
+                      <div className="flex-1 space-y-4">
+                        <Label className="text-[10px] font-black uppercase text-center block opacity-40 tracking-widest">{activeMatch?.teamA}</Label>
+                        <Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-7xl font-black h-32 bg-white/5 border-white/10 shadow-inner rounded-3xl" />
                       </div>
+                      <div className="text-4xl font-black opacity-10 pt-10">:</div>
+                      <div className="flex-1 space-y-4">
+                        <Label className="text-[10px] font-black uppercase text-center block opacity-40 tracking-widest">{activeMatch?.teamB}</Label>
+                        <Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-7xl font-black h-32 bg-white/5 border-white/10 shadow-inner rounded-3xl" />
+                      </div>
+                    </div>
 
-                      {selectedSport === 'badminton' && (
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-8 border-t border-white/5">
+                    {selectedSportSlug === 'badminton' && (
+                      <div className="space-y-6 pt-10 border-t border-white/5">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Sub-Match Breakdown (Set Matrix)</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                           {badmintonResults.map((res, idx) => (
-                            <div key={idx} className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-3 group hover:border-primary/30 transition-all">
+                            <div key={idx} className="bg-white/5 p-5 rounded-2xl border border-white/5 space-y-4 group hover:border-primary/30 transition-all">
                               <p className="text-[9px] font-black text-primary uppercase tracking-tighter opacity-70">{res.type} Vector</p>
-                              <Input value={res.score} onChange={e => { const n = [...badmintonResults]; n[idx].score = e.target.value; setBadmintonResults(n); }} className="h-10 text-xs font-black text-center bg-black/20 border-white/5" />
+                              <Input value={res.score} onChange={e => { const n = [...badmintonResults]; n[idx].score = e.target.value; setBadmintonResults(n); }} className="h-10 text-xs font-black text-center bg-black/20 border-white/5 rounded-xl" placeholder="0-0" />
+                              <Select value={res.winner} onValueChange={v => { const n = [...badmintonResults]; n[idx].winner = v; setBadmintonResults(n); }}>
+                                <SelectTrigger className="h-8 text-[8px] font-black uppercase bg-transparent border-white/5"><SelectValue placeholder="Winner" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value={activeMatch?.teamA || 'Team A'} className="text-[8px] uppercase">{activeMatch?.teamA}</SelectItem>
+                                  <SelectItem value={activeMatch?.teamB || 'Team B'} className="text-[8px] uppercase">{activeMatch?.teamB}</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           ))}
                         </div>
-                      )}
-
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase opacity-50 tracking-widest">Protocol Status</Label>
-                        <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-                          <SelectTrigger className="bg-white/5 border-white/10 h-12 text-[10px] font-black uppercase tracking-wider"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Upcoming" className="text-[10px] font-black uppercase">Standby</SelectItem>
-                            <SelectItem value="Live" className="text-[10px] font-black uppercase">Broadcasting</SelectItem>
-                            <SelectItem value="Completed" className="text-[10px] font-black uppercase">Archive Result</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
+                    )}
 
-                      <Button type="submit" className="w-full h-14 font-black uppercase text-xs tracking-[0.2em] gap-3 shadow-2xl shadow-primary/30 rounded-2xl">
-                        <ShieldCheck className="h-5 w-5" /> Push Broadcast Update
-                      </Button>
-                    </form>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="schedule" className="pt-6 space-y-8">
-            <Card className="premium-card border-white/5">
-              <CardHeader className="bg-white/[0.02] border-b border-white/5">
-                <CardTitle className="text-xs font-black uppercase italic flex items-center justify-between tracking-widest">
-                  {editMatchId ? "Modify Transmission" : "Initialize Transmission"}
-                  {editMatchId && <Button variant="ghost" size="sm" onClick={() => setEditMatchId(null)} className="h-7 text-[9px] font-black uppercase gap-1 text-muted-foreground"><X className="h-3 w-3" /> Cancel Edit</Button>}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <form onSubmit={handleCreateOrUpdateSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Match Number</Label>
-                    <Input value={schedMatchNumber} onChange={e => setSchedMatchNumber(e.target.value)} placeholder="e.g., 101" className="bg-white/5 border-white/10 h-12 font-black text-xs" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Phase Vector</Label>
-                    <Select value={schedPhase} onValueChange={(v: any) => setSchedPhase(v)}>
-                      <SelectTrigger className="bg-white/5 border-white/10 h-12 font-black text-[11px] uppercase"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="group" className="text-[10px] font-black uppercase">Group Stage</SelectItem>
-                        <SelectItem value="semi-final" className="text-[10px] font-black uppercase">Semi Final</SelectItem>
-                        <SelectItem value="third-place" className="text-[10px] font-black uppercase">3rd Place</SelectItem>
-                        <SelectItem value="final" className="text-[10px] font-black uppercase">Grand Final</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Home Domain</Label>
-                    <Select value={schedTeamA} onValueChange={setSchedTeamA}>
-                      <SelectTrigger className="bg-white/5 border-white/10 h-12 font-black text-[11px] uppercase"><SelectValue /></SelectTrigger>
-                      <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Away Domain</Label>
-                    <Select value={schedTeamB} onValueChange={setSchedTeamB}>
-                      <SelectTrigger className="bg-white/5 border-white/10 h-12 font-black text-[11px] uppercase"><SelectValue /></SelectTrigger>
-                      <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Date</Label>
-                    <Input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} className="bg-white/5 border-white/10 h-12 font-black text-xs uppercase" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Day</Label>
-                    <Select value={schedDay} onValueChange={setSchedDay}>
-                      <SelectTrigger className="bg-white/5 border-white/10 h-12 font-black text-[11px] uppercase"><SelectValue placeholder="Select Day" /></SelectTrigger>
-                      <SelectContent>
-                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => <SelectItem key={d} value={d} className="text-[10px] font-black uppercase">{d}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Time</Label>
-                    <Input placeholder="e.g., 04:30 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="bg-white/5 border-white/10 h-12 font-black text-xs uppercase" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">General Venue</Label>
-                    <Input value={schedVenue} onChange={e => setSchedVenue(e.target.value)} placeholder="e.g., Main Ground" className="bg-white/5 border-white/10 h-12 font-black text-xs uppercase" required />
-                  </div>
-                  {(selectedSport === 'badminton' || selectedSport === 'volleyball') && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest">Court Number</Label>
-                      <Input value={schedCourtNumber} onChange={e => setSchedCourtNumber(e.target.value)} placeholder="e.g., Court 1" className="bg-white/5 border-white/10 h-12 font-black text-xs uppercase" />
-                    </div>
-                  )}
-                  {selectedSport === 'football' && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest">Ground Number</Label>
-                      <Input value={schedGroundNumber} onChange={e => setSchedGroundNumber(e.target.value)} placeholder="e.g., Ground A" className="bg-white/5 border-white/10 h-12 font-black text-xs uppercase" />
-                    </div>
-                  )}
-                  {schedPhase === 'group' && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest">Group Index</Label>
-                      <Select value={schedGroup} onValueChange={setSchedGroup}>
-                        <SelectTrigger className="bg-white/5 border-white/10 h-12 font-black text-[11px] uppercase"><SelectValue /></SelectTrigger>
-                        <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g} className="text-[10px] font-black uppercase">Group {g}</SelectItem>)}</SelectContent>
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase opacity-50 tracking-widest ml-1">Protocol Protocol Status</Label>
+                      <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+                        <SelectTrigger className="bg-white/5 border-white/10 h-14 text-[11px] font-black uppercase tracking-wider rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Upcoming" className="text-[10px] font-black uppercase">Standby</SelectItem>
+                          <SelectItem value="Live" className="text-[10px] font-black uppercase">Live Transmission</SelectItem>
+                          <SelectItem value="Completed" className="text-[10px] font-black uppercase">Archive Result</SelectItem>
+                        </SelectContent>
                       </Select>
                     </div>
-                  )}
-                  <Button type="submit" className="md:col-span-2 h-14 uppercase font-black text-xs tracking-[0.2em] gap-3 shadow-xl shadow-primary/20 rounded-2xl transition-all hover:scale-[1.01]">
-                    {editMatchId ? <Save className="h-5 w-5" /> : <Plus className="h-5 w-5" />} {editMatchId ? "Authorize Modification" : "Initialize Transmission"}
+
+                    <Button type="submit" className="w-full h-16 font-black uppercase text-xs tracking-[0.3em] gap-4 shadow-2xl shadow-primary/30 rounded-2xl transition-transform active:scale-[0.98]">
+                      <ShieldCheck className="h-6 w-6" /> Push Live Update
+                    </Button>
+                  </form>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="schedule" className="space-y-8">
+          <Card className="premium-card border-white/5">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5">
+              <CardTitle className="text-xs font-black uppercase italic flex items-center justify-between tracking-widest">
+                {editMatchId ? "Modify Match Record" : "Initialize New Match"}
+                {editMatchId && <Button variant="ghost" size="sm" onClick={() => setEditMatchId(null)} className="h-7 text-[9px] font-black uppercase gap-1 text-muted-foreground"><X className="h-3 w-3" /> Cancel</Button>}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-10">
+              <form onSubmit={handleCreateOrUpdateSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Match Index (M#)</Label>
+                  <Input value={schedMatchNumber} onChange={e => setSchedMatchNumber(e.target.value)} placeholder="e.g., 101" className="bg-white/5 border-white/10 h-14 font-black text-xs rounded-xl" required />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Phase Vector</Label>
+                  <Select value={schedPhase} onValueChange={(v: any) => setSchedPhase(v)}>
+                    <SelectTrigger className="bg-white/5 border-white/10 h-14 font-black text-[11px] uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="group" className="text-[10px] font-black uppercase">Group Stage</SelectItem>
+                      <SelectItem value="semi-final" className="text-[10px] font-black uppercase">Semi Final</SelectItem>
+                      <SelectItem value="third-place" className="text-[10px] font-black uppercase">3rd Place Play-off</SelectItem>
+                      <SelectItem value="final" className="text-[10px] font-black uppercase">Grand Final</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Home Domain (House)</Label>
+                  <Select value={schedTeamA} onValueChange={setSchedTeamA}>
+                    <SelectTrigger className="bg-white/5 border-white/10 h-14 font-black text-[11px] uppercase rounded-xl"><SelectValue placeholder="Select House" /></SelectTrigger>
+                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Away Domain (House)</Label>
+                  <Select value={schedTeamB} onValueChange={setSchedTeamB}>
+                    <SelectTrigger className="bg-white/5 border-white/10 h-14 font-black text-[11px] uppercase rounded-xl"><SelectValue placeholder="Select House" /></SelectTrigger>
+                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Calendar Date</Label>
+                  <Input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} className="bg-white/5 border-white/10 h-14 font-black text-xs uppercase rounded-xl" required />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Day Profile</Label>
+                  <Select value={schedDay} onValueChange={setSchedDay}>
+                    <SelectTrigger className="bg-white/5 border-white/10 h-14 font-black text-[11px] uppercase rounded-xl"><SelectValue placeholder="Select Day" /></SelectTrigger>
+                    <SelectContent>
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => <SelectItem key={d} value={d} className="text-[10px] font-black uppercase">{d}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Time Vector</Label>
+                  <Input placeholder="e.g., 04:30 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="bg-white/5 border-white/10 h-14 font-black text-xs uppercase rounded-xl" required />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">General Venue</Label>
+                  <Input value={schedVenue} onChange={e => setSchedVenue(e.target.value)} placeholder="e.g., Main Ground" className="bg-white/5 border-white/10 h-14 font-black text-xs uppercase rounded-xl" required />
+                </div>
+                {(selectedSportSlug === 'badminton' || selectedSportSlug === 'volleyball') && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Court Number</Label>
+                    <Input value={schedCourtNumber} onChange={e => setSchedCourtNumber(e.target.value)} placeholder="e.g., Court 1" className="bg-white/5 border-white/10 h-14 font-black text-xs uppercase rounded-xl" />
+                  </div>
+                )}
+                {selectedSportSlug === 'football' && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Ground Identifier</Label>
+                    <Input value={schedGroundNumber} onChange={e => setSchedGroundNumber(e.target.value)} placeholder="e.g., Ground A" className="bg-white/5 border-white/10 h-14 font-black text-xs uppercase rounded-xl" />
+                  </div>
+                )}
+                {schedPhase === 'group' && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Group Index</Label>
+                    <Select value={schedGroup} onValueChange={setSchedGroup}>
+                      <SelectTrigger className="bg-white/5 border-white/10 h-14 font-black text-[11px] uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g} className="text-[10px] font-black uppercase">Group {g}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <Button type="submit" className="md:col-span-2 h-16 uppercase font-black text-xs tracking-[0.3em] gap-4 shadow-xl shadow-primary/20 rounded-2xl mt-4">
+                  {editMatchId ? <Save className="h-6 w-6" /> : <Plus className="h-6 w-6" />} {editMatchId ? "Authorize Modification" : "Confirm Schedule Initialization"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6">
+             <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground flex items-center gap-3 ml-2"><ListOrdered className="h-4 w-4 text-primary" /> Active Schedule Matrix</h3>
+             <div className="grid grid-cols-1 gap-4">
+               {matches?.map(match => (
+                 <Card key={match.id} className="premium-card group hover:border-primary/30 transition-all bg-white/[0.01] rounded-2xl">
+                   <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                     <div className="flex items-center gap-8 w-full">
+                       <div className="text-center w-28 border-r border-white/10 pr-6">
+                         <p className="text-[9px] font-black text-primary uppercase opacity-70">M#{match.matchNumber}</p>
+                         <p className="text-sm font-black text-white uppercase">{match.time}</p>
+                         <p className="text-[8px] font-black text-muted-foreground/40 uppercase mt-0.5">{match.date}</p>
+                       </div>
+                       <div className="flex-1">
+                         <div className="flex items-center gap-3">
+                           <p className="text-lg font-black uppercase italic group-hover:text-primary transition-colors tracking-tight leading-none">{match.teamA} vs {match.teamB}</p>
+                           <Badge variant="outline" className="text-[7px] font-black uppercase h-5 bg-primary/5 border-primary/20 text-primary/60">{match.phase}</Badge>
+                         </div>
+                         <div className="flex items-center gap-4 mt-2">
+                           <span className="text-[9px] font-black text-muted-foreground/40 uppercase flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {match.venue}</span>
+                           {(match.courtNumber || match.groundNumber) && <span className="text-[9px] font-black text-primary/40 uppercase bg-primary/5 px-2 py-0.5 rounded border border-primary/10">Location: {match.courtNumber || match.groundNumber}</span>}
+                         </div>
+                       </div>
+                     </div>
+                     <div className="flex items-center gap-3">
+                       <Button size="icon" variant="ghost" className="h-11 w-11 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl" onClick={() => {
+                         setEditMatchId(match.id);
+                         setSchedMatchNumber(match.matchNumber);
+                         setSchedTeamA(match.teamA);
+                         setSchedTeamB(match.teamB);
+                         setSchedTime(match.time);
+                         setSchedDate(match.date);
+                         setSchedDay(match.day);
+                         setSchedVenue(match.venue);
+                         setSchedCourtNumber(match.courtNumber || '');
+                         setSchedGroundNumber(match.groundNumber || '');
+                         setSchedPhase(match.phase);
+                         if (match.group) setSchedGroup(match.group);
+                         window.scrollTo({ top: 0, behavior: 'smooth' });
+                       }}>
+                         <Edit2 className="h-5 w-5" />
+                       </Button>
+                       <Button size="icon" variant="ghost" className="h-11 w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => { if(confirm("Terminate this match entry?")) deleteDoc(doc(db!, 'matches', match.id)); }}>
+                         <Trash2 className="h-5 w-5" />
+                       </Button>
+                     </div>
+                   </CardContent>
+                 </Card>
+               ))}
+             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="standings" className="space-y-8">
+           <Card className="premium-card border-white/5">
+             <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2">Group Stage Configuration</CardTitle></CardHeader>
+             <CardContent className="p-8">
+               <form onSubmit={handleAddStanding} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                 <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase opacity-60">House Domain</Label>
+                   <Select value={newStandingTeam} onValueChange={setNewStandingTeam}>
+                     <SelectTrigger className="bg-white/5 border-white/10 h-12 text-xs font-black uppercase rounded-xl"><SelectValue placeholder="Select House" /></SelectTrigger>
+                     <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase opacity-60">Group Assignment</Label>
+                   <Select value={newStandingGroup} onValueChange={setNewStandingGroup}>
+                     <SelectTrigger className="bg-white/5 border-white/10 h-12 text-xs font-black uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                     <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g} className="text-[10px] font-black uppercase">Group {g}</SelectItem>)}</SelectContent>
+                   </Select>
+                 </div>
+                 <Button type="submit" className="h-12 uppercase font-black text-[10px] tracking-widest rounded-xl"><Plus className="h-4 w-4 mr-2" /> Assign to Group</Button>
+               </form>
+             </CardContent>
+           </Card>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             {GROUPS.map(group => {
+               const groupItems = standings?.filter(s => s.group === group).sort((a,b) => b.points - a.points);
+               if (!groupItems?.length) return null;
+               return (
+                 <Card key={group} className="premium-card border-white/5">
+                   <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-[11px] font-black uppercase text-center tracking-[0.4em] text-primary">Group {group} Matrix</CardTitle></CardHeader>
+                   <CardContent className="p-0">
+                     <Table>
+                       <TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Team</TableHead><TableHead className="text-[9px] font-black uppercase text-center">P</TableHead><TableHead className="text-[9px] font-black uppercase text-center">W</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Pts</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Del</TableHead></TableRow></TableHeader>
+                       <TableBody>
+                         {groupItems.map(item => (
+                           <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.01]">
+                             <TableCell className="text-xs font-black uppercase">{item.team}</TableCell>
+                             <TableCell className="p-1"><Input type="number" className="h-8 w-12 text-center text-[10px] font-black bg-white/5 mx-auto" value={item.played} onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} /></TableCell>
+                             <TableCell className="p-1"><Input type="number" className="h-8 w-12 text-center text-[10px] font-black bg-white/5 mx-auto" value={item.won} onChange={e => handleUpdateStanding(item.id, 'won', Number(e.target.value))} /></TableCell>
+                             <TableCell className="p-1"><Input type="number" className="h-8 w-14 text-center text-[10px] font-black bg-primary/10 border-primary/20 mx-auto" value={item.points} onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} /></TableCell>
+                             <TableCell className="text-right">
+                               <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => { if(confirm("Remove team from group?")) deleteDoc(doc(db!, 'standings', item.id)); }}>
+                                 <Trash2 className="h-4 w-4" />
+                               </Button>
+                             </TableCell>
+                           </TableRow>
+                         ))}
+                       </TableBody>
+                     </Table>
+                   </CardContent>
+                 </Card>
+               );
+             })}
+           </div>
+        </TabsContent>
+
+        <TabsContent value="archive" className="space-y-6">
+          <Card className="premium-card border-white/5">
+             <CardHeader className="bg-white/[0.02] border-b border-white/5">
+               <CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><ListOrdered className="h-4 w-4" /> Historical Transmission Vectors</CardTitle>
+             </CardHeader>
+             <CardContent className="p-0">
+               {selectedSportSlug === 'kampus-run' ? (
+                 <Table>
+                   <TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="w-16 text-center text-[9px] font-black uppercase">Pos</TableHead><TableHead className="text-[9px] font-black uppercase">Participant</TableHead><TableHead className="text-[9px] font-black uppercase">Time</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
+                   <TableBody>
+                     {runResults?.map(res => (
+                       <TableRow key={res.id} className="border-white/5 hover:bg-white/[0.01] h-14">
+                         <TableCell className="text-center font-black">#{res.position}</TableCell>
+                         <TableCell><p className="text-xs font-black uppercase">{res.name}</p><p className="text-[8px] font-black opacity-40 uppercase">{res.category} • {res.gender}</p></TableCell>
+                         <TableCell className="text-xs font-black tabular-nums opacity-60">{res.time}</TableCell>
+                         <TableCell className="text-right">
+                           <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}>
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               ) : (
+                 <Table>
+                   <TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Transmission Profile</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Final Score</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
+                   <TableBody>
+                     {matches?.filter(m => m.status === 'Completed').map(match => (
+                       <TableRow key={match.id} className="border-white/5 hover:bg-white/[0.01] h-16">
+                         <TableCell><p className="text-xs font-black uppercase italic">M#{match.matchNumber} | {match.teamA} vs {match.teamB}</p><p className="text-[8px] font-black opacity-30 uppercase">{match.phase} {match.group ? `• Group ${match.group}` : ''}</p></TableCell>
+                         <TableCell className="text-center font-black text-lg tracking-tighter text-primary">{match.scoreA} - {match.scoreB}</TableCell>
+                         <TableCell className="text-right">
+                           <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => { if(confirm("Permanently erase archival record?")) deleteDoc(doc(db!, 'matches', match.id)); }}>
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               )}
+             </CardContent>
+          </Card>
+        </TabsContent>
+
+        {isSuperAdmin && (
+          <TabsContent value="access" className="space-y-8">
+            <Card className="premium-card border-primary/20">
+              <CardHeader className="bg-primary/5 border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Authorize Domain Personnel</CardTitle></CardHeader>
+              <CardContent className="p-10">
+                <form onSubmit={handleAddPersonnel} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Identity UID (Firebase)</Label>
+                    <Input value={newAdminUid} onChange={e => setNewAdminUid(e.target.value)} className="bg-white/5 border-white/10 h-14 text-xs font-black rounded-xl" placeholder="Paste Firebase UID here" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Protocol Identity (Email)</Label>
+                    <Input value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} className="bg-white/5 border-white/10 h-14 text-xs font-black rounded-xl" placeholder="operator@study.iitm.ac.in" required />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Assigned Operational Sector</Label>
+                    <Select value={newAdminSport} onValueChange={setNewAdminSport}>
+                      <SelectTrigger className="bg-white/5 border-white/10 h-14 font-black text-[10px] uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="text-[10px] font-black uppercase">Universal Override (All Sectors)</SelectItem>
+                        {EVENTS.map(e => <SelectItem key={e.id} value={e.slug} className="text-[10px] font-black uppercase">{e.name} Sector Access Only</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="md:col-span-2 h-14 uppercase font-black text-xs tracking-widest gap-4 shadow-xl shadow-primary/20 rounded-xl mt-4">
+                    <UserPlus className="h-6 w-6" /> Initialize Personnel Identity
                   </Button>
                 </form>
               </CardContent>
             </Card>
 
-            <div className="space-y-4">
-               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3"><ListOrdered className="h-4 w-4" /> Schedule Matrix</h3>
-               <div className="grid grid-cols-1 gap-3">
-                 {matches?.map(match => (
-                   <Card key={match.id} className="premium-card group hover:border-primary/20 bg-white/[0.01]">
-                     <CardContent className="p-5 flex items-center justify-between">
-                       <div className="flex items-center gap-6">
-                         <div className="text-center w-24 border-r border-white/5 pr-4">
-                           <p className="text-[8px] font-black text-primary uppercase opacity-60">M#{match.matchNumber}</p>
-                           <p className="text-xs font-black text-white uppercase">{match.time}</p>
-                           <p className="text-[7px] font-black text-muted-foreground uppercase opacity-40">{match.date}</p>
-                         </div>
-                         <div>
-                           <p className="text-sm font-black uppercase italic group-hover:text-primary transition-colors tracking-tight">{match.teamA} vs {match.teamB}</p>
-                           <p className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest flex items-center gap-2">
-                             <MapPin className="h-2 w-2" /> {match.venue} {match.courtNumber || match.groundNumber ? `• ${match.courtNumber || match.groundNumber}` : ''}
-                           </p>
-                           <p className="text-[7px] font-black text-primary/40 uppercase tracking-widest mt-1">{match.phase} {match.group ? `• Group ${match.group}` : ''}</p>
-                         </div>
-                       </div>
-                       <div className="flex items-center gap-2">
-                         <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl" onClick={() => handleEditMatch(match)}>
-                           <Edit2 className="h-4 w-4" />
-                         </Button>
-                         <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => handleDeleteMatch(match.id)}>
-                           <Trash2 className="h-4 w-4" />
-                         </Button>
-                       </div>
-                     </CardContent>
-                   </Card>
-                 ))}
-               </div>
+            <div className="space-y-6">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground flex items-center gap-3 ml-2"><Users className="h-4 w-4 text-primary" /> Active Personnel Matrix</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allAdmins?.map(admin => (
+                  <Card key={admin.uid} className="premium-card bg-white/[0.01] border-white/5 rounded-2xl group hover:border-primary/20 transition-all">
+                    <CardContent className="p-6 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-5">
+                        <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center transition-all", admin.role === 'super-admin' ? 'bg-primary/20 text-primary shadow-lg shadow-primary/10' : 'bg-muted/30 text-muted-foreground')}>
+                          <ShieldCheck className="h-6 w-6" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black uppercase truncate text-white">{admin.email}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-white/10">{admin.role}</Badge>
+                            <span className="text-[8px] font-black text-muted-foreground uppercase opacity-40 tracking-widest">{admin.assignedSport || 'Universal'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      {admin.role !== 'super-admin' && (
+                        <Button size="icon" variant="ghost" className="h-10 w-10 text-destructive/30 hover:text-destructive hover:bg-destructive/10 rounded-xl flex-shrink-0" onClick={() => deleteDoc(doc(db!, 'admins', admin.uid))}>
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </TabsContent>
-
-          <TabsContent value="archive" className="pt-6">
-            <Card className="premium-card border-white/5">
-               <CardHeader className="bg-white/[0.02] border-b border-white/5">
-                 <CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><ListOrdered className="h-4 w-4" /> Archived Vectors</CardTitle>
-               </CardHeader>
-               <CardContent className="p-0">
-                 {selectedSport === 'kampus-run' ? (
-                   <Table>
-                     <TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Pos</TableHead><TableHead className="text-[9px] font-black uppercase">Participant</TableHead><TableHead className="text-[9px] font-black uppercase">Time</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
-                     <TableBody>
-                       {runResults?.map(res => (
-                         <TableRow key={res.id} className="border-white/5 hover:bg-white/[0.01]">
-                           <TableCell className="font-black text-xs">#{res.position}</TableCell>
-                           <TableCell><p className="text-xs font-black uppercase">{res.name}</p><p className="text-[8px] font-black opacity-40 uppercase">{res.category} • {res.gender}</p></TableCell>
-                           <TableCell className="text-xs font-black tabular-nums opacity-60">{res.time}</TableCell>
-                           <TableCell className="text-right">
-                             <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => deleteDoc(doc(db, 'runResults', res.id))}>
-                               <Trash2 className="h-3.5 w-3.5" />
-                             </Button>
-                           </TableCell>
-                         </TableRow>
-                       ))}
-                     </TableBody>
-                   </Table>
-                 ) : (
-                   <Table>
-                     <TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Transmission</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Score</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
-                     <TableBody>
-                       {matches?.filter(m => m.status === 'Completed').map(match => (
-                         <TableRow key={match.id} className="border-white/5 hover:bg-white/[0.01]">
-                           <TableCell><p className="text-xs font-black uppercase italic">M#{match.matchNumber} | {match.teamA} vs {match.teamB}</p><p className="text-[8px] font-black opacity-30 uppercase">{match.phase}</p></TableCell>
-                           <TableCell className="text-center font-black text-sm tracking-tighter">{match.scoreA} - {match.scoreB}</TableCell>
-                           <TableCell className="text-right">
-                             <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => handleDeleteMatch(match.id)}>
-                               <Trash2 className="h-3.5 w-3.5" />
-                             </Button>
-                           </TableCell>
-                         </TableRow>
-                       ))}
-                     </TableBody>
-                   </Table>
-                 )}
-               </CardContent>
-            </Card>
-          </TabsContent>
-
-          {isSuperAdmin && (
-            <TabsContent value="access" className="pt-6 space-y-8">
-              <Card className="premium-card border-primary/20">
-                <CardHeader className="bg-primary/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Authorize Personnel</CardTitle></CardHeader>
-                <CardContent className="p-8">
-                  <form onSubmit={handleAddPersonnel} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest">Personnel UID</Label>
-                      <Input value={newAdminUid} onChange={e => setNewAdminUid(e.target.value)} className="bg-white/5 border-white/10 h-11 text-xs" placeholder="Firebase UID" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest">Protocol Identity (Email)</Label>
-                      <Input value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} className="bg-white/5 border-white/10 h-11 text-xs" placeholder="email@study.iitm.ac.in" required />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest">Assigned Sector</Label>
-                      <Select value={newAdminSport} onValueChange={setNewAdminSport}>
-                        <SelectTrigger className="bg-white/5 border-white/10 h-11 font-black text-[10px] uppercase"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all" className="text-[10px] font-black uppercase">Universal Override (All Sports)</SelectItem>
-                          {EVENTS.map(e => <SelectItem key={e.id} value={e.slug} className="text-[10px] font-black uppercase">{e.name} Sector Only</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-xs tracking-widest gap-3 shadow-xl shadow-primary/20 rounded-xl">
-                      <UserPlus className="h-5 w-5" /> Register Identity
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3"><Users className="h-4 w-4" /> Active Personnel Matrix</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {allAdmins?.map(admin => (
-                    <Card key={admin.uid} className="premium-card bg-white/[0.01] border-white/5">
-                      <CardContent className="p-5 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", admin.role === 'super-admin' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>
-                            <ShieldCheck className="h-5 w-5" />
-                          </div>
-                          <div><p className="text-xs font-black uppercase truncate max-w-[150px]">{admin.email}</p><p className="text-[8px] font-black text-muted-foreground uppercase opacity-60 tracking-widest">{admin.role} • {admin.assignedSport || 'Universal'}</p></div>
-                        </div>
-                        {admin.role !== 'super-admin' && <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/30 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => deleteDoc(doc(db, 'admins', admin.uid))}><Trash2 className="h-4 w-4" /></Button>}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-          )}
-        </Tabs>
-      </div>
+        )}
+      </Tabs>
     </div>
   );
 }
