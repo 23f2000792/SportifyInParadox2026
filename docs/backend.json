@@ -20,13 +20,20 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
+        "matchNumber": { "type": "string" },
         "sport": { "type": "string" },
         "teamA": { "type": "string" },
         "teamB": { "type": "string" },
         "scoreA": { "type": "number" },
         "scoreB": { "type": "number" },
         "status": { "type": "string", "enum": ["Upcoming", "Live", "Completed"] },
+        "phase": { "type": "string" },
         "time": { "type": "string" },
+        "date": { "type": "string" },
+        "day": { "type": "string" },
+        "venue": { "type": "string" },
+        "courtNumber": { "type": "string" },
+        "groundNumber": { "type": "string" },
         "group": { "type": "string" },
         "keyEvents": { "type": "array", "items": { "type": "string" } },
         "badmintonResults": {
@@ -41,7 +48,7 @@
           }
         }
       },
-      "required": ["id", "sport", "teamA", "teamB", "scoreA", "scoreB", "status", "time"]
+      "required": ["id", "matchNumber", "sport", "teamA", "teamB", "scoreA", "scoreB", "status", "time", "date", "day", "venue"]
     },
     "Standing": {
       "title": "Standing",
@@ -81,7 +88,7 @@
         "uid": { "type": "string" },
         "email": { "type": "string" },
         "role": { "type": "string", "enum": ["admin", "super-admin"] },
-        "assignedSport": { "type": "string", "description": "The sport slug this admin manages" }
+        "assignedSport": { "type": "string" }
       },
       "required": ["uid", "email", "role"]
     }

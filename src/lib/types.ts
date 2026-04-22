@@ -18,6 +18,7 @@ export interface BadmintonMatchResult {
 
 export interface Match {
   id: string;
+  matchNumber: string;
   sport: SportType;
   teamA: string;
   teamB: string;
@@ -26,6 +27,11 @@ export interface Match {
   status: 'Upcoming' | 'Live' | 'Completed';
   phase: MatchPhase;
   time: string;
+  date: string;
+  day: string;
+  venue: string;
+  courtNumber?: string; // For Badminton, Volleyball
+  groundNumber?: string; // For Football
   group?: string; // A, B, C, D
   keyEvents?: string[];
   badmintonResults?: BadmintonMatchResult[];
