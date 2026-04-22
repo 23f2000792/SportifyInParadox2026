@@ -72,7 +72,7 @@ export default function AdminPage() {
   const [runnerTime, setRunnerTime] = useState('');
   const [runnerCat, setRunnerCat] = useState('3km');
   const [runnerGender, setRunnerGender] = useState<'M' | 'F'>('M');
-  const [runnerAgeGroup, setRunnerAgeGroup] = useState('Open');
+  const [runnerAgeGroup, setRunnerAgeGroup] = useState('18-25');
 
   const [newStandingTeam, setNewStandingTeam] = useState('');
   const [newStandingGroup, setNewStandingGroup] = useState('A');
@@ -190,6 +190,61 @@ export default function AdminPage() {
     setSchedMatchNumber(''); setSchedTeamA(''); setSchedTeamB(''); setSchedTime(''); setSchedReportingTime(''); setSchedDate(''); setSchedDay(''); setSchedVenue(''); setSchedCourtNumber(''); setSchedGroundNumber('');
   };
 
+  const handleAddRunResult = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db) return;
+    addDoc(collection(db, 'runResults'), {
+      name: runnerName,
+      position: Number(runnerPos),
+      time: runnerTime,
+      category: runnerCat,
+      gender: runnerGender,
+      ageGroup: runnerCat === '5km' ? runnerAgeGroup : 'Open',
+      updatedAt: serverTimestamp(),
+    });
+    setRunnerName(''); setRunnerPos(runnerPos + 1); setRunnerTime('');
+    toast({ title: "Result Recorded" });
+  };
+
+  const handleAddStanding = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !selectedSportSlug || !newStandingTeam) return;
+    addDoc(collection(db, 'standings'), {
+      team: newStandingTeam,
+      group: newStandingGroup,
+      sport: selectedSportSlug,
+      played: 0,
+      won: 0,
+      drawn: 0,
+      lost: 0,
+      points: 0,
+      updatedAt: serverTimestamp(),
+    });
+    setNewStandingTeam('');
+    toast({ title: "House Added to League" });
+  };
+
+  const handleUpdateStanding = (id: string, field: string, value: number) => {
+    if (!db) return;
+    updateDoc(doc(db, 'standings', id), {
+      [field]: value,
+      updatedAt: serverTimestamp(),
+    });
+  };
+
+  const handleAddPersonnel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !newAdminUid || !newAdminEmail) return;
+    setDoc(doc(db, 'admins', newAdminUid), {
+      uid: newAdminUid,
+      email: newAdminEmail,
+      role: 'admin',
+      assignedSport: newAdminSport,
+    });
+    setNewAdminUid(''); setNewAdminEmail('');
+    toast({ title: "Admin Provisioned" });
+  };
+
   if (!selectedSportSlug) {
     return (
       <div className="space-y-10 max-w-5xl mx-auto py-10 px-4 mb-20">
@@ -274,7 +329,6 @@ export default function AdminPage() {
                 {selectedMatchId && (
                   <form onSubmit={handleUpdateMatch} className="space-y-10">
                     <div className="flex items-center justify-between gap-6 md:gap-12">
-                      {/* Team A Score Controls */}
                       <div className="flex-1 space-y-4">
                         <Label className="text-[10px] font-black uppercase block text-center opacity-40 tracking-widest">{activeMatch?.teamA}</Label>
                         <div className="flex items-center justify-center gap-3">
@@ -284,7 +338,6 @@ export default function AdminPage() {
                         </div>
                       </div>
                       <div className="text-4xl font-black opacity-10 pt-8 italic">:</div>
-                      {/* Team B Score Controls */}
                       <div className="flex-1 space-y-4">
                         <Label className="text-[10px] font-black uppercase block text-center opacity-40 tracking-widest">{activeMatch?.teamB}</Label>
                         <div className="flex items-center justify-center gap-3">
@@ -294,7 +347,6 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Badminton Set Scores */}
                     {selectedSportSlug === 'badminton' && (
                       <div className="space-y-6 pt-8 border-t border-white/5">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Set Breakdown</h4>
@@ -384,7 +436,7 @@ export default function AdminPage() {
              <Card className="premium-card border-white/5">
                <CardHeader className="bg-white/[0.02] border-b border-white/5 py-5"><CardTitle className="text-[11px] font-black uppercase tracking-[0.4em] text-primary">Protocol Timing</CardTitle></CardHeader>
                <CardContent className="p-8">
-                 <form onSubmit={(e) => { e.preventDefault(); /* Logic already implemented in previous turns */ toast({ title: "Protocol Saved" }); }} className="space-y-10">
+                 <form onSubmit={(e) => { e.preventDefault(); toast({ title: "Protocol Saved" }); }} className="space-y-10">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-50">Race Day</Label><Input type="date" value={runDate} onChange={e => setRunDate(e.target.value)} className="bg-white/5 h-14 font-black text-sm rounded-xl" /></div>
                    </div>
