@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -16,6 +15,7 @@ import { collection, doc, setDoc, query, where, serverTimestamp } from 'firebase
 import { Match, AdminUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 export default function AdminPage() {
   const { toast } = useToast();
