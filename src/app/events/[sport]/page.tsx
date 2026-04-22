@@ -13,7 +13,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Match, RunResult, Standing, GROUPS } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, Medal, MapPin, Calendar, Clock } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, Medal, MapPin, Calendar, Clock, Activity } from 'lucide-react';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -49,7 +49,6 @@ export default function EventPage() {
   const { data: standings, loading: stdLoading } = useCollection<Standing>(standingsQuery);
   const { data: rawRunResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
 
-  // Client-side sorting
   const sportMatches = useMemo(() => {
     return [...(rawMatches || [])].sort((a, b) => {
       const numA = parseInt(a.matchNumber) || 0;
@@ -68,21 +67,21 @@ export default function EventPage() {
   const raceSchedules = sportMatches?.filter(m => m.phase === 'race');
 
   return (
-    <div className="space-y-12 max-w-6xl mx-auto pb-20">
-      {/* Hero Domain Section */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary/20 via-background to-background border border-white/5 p-10 md:p-16">
-        <div className="absolute top-0 right-0 p-12 opacity-10 blur-sm">
-           {IconComp && <IconComp className="h-64 w-64 text-primary" />}
+    <div className="space-y-12 max-w-6xl mx-auto pb-20 px-4 md:px-0">
+      {/* High-Impact Broadcast Hero */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/30 via-background to-background border border-white/5 p-8 md:p-20 shadow-2xl">
+        <div className="absolute -top-10 -right-10 opacity-5 blur-xl">
+           {IconComp && <IconComp className="h-96 w-96 text-primary" />}
         </div>
-        <div className="relative space-y-8">
-          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase text-[10px] font-black px-4 py-1.5 tracking-[0.3em]">
-            Protocol Domain: {sport.replace('-', ' ')}
+        <div className="relative z-10 space-y-6">
+          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase text-[10px] font-black px-6 py-2 tracking-[0.4em] animate-pulse">
+            TRANSMISSION ACTIVE: {sport.toUpperCase()}
           </Badge>
           <div className="space-y-4">
-            <h1 className="text-6xl md:text-8xl font-black italic text-white tracking-tighter uppercase leading-none bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
+            <h1 className="text-5xl md:text-9xl font-black italic text-white tracking-tighter uppercase leading-[0.85] bg-clip-text text-transparent bg-gradient-to-b from-white to-white/30">
               {event.name}
             </h1>
-            <p className="text-base text-muted-foreground uppercase tracking-[0.4em] font-black max-w-2xl leading-relaxed">
+            <p className="text-sm md:text-lg text-muted-foreground uppercase tracking-[0.3em] font-black max-w-2xl leading-relaxed opacity-70">
               {event.description}
             </p>
           </div>
@@ -93,29 +92,29 @@ export default function EventPage() {
         <section className="space-y-16">
           {raceSchedules && raceSchedules.length > 0 && (
             <div className="space-y-8">
-               <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary flex items-center gap-3">
-                 <Clock className="h-4 w-4" /> Race Day Synchronicity
+               <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-primary flex items-center gap-4 ml-2">
+                 <Clock className="h-5 w-5" /> RACE PROTOCOL
                </h2>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {raceSchedules.map(race => (
-                    <Card key={race.id} className="premium-card">
-                      <CardHeader className="p-8 bg-white/[0.03] border-b border-white/5 text-center">
-                        <CardTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">
+                    <Card key={race.id} className="premium-card bg-white/[0.02]">
+                      <CardHeader className="p-8 border-b border-white/5 text-center">
+                        <CardTitle className="text-3xl font-black uppercase italic tracking-tighter text-white">
                           {race.teamA}
                         </CardTitle>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-2">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mt-2 opacity-50">
                           {race.date} • {race.venue}
                         </p>
                       </CardHeader>
                       <CardContent className="p-10 flex items-center justify-around">
                         <div className="text-center space-y-2">
-                          <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">Reporting</p>
-                          <p className="text-3xl font-black text-white">{race.reportingTime || 'TBD'}</p>
+                          <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">REPORTING</p>
+                          <p className="text-4xl font-black text-white tabular-nums">{race.reportingTime || '--:--'}</p>
                         </div>
-                        <div className="h-16 w-px bg-white/10" />
+                        <div className="h-20 w-px bg-white/10" />
                         <div className="text-center space-y-2">
-                          <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">Start Vector</p>
-                          <p className="text-3xl font-black text-accent">{race.time}</p>
+                          <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">START VECTOR</p>
+                          <p className="text-4xl font-black text-accent tabular-nums">{race.time}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -125,70 +124,67 @@ export default function EventPage() {
           )}
 
           <div className="space-y-8">
-            <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary flex items-center gap-3">
-              <Medal className="h-4 w-4" /> Global Performance Registry
+            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-primary flex items-center gap-4 ml-2">
+              <Medal className="h-5 w-5" /> PERFORMANCE REGISTRY
             </h2>
-            <Card className="premium-card rounded-3xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-24 text-center">Rank</TableHead>
-                    <TableHead>Participant Identity</TableHead>
-                    <TableHead>Protocol Classification</TableHead>
-                    <TableHead className="text-right pr-10">Archive Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {runResults?.map((res) => (
-                    <TableRow key={res.id} className="h-20">
-                      <TableCell className="text-center text-2xl font-black italic text-primary">#{res.position}</TableCell>
-                      <TableCell className="text-xl font-black uppercase italic text-white">{res.name}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline" className="text-[9px] font-black uppercase h-6 bg-primary/10 border-primary/30 text-primary px-3">
-                            {res.category}
-                          </Badge>
-                          <Badge variant="outline" className="text-[9px] font-black uppercase h-6 border-white/10 px-3">
-                            {res.gender === 'M' ? 'Male' : 'Female'}
-                          </Badge>
-                          {res.ageGroup !== 'Open' && (
-                            <Badge variant="outline" className="text-[9px] font-black uppercase h-6 bg-accent/10 border-accent/30 text-accent px-3">
-                              Age: {res.ageGroup}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right pr-10 text-2xl font-black tabular-nums text-accent">{res.time}</TableCell>
+            <Card className="premium-card rounded-[2rem] overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-24 text-center">RANK</TableHead>
+                      <TableHead>PARTICIPANT</TableHead>
+                      <TableHead>PROTOCOL</TableHead>
+                      <TableHead className="text-right pr-10">RECORD</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {runResults?.map((res) => (
+                      <TableRow key={res.id} className="h-24 hover:bg-white/[0.03]">
+                        <TableCell className="text-center text-3xl font-black italic text-primary">#{res.position}</TableCell>
+                        <TableCell className="text-xl md:text-2xl font-black uppercase italic text-white tracking-tighter">{res.name}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline" className="text-[10px] font-black uppercase h-7 bg-primary/10 border-primary/20 text-primary px-4 tracking-widest">
+                              {res.category}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] font-black uppercase h-7 border-white/10 px-4 tracking-widest opacity-60">
+                              {res.gender === 'M' ? 'MALE' : 'FEMALE'}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right pr-10 text-3xl font-black tabular-nums text-accent">{res.time}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </Card>
           </div>
         </section>
       ) : (
         <>
           <section className="space-y-8">
-             <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary flex items-center gap-3">
-               <Trophy className="h-4 w-4" /> Tournament Matrix
+             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-primary flex items-center gap-4 ml-2">
+               <Trophy className="h-5 w-5" /> TOURNAMENT MATRIX
              </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {GROUPS.map(group => {
                 const groupStandings = standings?.filter(s => s.group === group).sort((a,b) => b.points - a.points);
                 if (!groupStandings?.length) return null;
                 return (
-                  <Card key={group} className="premium-card">
-                    <CardHeader className="p-5 border-b border-white/5 bg-white/[0.03]">
-                      <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-primary text-center">Group {group}</CardTitle>
+                  <Card key={group} className="premium-card bg-white/[0.01]">
+                    <CardHeader className="p-6 border-b border-white/5 bg-white/[0.04] text-center">
+                      <CardTitle className="text-[11px] font-black uppercase tracking-[0.4em] text-primary">GROUP {group}</CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                       <Table>
                         <TableBody>
                           {groupStandings.map((row) => (
-                            <TableRow key={row.team} className="h-14">
-                              <TableCell className="text-base font-black uppercase italic py-0">{row.team}</TableCell>
-                              <TableCell className="text-right font-black text-xl py-0 pr-6">
-                                {row.points} <span className="text-[9px] text-muted-foreground/40 ml-1">PTS</span>
+                            <TableRow key={row.team} className="h-16">
+                              <TableCell className="text-lg font-black uppercase italic text-white py-0 pl-6">{row.team}</TableCell>
+                              <TableCell className="text-right font-black text-2xl py-0 pr-8">
+                                {row.points} <span className="text-[10px] text-muted-foreground/30 ml-1">PTS</span>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -202,53 +198,53 @@ export default function EventPage() {
           </section>
 
           <section className="space-y-8">
-            <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary flex items-center gap-3">
-              <Zap className="h-4 w-4" /> Live Transmission Stream
+            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-primary flex items-center gap-4 ml-2">
+              <Zap className="h-5 w-5" /> LIVE TRANSMISSION STREAM
             </h2>
             <Tabs defaultValue="live" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-white/[0.04] border border-white/10 p-1.5 h-16 rounded-2xl">
-                <TabsTrigger value="live" className="text-[10px] font-black uppercase tracking-widest rounded-xl">Live Sync</TabsTrigger>
-                <TabsTrigger value="upcoming" className="text-[10px] font-black uppercase tracking-widest rounded-xl">Protocol</TabsTrigger>
-                <TabsTrigger value="completed" className="text-[10px] font-black uppercase tracking-widest rounded-xl">Archive</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 bg-white/[0.04] border border-white/10 p-2 h-16 rounded-2xl">
+                <TabsTrigger value="live" className="text-[11px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white">LIVE FEED</TabsTrigger>
+                <TabsTrigger value="upcoming" className="text-[11px] font-black uppercase tracking-widest rounded-xl">SCHEDULE</TabsTrigger>
+                <TabsTrigger value="completed" className="text-[11px] font-black uppercase tracking-widest rounded-xl">ARCHIVE</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="live" className="space-y-6 mt-8">
+              <TabsContent value="live" className="space-y-8 mt-10">
                 {sportMatches?.filter(m => m.status === 'Live').map(match => (
-                  <Card key={match.id} className="premium-card border-accent/40 bg-accent/5">
-                    <CardContent className="p-12">
+                  <Card key={match.id} className="premium-card border-accent/30 bg-accent/5 rounded-[2.5rem]">
+                    <CardContent className="p-8 md:p-16">
                       <div className="flex flex-col md:flex-row items-center justify-between gap-12">
                         <div className="flex-1 text-center md:text-right">
-                          <p className="text-4xl font-black uppercase italic tracking-tighter text-white">{match.teamA}</p>
+                          <p className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-white">{match.teamA}</p>
                         </div>
-                        <div className="flex flex-col items-center gap-6">
-                          <div className="text-8xl font-black tabular-nums tracking-tighter bg-white/5 px-14 py-6 rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(var(--accent),0.2)]">
+                        <div className="flex flex-col items-center gap-8">
+                          <div className="text-7xl md:text-9xl font-black tabular-nums tracking-tighter bg-black/40 px-12 md:px-20 py-8 md:py-10 rounded-[3rem] border border-white/10 shadow-[0_0_80px_rgba(var(--accent),0.3)] border-accent/20">
                             {match.scoreA} : {match.scoreB}
                           </div>
-                          <Badge className="bg-accent text-black text-[10px] font-black uppercase animate-pulse px-4 py-1 tracking-widest">
-                            Live Feed Active
+                          <Badge className="bg-accent text-black text-[11px] font-black uppercase animate-pulse px-6 py-2 tracking-widest rounded-full">
+                            TRANSMISSION LIVE
                           </Badge>
                         </div>
                         <div className="flex-1 text-center md:text-left">
-                          <p className="text-4xl font-black uppercase italic tracking-tighter text-white">{match.teamB}</p>
+                          <p className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-white">{match.teamB}</p>
                         </div>
                       </div>
                       
                       {sport === 'badminton' && match.badmintonResults && (
-                        <div className="mt-12 pt-12 border-t border-white/10 grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div className="mt-16 pt-16 border-t border-white/10 grid grid-cols-2 md:grid-cols-5 gap-4">
                           {match.badmintonResults.map((sub, idx) => (
-                            <div key={idx} className="bg-white/5 rounded-2xl p-4 text-center border border-white/5 hover:bg-white/10 transition-colors">
-                              <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-2">{sub.type} Division</p>
-                              <p className="text-xl font-black text-white">{sub.score}</p>
-                              {sub.winner && <p className="text-[8px] font-black text-accent uppercase mt-2">Win: {sub.winner}</p>}
+                            <div key={idx} className="bg-white/5 rounded-3xl p-6 text-center border border-white/5">
+                              <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] mb-3">{sub.type}</p>
+                              <p className="text-2xl font-black text-white tabular-nums">{sub.score}</p>
+                              {sub.winner && <p className="text-[8px] font-black text-accent uppercase mt-3 tracking-widest">WIN: {sub.winner}</p>}
                             </div>
                           ))}
                         </div>
                       )}
                       
-                      <div className="mt-12 text-center border-t border-white/10 pt-6 flex flex-col items-center gap-2">
-                        <span className="text-[10px] font-black uppercase text-primary/80 tracking-[0.3em]">Transmission Match #{match.matchNumber}</span>
-                        <span className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-[0.4em] flex items-center gap-3">
-                          <MapPin className="h-4 w-4" /> {match.venue} {match.courtNumber || match.groundNumber ? `• ${match.courtNumber || match.groundNumber}` : ''}
+                      <div className="mt-16 text-center border-t border-white/10 pt-10 flex flex-col items-center gap-3">
+                        <span className="text-[11px] font-black uppercase text-primary tracking-[0.5em] opacity-80">M#{match.matchNumber} TRANSMISSION VECTOR</span>
+                        <span className="text-[10px] font-black uppercase text-muted-foreground/50 tracking-[0.4em] flex items-center gap-4">
+                          <MapPin className="h-5 w-5" /> {match.venue} {match.courtNumber || match.groundNumber ? `• ${match.courtNumber || match.groundNumber}` : ''}
                         </span>
                       </div>
                     </CardContent>
@@ -256,64 +252,65 @@ export default function EventPage() {
                 ))}
               </TabsContent>
 
-              <TabsContent value="upcoming" className="space-y-4 mt-8">
+              <TabsContent value="upcoming" className="space-y-6 mt-10">
                 {sportMatches?.filter(m => m.status === 'Upcoming').map(match => (
-                  <Card key={match.id} className="premium-card group">
-                    <CardContent className="p-8 flex items-center justify-between">
-                      <div className="flex items-center gap-10">
-                        <div className="text-center pr-10 border-r border-white/10 w-32">
-                          <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">M#{match.matchNumber}</p>
-                          <p className="text-xl font-black text-white uppercase">{match.time}</p>
-                          <p className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest mt-1">{match.day}</p>
+                  <Card key={match.id} className="premium-card group hover:bg-white/[0.02]">
+                    <CardContent className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                      <div className="flex flex-col md:flex-row items-center gap-10">
+                        <div className="text-center md:pr-10 md:border-r border-white/10 md:w-40">
+                          <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mb-2">M#{match.matchNumber}</p>
+                          <p className="text-3xl font-black text-white uppercase tabular-nums">{match.time}</p>
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-2 opacity-50">{match.day}</p>
                         </div>
-                        <div>
-                          <p className="text-2xl font-black uppercase italic tracking-tight group-hover:text-primary transition-colors duration-300">
-                            {match.teamA} <span className="text-muted-foreground/30 mx-2 text-lg">VS</span> {match.teamB}
+                        <div className="text-center md:text-left">
+                          <p className="text-3xl font-black uppercase italic tracking-tight group-hover:text-primary transition-all duration-300">
+                            {match.teamA} <span className="text-muted-foreground/20 mx-4 text-2xl font-medium">VS</span> {match.teamB}
                           </p>
-                          <div className="flex items-center gap-6 mt-3">
-                            <span className="text-[10px] font-black text-muted-foreground/50 uppercase flex items-center gap-2 tracking-widest">
+                          <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 mt-4">
+                            <span className="text-[11px] font-black text-muted-foreground/40 uppercase flex items-center gap-3 tracking-widest">
                               <MapPin className="h-4 w-4" /> {match.venue}
                             </span>
-                            <span className="text-[10px] font-black text-muted-foreground/50 uppercase flex items-center gap-2 tracking-widest">
+                            <span className="text-[11px] font-black text-muted-foreground/40 uppercase flex items-center gap-3 tracking-widest">
                               <Calendar className="h-4 w-4" /> {match.date}
                             </span>
                             { (match.courtNumber || match.groundNumber) && (
-                              <span className="text-[10px] font-black text-accent/50 uppercase tracking-widest bg-accent/5 px-2 py-0.5 rounded border border-accent/10">
-                                LOC: {match.courtNumber || match.groundNumber}
-                              </span>
+                              <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-accent/10 border-accent/20 text-accent px-4 py-1">
+                                {match.courtNumber || match.groundNumber}
+                              </Badge>
                             )}
                           </div>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[9px] font-black uppercase px-4 h-8 bg-white/5 border-white/10">{match.phase}</Badge>
+                      <Badge variant="outline" className="text-[10px] font-black uppercase px-6 py-2 h-10 bg-white/5 border-white/10 tracking-widest">{match.phase}</Badge>
                     </CardContent>
                   </Card>
                 ))}
               </TabsContent>
 
-              <TabsContent value="completed" className="space-y-6 mt-8">
+              <TabsContent value="completed" className="space-y-8 mt-10">
                 {sportMatches?.filter(m => m.status === 'Completed').map(match => (
-                  <Card key={match.id} className="premium-card group">
+                  <Card key={match.id} className="premium-card group border-white/5">
                     <CardContent className="p-0">
-                      <div className="p-10 flex items-center justify-between">
-                        <div className="flex-1 text-right pr-10">
-                          <p className={cn("font-black text-2xl uppercase italic tracking-tighter", match.scoreA > match.scoreB ? 'text-primary' : 'text-muted-foreground/60')}>
+                      <div className="p-10 md:p-14 flex items-center justify-between gap-6">
+                        <div className="flex-1 text-right">
+                          <p className={cn("font-black text-2xl md:text-4xl uppercase italic tracking-tighter", match.scoreA > match.scoreB ? 'text-primary' : 'text-muted-foreground/40')}>
                             {match.teamA}
                           </p>
                         </div>
-                        <div className="text-3xl font-black tabular-nums bg-white/5 px-8 py-3 rounded-2xl border border-white/10 shadow-lg">
+                        <div className="text-4xl md:text-6xl font-black tabular-nums bg-white/5 px-10 py-5 rounded-3xl border border-white/10 shadow-xl border-white/5">
                           {match.scoreA} - {match.scoreB}
                         </div>
-                        <div className="flex-1 text-left pl-10">
-                          <p className={cn("font-black text-2xl uppercase italic tracking-tighter", match.scoreB > match.scoreA ? 'text-primary' : 'text-muted-foreground/60')}>
+                        <div className="flex-1 text-left">
+                          <p className={cn("font-black text-2xl md:text-4xl uppercase italic tracking-tighter", match.scoreB > match.scoreA ? 'text-primary' : 'text-muted-foreground/40')}>
                             {match.teamB}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between px-10 py-5 border-t border-white/5 bg-white/[0.02]">
-                        <span className="text-[10px] font-black uppercase text-muted-foreground/30 tracking-[0.4em]">
-                          Transmission Archival M#{match.matchNumber} • {match.venue} • {match.phase}
+                      <div className="flex flex-col md:flex-row items-center justify-between px-10 py-6 border-t border-white/5 bg-white/[0.03]">
+                        <span className="text-[11px] font-black uppercase text-muted-foreground/20 tracking-[0.5em]">
+                          M#{match.matchNumber} ARCHIVE • {match.venue.toUpperCase()} • {match.phase.toUpperCase()}
                         </span>
+                        <span className="text-[10px] font-black text-primary/30 uppercase tracking-widest mt-2 md:mt-0">{match.date}</span>
                       </div>
                     </CardContent>
                   </Card>

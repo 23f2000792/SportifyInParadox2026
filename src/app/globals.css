@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Vibrant Electric Palette */
+    /* Vibrant Electric Palette - Deep Violet & Cyan */
     --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
     
@@ -32,12 +33,7 @@
     --border: 222 47% 15%;
     --input: 222 47% 15%;
     --ring: 262 83% 58%;
-    --radius: 1rem;
-    
-    /* Custom Status Colors */
-    --status-win: 142 70% 45%;
-    --status-loss: 0 84% 60%;
-    --status-live: 190 95% 39%;
+    --radius: 1.5rem;
   }
 
   .dark {
@@ -54,7 +50,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased text-base;
+    @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   h1, h2, h3, h4, h5, h6 {
@@ -70,17 +66,9 @@
   scrollbar-width: none;
 }
 
-.text-win { color: hsl(var(--status-win)); }
-.text-loss { color: hsl(var(--status-loss)); }
-.text-live { color: hsl(var(--status-live)); }
-
-.bg-win { background-color: hsl(var(--status-win)); }
-.bg-loss { background-color: hsl(var(--status-loss)); }
-.bg-live { background-color: hsl(var(--status-live)); }
-
 .premium-card {
-  @apply relative overflow-hidden bg-card border border-white/5 shadow-2xl transition-all duration-500;
-  background: linear-gradient(165deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.5) 100%);
+  @apply relative overflow-hidden bg-card border border-white/5 shadow-2xl transition-all duration-500 rounded-[2rem];
+  background: linear-gradient(165deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.3) 100%);
 }
 
 .premium-card:hover {
@@ -90,18 +78,26 @@
 .premium-card::before {
   content: '';
   @apply absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none;
-  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.15), transparent 60%);
+  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.1), transparent 60%);
 }
 
 .premium-card:hover::before {
   @apply opacity-100;
 }
 
-/* Larger Font Scales for Live Data */
+/* Typography for High-Impact Live Tables */
 .live-table-text {
-  @apply text-base md:text-lg font-black tracking-tight;
+  @apply text-lg md:text-xl font-black tracking-tight uppercase italic;
 }
 
 .live-table-header {
-  @apply text-[11px] font-black uppercase tracking-[0.3em] text-primary/70 py-4;
+  @apply text-[11px] font-black uppercase tracking-[0.4em] text-primary/70 py-6;
+}
+
+.broadcast-glow {
+  text-shadow: 0 0 20px hsla(var(--primary), 0.5);
+}
+
+.accent-glow {
+  text-shadow: 0 0 20px hsla(var(--accent), 0.5);
 }

@@ -58,8 +58,8 @@ export interface RunResult {
   name: string;
   time: string;
   gender: 'M' | 'F';
-  ageGroup: string;
-  category: string;
+  ageGroup: string; // Open, 18-25, 26+
+  category: string; // 3km, 5km
   updatedAt?: any;
 }
 
