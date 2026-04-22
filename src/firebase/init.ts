@@ -11,7 +11,7 @@ import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 /**
- * Robust Singleton Registry for Firebase Services.
+ * Defensive Singleton Registry for Firebase Services.
  * Forces memory-only cache to prevent "INTERNAL ASSERTION FAILED (ID: ca9)" 
  * which is commonly caused by persistent cache conflicts in Firestore v11.
  */
@@ -35,14 +35,12 @@ export function initializeFirebase() {
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
   // 4. Instantiate services strictly once with defensive settings
-  // Using initializeFirestore with memoryLocalCache() is the definitive fix for ID: ca9
   let db: Firestore;
   try {
     db = initializeFirestore(app, {
       localCache: memoryLocalCache(),
     });
   } catch (e) {
-    // If already initialized, fallback to getFirestore
     db = getFirestore(app);
   }
 
