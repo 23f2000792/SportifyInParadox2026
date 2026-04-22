@@ -4,62 +4,48 @@
 
 @layer base {
   :root {
-    /* Primary vibrant green: #4EAD1F */
-    --primary: 100 70% 40%;
+    /* Vibrant Electric Palette */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
     
-    /* Background: desaturated light green-grey #F4F7F3 */
-    --background: 105 15% 96%;
-    --foreground: 105 10% 10%;
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
     
-    /* Accent chartreuse: #D5ED5E */
-    --accent: 70 80% 65%;
-    --accent-foreground: 105 10% 10%;
+    --accent: 190 95% 39%;
+    --accent-foreground: 210 40% 98%;
     
-    --card: 0 0% 100%;
-    --card-foreground: 105 10% 10%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 105 10% 10%;
+    --popover: 222 47% 6%;
+    --popover-foreground: 210 40% 98%;
     
-    --secondary: 105 10% 90%;
-    --secondary-foreground: 105 10% 10%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 98%;
     
-    --muted: 105 10% 90%;
-    --muted-foreground: 105 10% 40%;
+    --muted: 222 47% 12%;
+    --muted-foreground: 215 20% 65%;
     
-    --destructive: 0 84% 60%;
+    --destructive: 346 84% 61%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 105 10% 85%;
-    --input: 105 10% 85%;
-    --ring: 100 70% 40%;
-    --radius: 0.75rem;
+    --border: 222 47% 15%;
+    --input: 222 47% 15%;
+    --ring: 262 83% 58%;
+    --radius: 1rem;
     
     /* Custom Status Colors */
     --status-win: 142 70% 45%;
     --status-loss: 0 84% 60%;
-    --status-live: 45 100% 50%;
+    --status-live: 190 95% 39%;
   }
 
   .dark {
-    --background: 105 20% 4%;
-    --foreground: 105 10% 95%;
-    --card: 105 20% 7%;
-    --card-foreground: 105 10% 95%;
-    --popover: 105 20% 6%;
-    --popover-foreground: 105 10% 95%;
-    --primary: 100 70% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 105 20% 12%;
-    --secondary-foreground: 105 10% 95%;
-    --muted: 105 20% 12%;
-    --muted-foreground: 105 5% 60%;
-    --accent: 70 80% 60%;
-    --accent-foreground: 105 10% 10%;
-    --border: 105 20% 15%;
-    --input: 105 20% 15%;
-    --ring: 100 70% 45%;
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 7%;
+    --primary: 262 83% 58%;
+    --accent: 190 95% 39%;
   }
 }
 
@@ -68,11 +54,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground font-body antialiased text-base;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline font-black tracking-tight uppercase;
+    @apply font-headline font-black tracking-tighter uppercase italic;
   }
 }
 
@@ -93,20 +79,29 @@
 .bg-live { background-color: hsl(var(--status-live)); }
 
 .premium-card {
-  @apply relative overflow-hidden bg-card border border-border/50 shadow-sm transition-all duration-300;
-  background: linear-gradient(135deg, hsl(var(--card)) 0%, color-mix(in srgb, hsl(var(--card)), transparent 20%) 100%);
+  @apply relative overflow-hidden bg-card border border-white/5 shadow-2xl transition-all duration-500;
+  background: linear-gradient(165deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.5) 100%);
 }
 
 .premium-card:hover {
-  @apply shadow-md border-primary/20 -translate-y-0.5;
+  @apply border-primary/30 -translate-y-1 shadow-primary/10;
 }
 
-.premium-card::after {
+.premium-card::before {
   content: '';
   @apply absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none;
-  background: radial-gradient(circle at top left, hsla(var(--primary), 0.05), transparent 70%);
+  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.15), transparent 60%);
 }
 
-.premium-card:hover::after {
+.premium-card:hover::before {
   @apply opacity-100;
+}
+
+/* Larger Font Scales for Live Data */
+.live-table-text {
+  @apply text-base md:text-lg font-black tracking-tight;
+}
+
+.live-table-header {
+  @apply text-[11px] font-black uppercase tracking-[0.3em] text-primary/70 py-4;
 }
