@@ -28,24 +28,20 @@ export const FOOTBALL_STANDINGS: Standing[] = [
   { team: 'Avengers FC', played: 2, won: 2, drawn: 0, lost: 0, points: 6, group: 'A' },
   { team: 'Storm Breakers', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'A' },
   { team: 'Guardians Utd', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'A' },
-  { team: 'Titan Kings', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'A' },
   
   // Group B
   { team: 'Shadow Strikers', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'B' },
   { team: 'Star Knights', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'B' },
   { team: 'Rogue Legion', played: 2, won: 0, drawn: 1, lost: 1, points: 1, group: 'B' },
-  { team: 'Phoenix Suns', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'B' },
 
   // Group C
   { team: 'Galactic Warriors', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'C' },
   { team: 'Nebula Navigators', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'C' },
   { team: 'Comet Crusaders', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
-  { team: 'Meteor Masters', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
 
   // Group D
   { team: 'Solar Flares', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'D' },
   { team: 'Lunar Legends', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'D' },
-  { team: 'Stellar Sprinters', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
   { team: 'Nova Knights', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
 ];
 
@@ -54,24 +50,20 @@ export const VOLLEYBALL_STANDINGS: Standing[] = [
   { team: 'Spike Squad', played: 2, won: 2, drawn: 0, lost: 0, points: 6, group: 'A' },
   { team: 'Net Ninjas', played: 2, won: 0, drawn: 0, lost: 2, points: 0, group: 'A' },
   { team: 'Server Aces', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' },
-  { team: 'Court Kings', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' },
   
   // Group B
   { team: 'Thunder Bolts', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'B' },
   { team: 'Volley Vipers', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'B' },
   { team: 'Sky Jumpers', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'B' },
-  { team: 'Net Masters', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'B' },
 
   // Group C
   { team: 'Cloud 9', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
   { team: 'Gravity', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
   { team: 'Zenith', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
-  { team: 'Vortex', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
 
   // Group D
   { team: 'Nova', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
   { team: 'Pulse', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
-  { team: 'Echo', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
   { team: 'Titan', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
 ];
 
