@@ -13,6 +13,11 @@ export const MOCK_MATCHES: Match[] = [
   { id: 'm2', sport: 'football', teamA: 'Phoenix Suns', teamB: 'Shadow Strikers', scoreA: 0, scoreB: 0, status: 'Live', time: '12:00 PM', group: 'B' },
   { id: 'm3', sport: 'volleyball', teamA: 'Spike Squad', teamB: 'Net Ninjas', scoreA: 25, scoreB: 23, status: 'Completed', time: '11:00 AM' },
   { id: 'm4', sport: 'volleyball', teamA: 'Volley Vipers', teamB: 'Thunder Bolts', scoreA: 12, scoreB: 15, status: 'Live', time: '12:30 PM' },
+  { id: 'm5', sport: 'badminton', teamA: 'House Alpha', teamB: 'House Beta', scoreA: 2, scoreB: 0, status: 'Completed', time: '09:00 AM' },
+  { id: 'm6', sport: 'football', teamA: 'Titan Kings', teamB: 'Storm Breakers', scoreA: 1, scoreB: 3, status: 'Completed', time: '08:30 AM' },
+  { id: 'm7', sport: 'volleyball', teamA: 'Cloud 9', teamB: 'Gravity', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '02:00 PM' },
+  { id: 'm8', sport: 'badminton', teamA: 'Swift Strikes', teamB: 'Feather Flyers', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '03:30 PM' },
+  { id: 'm9', sport: 'football', teamA: 'Rogue Legion', teamB: 'Star Knights', scoreA: 1, scoreB: 1, status: 'Completed', time: '07:00 AM' },
 ];
 
 export const FOOTBALL_STANDINGS: Standing[] = [
