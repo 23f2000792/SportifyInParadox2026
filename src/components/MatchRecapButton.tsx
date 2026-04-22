@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { generateMatchRecap, GenerateMatchRecapOutput } from '@/ai/flows/ai-match-recap-tool';
+import { generateMatchRecap } from '@/ai/flows/ai-match-recap-tool';
 import { Match } from '@/lib/types';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -26,8 +26,7 @@ export function MatchRecapButton({ match }: { match: Match }) {
       });
       setRecap(result.recap);
     } catch (error) {
-      console.error('Failed to generate recap', error);
-      setRecap("Oops! We couldn't generate the recap at this moment. Please try again later.");
+      setRecap("Recap temporarily unavailable. Please try again soon.");
     } finally {
       setLoading(false);
     }
@@ -38,38 +37,38 @@ export function MatchRecapButton({ match }: { match: Match }) {
       <Button 
         variant="ghost" 
         size="sm" 
-        className="text-primary hover:text-primary hover:bg-primary/10 gap-2"
+        className="h-7 text-[10px] font-black uppercase text-primary hover:text-primary hover:bg-primary/5 gap-1.5"
         onClick={handleGenerate}
       >
-        <Sparkles className="h-4 w-4" />
-        AI Match Recap
+        <Sparkles className="h-3 w-3" />
+        AI Recap
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Match Summary
+        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none">
+          <DialogHeader className="p-6 bg-primary text-white">
+            <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase tracking-tight">
+              <Sparkles className="h-5 w-5" />
+              Match Recap
             </DialogTitle>
-            <DialogDescription>
-              {match.teamA} vs {match.teamB}
+            <DialogDescription className="text-primary-foreground/80 font-bold text-xs uppercase">
+              {match.teamA} {match.scoreA} - {match.scoreB} {match.teamB}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="p-6">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground animate-pulse">Our AI is drafting your recap...</p>
+              <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-[10px] font-black uppercase text-muted-foreground animate-pulse tracking-widest">Drafting...</p>
               </div>
             ) : (
-              <p className="text-lg leading-relaxed italic text-foreground/90 font-medium">
+              <p className="text-sm leading-relaxed font-medium text-foreground italic border-l-2 border-primary/20 pl-4 py-1">
                 "{recap}"
               </p>
             )}
           </div>
-          <div className="flex justify-end">
-            <Button variant="secondary" onClick={() => setOpen(false)}>Close</Button>
+          <div className="px-6 pb-6 flex justify-end">
+            <Button variant="outline" size="sm" className="text-[10px] font-black uppercase h-8" onClick={() => setOpen(false)}>Close</Button>
           </div>
         </DialogContent>
       </Dialog>

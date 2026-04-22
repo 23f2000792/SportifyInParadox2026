@@ -9,37 +9,37 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-sm h-14">
+      <div className="container mx-auto flex h-full max-w-5xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold italic">
+          <div className="flex h-7 w-7 items-center justify-center rounded bg-primary text-white text-sm font-black italic">
             P
           </div>
-          <span className="text-xl font-bold tracking-tight text-primary">
+          <span className="text-lg font-black tracking-tighter text-primary uppercase">
             SportFlow
           </span>
         </Link>
         
-        <nav className="flex items-center gap-4 md:gap-6">
+        <nav className="flex items-center gap-6">
           <Link
             href="/"
             className={cn(
-              "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+              "flex items-center gap-1.5 text-xs font-black uppercase tracking-tight transition-colors hover:text-primary",
               pathname === "/" ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="hidden sm:inline">Dashboard</span>
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            <span className="hidden xs:inline">Dashboard</span>
           </Link>
           <Link
             href="/admin"
             className={cn(
-              "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+              "flex items-center gap-1.5 text-xs font-black uppercase tracking-tight transition-colors hover:text-primary",
               pathname === "/admin" ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Admin</span>
+            <Settings className="h-3.5 w-3.5" />
+            <span className="hidden xs:inline">Admin</span>
           </Link>
         </nav>
       </div>

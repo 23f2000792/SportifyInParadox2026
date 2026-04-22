@@ -4,47 +4,32 @@
 
 @layer base {
   :root {
-    --background: 105 10% 96%;
+    --background: 105 15% 98%;
     --foreground: 100 20% 10%;
     --card: 0 0% 100%;
     --card-foreground: 100 20% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 100 20% 10%;
-    --primary: 100 70% 40%;
+    --primary: 100 70% 35%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 105 10% 90%;
+    --secondary: 105 10% 94%;
     --secondary-foreground: 100 20% 20%;
-    --muted: 105 10% 90%;
-    --muted-foreground: 100 10% 40%;
-    --accent: 70 80% 65%;
+    --muted: 105 10% 94%;
+    --muted-foreground: 100 10% 45%;
+    --accent: 70 85% 60%;
     --accent-foreground: 100 20% 10%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 105 10% 88%;
-    --input: 105 10% 88%;
-    --ring: 100 70% 40%;
-    --radius: 0.75rem;
-  }
-  .dark {
-    --background: 100 20% 5%;
-    --foreground: 100 10% 95%;
-    --card: 100 20% 8%;
-    --card-foreground: 100 10% 95%;
-    --popover: 100 20% 8%;
-    --popover-foreground: 100 10% 95%;
-    --primary: 100 70% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 100 20% 15%;
-    --secondary-foreground: 100 10% 90%;
-    --muted: 100 20% 15%;
-    --muted-foreground: 100 10% 65%;
-    --accent: 70 80% 60%;
-    --accent-foreground: 100 20% 10%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 100 20% 20%;
-    --input: 100 20% 20%;
-    --ring: 100 70% 45%;
+    --border: 105 10% 90%;
+    --input: 105 10% 90%;
+    --ring: 100 70% 35%;
+    --radius: 0.5rem;
+    
+    /* Custom Status Colors */
+    --status-win: 142 70% 40%;
+    --status-loss: 0 84% 55%;
+    --status-live: 45 100% 45%;
+    --status-upcoming: 0 0% 45%;
   }
 }
 
@@ -54,12 +39,25 @@
   }
   body {
     @apply bg-background text-foreground font-body;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-bold tracking-tight;
   }
 }
 
-.status-win { @apply text-green-600 font-bold; }
-.status-loss { @apply text-red-600 font-bold; }
-.status-live { @apply text-yellow-500 font-bold animate-pulse; }
+/* Status Utility Classes */
+.text-win { color: hsl(var(--status-win)); }
+.text-loss { color: hsl(var(--status-loss)); }
+.text-live { color: hsl(var(--status-live)); }
+.text-upcoming { color: hsl(var(--status-upcoming)); }
+
+.bg-win { background-color: hsl(var(--status-win)); }
+.bg-loss { background-color: hsl(var(--status-loss)); }
+.bg-live { background-color: hsl(var(--status-live)); }
+.bg-upcoming { background-color: hsl(var(--status-upcoming)); }
+
+/* Transitions */
+.fast-transition {
+  @apply transition-all duration-150 ease-in-out;
+}

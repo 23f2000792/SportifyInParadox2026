@@ -1,9 +1,8 @@
 import { EVENTS, MOCK_MATCHES } from '@/lib/mock-data';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, Gavel, ArrowRight, Play } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, Gavel, ArrowRight } from 'lucide-react';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -17,45 +16,37 @@ export default function Home() {
   const liveMatches = MOCK_MATCHES.filter(m => m.status === 'Live');
   
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Hero Section */}
-      <section className="space-y-2">
-        <h1 className="text-3xl md:text-4xl">Sportify in Paradox 2026</h1>
-        <p className="text-muted-foreground max-w-2xl">
-          Welcome to the central dashboard for the annual college sports fest. Stay updated with live scores, schedules, and standings.
-        </p>
-      </section>
+    <div className="space-y-6">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-black md:text-3xl">Sportify 2026</h1>
+        <p className="text-sm text-muted-foreground">Central dashboard for Paradox fest sports events.</p>
+      </header>
 
-      {/* Live Now Section */}
+      {/* Live Now Section - Compact */}
       {liveMatches.length > 0 && (
-        <section className="space-y-4">
+        <section className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
-            </div>
-            <h2 className="text-xl font-semibold">Live Now</h2>
+            <div className="h-2 w-2 rounded-full bg-live animate-pulse"></div>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-live">Live Now</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {liveMatches.map((match) => (
-              <Card key={match.id} className="border-l-4 border-l-yellow-400 shadow-md">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                      {match.sport.toUpperCase()}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground font-medium">{match.time}</span>
+              <Card key={match.id} className="border-l-4 border-l-yellow-500 shadow-sm hover:shadow-md fast-transition">
+                <CardContent className="p-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase text-muted-foreground">{match.sport}</span>
+                    <span className="text-[10px] font-medium text-muted-foreground">{match.time}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2">
-                    <div className="flex-1 text-center">
-                      <p className="font-bold text-lg">{match.teamA}</p>
-                      <p className="text-3xl font-black mt-1">{match.scoreA}</p>
+                  <div className="grid grid-cols-3 items-center">
+                    <div className="text-center">
+                      <p className="font-bold text-sm truncate">{match.teamA}</p>
+                      <p className="text-2xl font-black">{match.scoreA}</p>
                     </div>
-                    <div className="px-4 text-muted-foreground font-bold">VS</div>
-                    <div className="flex-1 text-center">
-                      <p className="font-bold text-lg">{match.teamB}</p>
-                      <p className="text-3xl font-black mt-1">{match.scoreB}</p>
+                    <div className="text-center text-[10px] font-black text-muted-foreground/50">VS</div>
+                    <div className="text-center">
+                      <p className="font-bold text-sm truncate">{match.teamB}</p>
+                      <p className="text-2xl font-black">{match.scoreB}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -65,29 +56,23 @@ export default function Home() {
         </section>
       )}
 
-      {/* Quick Navigation Cards */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Events</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Quick Navigation Cards - Minimalist */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Browse Events</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {EVENTS.map((event) => {
             const IconComp = ICON_MAP[event.icon];
             return (
               <Link key={event.id} href={`/events/${event.slug}`} className="group block">
-                <Card className="h-full transition-all group-hover:shadow-lg group-hover:border-primary/20 group-hover:-translate-y-1">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-lg font-bold">{event.name}</CardTitle>
-                    <div className="p-2 rounded-lg bg-accent/20 group-hover:bg-accent/40 transition-colors">
+                <Card className="h-full border-none bg-white shadow-sm hover:ring-1 hover:ring-primary/20 fast-transition">
+                  <CardHeader className="p-4 flex flex-col items-center space-y-2">
+                    <div className="p-3 rounded-full bg-primary/5 group-hover:bg-primary/10 fast-transition">
                       <IconComp className="h-5 w-5 text-primary" />
                     </div>
+                    <CardTitle className="text-xs font-black text-center group-hover:text-primary fast-transition">
+                      {event.name}
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {event.description}
-                    </p>
-                    <div className="flex items-center text-xs font-semibold text-primary group-hover:underline">
-                      View details <ArrowRight className="ml-1 h-3 w-3" />
-                    </div>
-                  </CardContent>
                 </Card>
               </Link>
             );
