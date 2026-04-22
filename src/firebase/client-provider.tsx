@@ -1,20 +1,23 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { initializeFirebase, FirebaseProvider } from './index';
+import { FirebaseApp } from 'firebase/app';
+import { Firestore } from 'firebase/firestore';
+import { Auth } from 'firebase/auth';
 
 export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
-  const [isMounted, setIsMounted] = useState(false);
+  const [firebase, setFirebase] = useState<{ app: FirebaseApp, db: Firestore, auth: Auth } | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
+    // Only initialize once the component has mounted on the client
+    const instances = initializeFirebase();
+    if (instances) {
+      setFirebase(instances);
+    }
   }, []);
 
-  const firebase = useMemo(() => {
-    if (!isMounted) return null;
-    return initializeFirebase();
-  }, [isMounted]);
-
+  // Return nothing until we have initialized Firebase on the client
   if (!firebase) {
     return null;
   }

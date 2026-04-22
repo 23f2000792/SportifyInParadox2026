@@ -6,8 +6,8 @@ import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 /**
- * Robust Firebase initialization for Next.js.
- * Uses a global singleton pattern on the window object to prevent 
+ * Defensive Firebase initialization for Next.js.
+ * Uses a global singleton on the window object to prevent 
  * re-initialization of services (Firestore/Auth) which causes 
  * "INTERNAL ASSERTION FAILED (ID: ca9)" errors in Firebase v11.
  */
@@ -16,16 +16,22 @@ export function initializeFirebase() {
     return null;
   }
 
-  // Initialize App
-  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-
-  // Singleton pattern for services using the window object
   const _window = window as any;
 
+  // 1. Initialize or retrieve the App
+  let app: FirebaseApp;
+  if (getApps().length > 0) {
+    app = getApp();
+  } else {
+    app = initializeApp(firebaseConfig);
+  }
+
+  // 2. Initialize or retrieve Firestore instance
   if (!_window.__FIREBASE_DB__) {
     _window.__FIREBASE_DB__ = getFirestore(app);
   }
   
+  // 3. Initialize or retrieve Auth instance
   if (!_window.__FIREBASE_AUTH__) {
     _window.__FIREBASE_AUTH__ = getAuth(app);
   }
