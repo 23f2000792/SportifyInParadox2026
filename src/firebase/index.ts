@@ -5,30 +5,23 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
-let app: FirebaseApp;
-let db: Firestore;
-let auth: Auth;
+let firebaseInstance: { app: FirebaseApp; db: Firestore; auth: Auth } | null = null;
 
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
-    throw new Error('Firebase can only be initialized on the client side.');
+    return null;
   }
 
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
+  if (firebaseInstance) {
+    return firebaseInstance;
   }
 
-  // Use existing instances if they exist to prevent re-initialization conflicts
-  if (!db) {
-    db = getFirestore(app);
-  }
-  if (!auth) {
-    auth = getAuth(app);
-  }
+  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  return { app, db, auth };
+  firebaseInstance = { app, db, auth };
+  return firebaseInstance;
 }
 
 export { FirebaseProvider, useFirebaseApp, useFirestore, useAuth } from './provider';
