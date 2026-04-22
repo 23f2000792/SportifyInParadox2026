@@ -24,6 +24,8 @@ const ICON_MAP: Record<string, any> = {
   Target: Target,
 };
 
+const APP_URL = "https://sportify-in-paradox2026.vercel.app/";
+
 export default function EventPage() {
   const params = useParams();
   const sport = params.sport as string;
@@ -64,11 +66,50 @@ export default function EventPage() {
     return [...(rawRunResults || [])].sort((a, b) => a.position - b.position);
   }, [rawRunResults]);
 
-  const handleShare = (match: Match) => {
-    const text = `🏆 *Paradox 2026 Results* 🏆\n\nSport: ${match.sport.toUpperCase()}\n${match.teamA} ${match.scoreA} - ${match.scoreB} ${match.teamB}\nPhase: ${match.phase}\n\nView results on Sportify!`;
+  const handleShareMatch = (match: Match) => {
+    const winnerText = match.scoreA > match.scoreB 
+      ? `🏆 *${match.teamA}* takes the victory!` 
+      : match.scoreB > match.scoreA 
+      ? `🏆 *${match.teamB}* takes the victory!` 
+      : `🤝 It's a draw!`;
+
+    let subResultsText = "";
+    if (sport === 'badminton' && match.badmintonResults) {
+      subResultsText = `📊 *MATCH BREAKDOWN:* \n` + 
+        match.badmintonResults.map(r => `• ${r.type}: ${r.score} (Winner: ${r.winner || 'TBD'})`).join('\n') + `\n\n`;
+    }
+
+    const text = `🔥 *PARADOX 2026 - MATCH RESULTS* 🔥\n\n` +
+      `🏅 *Sport:* ${match.sport.replace('-', ' ').toUpperCase()}\n` +
+      `🔢 *Match:* M#${match.matchNumber}\n` +
+      `📍 *Phase:* ${match.phase.replace('-', ' ').toUpperCase()}\n\n` +
+      `⚔️ *BATTLE:* \n` +
+      `*${match.teamA}* (${match.scoreA}) vs *${match.teamB}* (${match.scoreB})\n\n` +
+      `${winnerText}\n\n` +
+      `${subResultsText}` +
+      `🏟️ *Venue:* ${match.venue}\n` +
+      `📅 *Date:* ${match.date}\n\n` +
+      `📲 *Follow all live scores and updates on the official portal:*\n` +
+      `${APP_URL}`;
+      
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+    toast({ title: "Sharing result..." });
+  };
+
+  const handleShareRun = (res: RunResult) => {
+    const text = `🏅 *PARADOX 2026 - KAMPUS RUN RESULT* 🏅\n\n` +
+      `👤 *Participant:* ${res.name.toUpperCase()}\n` +
+      `🏃 *Rank:* #${res.position}\n` +
+      `⏱️ *Finish Time:* ${res.time}\n` +
+      `🏁 *Category:* ${res.category}\n` +
+      `🚻 *Gender:* ${res.gender === 'M' ? 'Male' : 'Female'}\n\n` +
+      `🎯 *Check out all race results on the portal:*\n` +
+      `${APP_URL}`;
+      
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
-    toast({ title: "Sharing result..." });
+    toast({ title: "Sharing achievement..." });
   };
 
   if (matchesLoading || stdLoading || runLoading) return <Loading />;
@@ -87,10 +128,10 @@ export default function EventPage() {
             </div>
           </div>
           <div className="space-y-3">
-            <h1 className="text-4xl md:text-8xl font-black italic text-white tracking-tighter uppercase leading-none">
+            <h1 className="text-5xl md:text-8xl font-black italic text-white tracking-tighter uppercase leading-none">
               {event.name}
             </h1>
-            <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto">
+            <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto opacity-70">
               {event.description}
             </p>
           </div>
@@ -111,18 +152,18 @@ export default function EventPage() {
                         <CardTitle className="text-xl font-black uppercase italic text-white">
                           {race.teamA}
                         </CardTitle>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mt-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1">
                           {race.date} • {race.venue}
                         </p>
                       </CardHeader>
                       <CardContent className="p-8 flex items-center justify-around">
                         <div className="text-center space-y-2">
-                          <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest">Reporting</p>
+                          <p className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest">Reporting</p>
                           <p className="text-2xl md:text-4xl font-black text-white">{race.reportingTime || '--:--'}</p>
                         </div>
                         <div className="h-12 w-px bg-white/[0.05]" />
                         <div className="text-center space-y-2">
-                          <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest">Start Time</p>
+                          <p className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest">Start Time</p>
                           <p className="text-2xl md:text-4xl font-black text-primary">{race.time}</p>
                         </div>
                       </CardContent>
@@ -148,12 +189,17 @@ export default function EventPage() {
                 </TableHeader>
                 <TableBody>
                   {runResults?.map((res) => (
-                    <TableRow key={res.id} className="h-20">
+                    <TableRow key={res.id} className="h-20 group">
                       <TableCell className="text-center text-2xl md:text-3xl font-black italic text-primary">#{res.position}</TableCell>
                       <TableCell>
-                        <p className="text-lg md:text-xl font-black uppercase italic text-white">{res.name}</p>
-                        <div className="flex gap-2 mt-1 sm:hidden">
-                           <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{res.category} • {res.gender}</span>
+                        <div className="flex flex-col">
+                          <p className="text-lg md:text-xl font-black uppercase italic text-white">{res.name}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                             <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{res.category} • {res.gender}</span>
+                             <Button variant="ghost" size="sm" onClick={() => handleShareRun(res)} className="h-5 p-0 text-[10px] font-black text-primary/60 hover:text-primary gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <Share2 className="h-2.5 w-2.5" /> SHARE
+                             </Button>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
@@ -210,10 +256,10 @@ export default function EventPage() {
               Match Center
             </h2>
             <Tabs defaultValue="live" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-white/[0.03] border border-white/[0.08] p-1.5 h-16 rounded-2xl max-w-md mx-auto">
-                <TabsTrigger value="live" className="text-[10px] font-black uppercase tracking-widest rounded-xl">Live</TabsTrigger>
-                <TabsTrigger value="upcoming" className="text-[10px] font-black uppercase tracking-widest rounded-xl">Schedule</TabsTrigger>
-                <TabsTrigger value="completed" className="text-[10px] font-black uppercase tracking-widest rounded-xl">History</TabsTrigger>
+              <TabsList className="flex w-full overflow-x-auto no-scrollbar justify-start bg-white/[0.03] border border-white/[0.08] p-1.5 h-16 rounded-2xl max-w-md mx-auto gap-1">
+                <TabsTrigger value="live" className="flex-1 text-[10px] font-black uppercase tracking-widest rounded-xl">Live</TabsTrigger>
+                <TabsTrigger value="upcoming" className="flex-1 text-[10px] font-black uppercase tracking-widest rounded-xl">Schedule</TabsTrigger>
+                <TabsTrigger value="completed" className="flex-1 text-[10px] font-black uppercase tracking-widest rounded-xl">History</TabsTrigger>
               </TabsList>
 
               <TabsContent value="live" className="space-y-6 mt-10">
@@ -244,7 +290,7 @@ export default function EventPage() {
                             <div key={idx} className="bg-white/[0.03] rounded-2xl p-5 text-center border border-white/[0.05]">
                               <p className="text-[10px] font-black text-primary/80 uppercase mb-2 tracking-widest">{sub.type}</p>
                               <p className="text-xl font-black text-white tracking-tight">{sub.score}</p>
-                              {sub.winner && <p className="text-[9px] font-black text-primary uppercase mt-2 tracking-widest">{sub.winner}</p>}
+                              {sub.winner && <p className="text-[10px] font-black text-primary uppercase mt-2 tracking-widest">{sub.winner}</p>}
                             </div>
                           ))}
                         </div>
@@ -260,7 +306,7 @@ export default function EventPage() {
                     <CardContent className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
                       <div className="flex flex-col md:flex-row items-center gap-8">
                         <div className="text-center md:pr-10 md:border-r border-white/[0.05] md:w-40">
-                          <p className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em] mb-1.5">M#{match.matchNumber}</p>
+                          <p className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em] mb-1.5 opacity-60">M#{match.matchNumber}</p>
                           <p className="text-3xl md:text-4xl font-black text-white tracking-tighter">{match.time}</p>
                           <p className="text-[11px] font-bold text-muted-foreground/60 uppercase mt-1 tracking-[0.2em]">{match.day}</p>
                         </div>
@@ -287,7 +333,7 @@ export default function EventPage() {
                     <CardContent className="p-0">
                       <div className="p-8 md:p-12 flex items-center justify-between gap-6">
                         <div className="flex-1 text-right">
-                          <p className={cn("font-black text-xl md:text-4xl uppercase italic tracking-tighter", match.scoreA > match.scoreB ? 'text-white' : 'text-muted-foreground/50')}>
+                          <p className={cn("font-black text-xl md:text-4xl uppercase italic tracking-tighter", match.scoreA > match.scoreB ? 'text-white' : 'text-muted-foreground/40')}>
                             {match.teamA}
                           </p>
                         </div>
@@ -295,7 +341,7 @@ export default function EventPage() {
                           {match.scoreA} - {match.scoreB}
                         </div>
                         <div className="flex-1 text-left">
-                          <p className={cn("font-black text-xl md:text-4xl uppercase italic tracking-tighter", match.scoreB > match.scoreA ? 'text-white' : 'text-muted-foreground/50')}>
+                          <p className={cn("font-black text-xl md:text-4xl uppercase italic tracking-tighter", match.scoreB > match.scoreA ? 'text-white' : 'text-muted-foreground/40')}>
                             {match.teamB}
                           </p>
                         </div>
@@ -305,7 +351,7 @@ export default function EventPage() {
                         <Accordion type="single" collapsible className="w-full px-8 pb-6">
                           <AccordionItem value="details" className="border-none">
                             <AccordionTrigger className="text-[11px] font-black uppercase text-primary hover:no-underline py-3 tracking-widest">
-                              View Sub-Match Scores
+                              View Sub-Match Breakdown
                             </AccordionTrigger>
                             <AccordionContent>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3">
@@ -313,7 +359,7 @@ export default function EventPage() {
                                   <div key={idx} className="bg-white/[0.03] rounded-2xl p-5 border border-white/[0.05] text-center">
                                     <p className="text-[10px] font-black text-primary/70 uppercase mb-2 tracking-widest">{sub.type}</p>
                                     <p className="text-lg font-black text-white tracking-tight">{sub.score}</p>
-                                    {sub.winner && <p className="text-[9px] font-black text-primary uppercase mt-2 tracking-widest">{sub.winner}</p>}
+                                    {sub.winner && <p className="text-[10px] font-black text-primary uppercase mt-2 tracking-widest">{sub.winner}</p>}
                                   </div>
                                 ))}
                               </div>
@@ -327,11 +373,11 @@ export default function EventPage() {
                           <span className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-[0.2em]">
                             M#{match.matchNumber} • {match.phase.toUpperCase()}
                           </span>
-                          <Button variant="ghost" size="sm" onClick={() => handleShare(match)} className="h-8 text-[11px] font-black text-primary hover:text-primary hover:bg-primary/10 gap-2">
-                            <Share2 className="h-3.5 w-3.5" /> Share
+                          <Button variant="ghost" size="sm" onClick={() => handleShareMatch(match)} className="h-8 text-[11px] font-black text-primary hover:text-primary hover:bg-primary/10 gap-2">
+                            <Share2 className="h-3.5 w-3.5" /> Broadcast Result
                           </Button>
                         </div>
-                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase mt-2 md:mt-0 tracking-widest">{match.date} • {match.venue}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase mt-2 md:mt-0 tracking-widest opacity-60">{match.date} • {match.venue}</span>
                       </div>
                     </CardContent>
                   </Card>
