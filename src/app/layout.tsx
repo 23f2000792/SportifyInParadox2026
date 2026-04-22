@@ -4,7 +4,7 @@ import {Navbar} from '@/components/Navbar';
 import {Toaster} from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Paradox SportFlow',
+  title: 'Sportify in Paradox 2026',
   description: 'Real-time sports control dashboard for Sportify in Paradox 2026',
 };
 
@@ -27,7 +27,7 @@ export default function RootLayout({
             {children}
           </main>
           <footer className="py-6 border-t bg-white/50 text-center text-sm text-muted-foreground">
-            <p>© 2026 Paradox SportFlow. All rights reserved.</p>
+            <p>© 2026 Sportify in Paradox. All rights reserved.</p>
           </footer>
         </div>
         <Toaster />

@@ -23,10 +23,10 @@ export function Navbar() {
       <header className="w-full border-b bg-white h-12 flex items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-white text-[10px] font-black italic">
-            P
+            S
           </div>
           <span className="text-sm font-black tracking-tighter text-primary uppercase">
-            SportFlow
+            Sportify 2026
           </span>
         </Link>
         

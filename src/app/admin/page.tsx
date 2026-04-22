@@ -27,7 +27,7 @@ export default function AdminPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="text-center space-y-1">
         <h1 className="text-2xl font-black">Admin Panel</h1>
-        <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Sportify 2026 Management</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Sportify in Paradox 2026</p>
       </div>
 
       <Tabs defaultValue="scores" className="w-full">
