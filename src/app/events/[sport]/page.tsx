@@ -15,6 +15,15 @@ export default async function EventPage({ params }: { params: { sport: string } 
 
   const sportMatches = MOCK_MATCHES.filter(m => m.sport === sport);
 
+  const runCategories = [
+    '3km Male',
+    '3km Female',
+    '5km Male 18-25',
+    '5km Male 26+',
+    '5km Female 18-25',
+    '5km Female 26+'
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1 border-b pb-4">
@@ -163,32 +172,99 @@ export default async function EventPage({ params }: { params: { sport: string } 
 
       {/* KAMPUS RUN LAYOUT */}
       {sport === 'kampus-run' && (
-        <Card className="border-none shadow-sm overflow-hidden bg-white">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="w-12 text-center text-[10px] font-black uppercase">Pos</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase">Participant</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase">Time</TableHead>
-                  <TableHead className="hidden sm:table-cell text-[10px] font-black uppercase text-center">Cat</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {RUN_RESULTS.map((res) => (
-                  <TableRow key={res.position} className="h-10">
-                    <TableCell className="text-center font-black">
-                      {res.position === 1 ? "🥇" : res.position === 2 ? "🥈" : res.position === 3 ? "🥉" : res.position}
-                    </TableCell>
-                    <TableCell className="font-bold py-2 text-sm">{res.name}</TableCell>
-                    <TableCell className="font-black text-primary text-sm">{res.time}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-center text-[10px] font-black text-muted-foreground uppercase">{res.ageGroup}</TableCell>
-                  </TableRow>
+        <div className="space-y-4">
+          <Tabs defaultValue={runCategories[0]} className="w-full">
+            <div className="overflow-x-auto no-scrollbar mb-4 bg-muted/50 p-1 rounded-lg">
+              <TabsList className="flex w-max h-10 bg-transparent gap-1">
+                {runCategories.map((cat) => (
+                  <TabsTrigger key={cat} value={cat} className="text-[10px] font-black uppercase px-4 whitespace-nowrap">
+                    {cat}
+                  </TabsTrigger>
                 ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              </TabsList>
+            </div>
+
+            {runCategories.map((cat) => {
+              const categoryResults = RUN_RESULTS.filter(r => r.category === cat).sort((a, b) => a.position - b.position);
+              return (
+                <TabsContent key={cat} value={cat} className="mt-0">
+                  <Card className="border-none shadow-sm overflow-hidden bg-white">
+                    <CardContent className="p-0">
+                      <div className="max-h-[600px] overflow-auto">
+                        <Table>
+                          <TableHeader className="bg-muted/50 sticky top-0 z-10 shadow-sm">
+                            <TableRow className="hover:bg-transparent border-none">
+                              <TableHead className="w-16 text-center text-[10px] font-black uppercase">Pos</TableHead>
+                              <TableHead className="text-[10px] font-black uppercase">Participant</TableHead>
+                              <TableHead className="text-[10px] font-black uppercase">Time</TableHead>
+                              <TableHead className="text-[10px] font-black uppercase text-center">Category</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {categoryResults.length > 0 ? (
+                              categoryResults.map((res) => {
+                                const isTop3 = res.position <= 3;
+                                const podiumColor = res.position === 1 ? 'text-yellow-500' : res.position === 2 ? 'text-gray-400' : res.position === 3 ? 'text-orange-400' : '';
+                                const podiumBg = res.position === 1 ? 'bg-yellow-50' : res.position === 2 ? 'bg-gray-50' : res.position === 3 ? 'bg-orange-50' : '';
+
+                                return (
+                                  <TableRow key={res.name} className={`h-12 border-muted/20 ${isTop3 ? podiumBg : ''}`}>
+                                    <TableCell className="text-center">
+                                      {res.position === 1 ? (
+                                        <div className="flex flex-col items-center">
+                                          <span className="text-xl">🥇</span>
+                                          <span className="text-[8px] font-black text-yellow-600 -mt-1">1ST</span>
+                                        </div>
+                                      ) : res.position === 2 ? (
+                                        <div className="flex flex-col items-center">
+                                          <span className="text-xl">🥈</span>
+                                          <span className="text-[8px] font-black text-gray-500 -mt-1">2ND</span>
+                                        </div>
+                                      ) : res.position === 3 ? (
+                                        <div className="flex flex-col items-center">
+                                          <span className="text-xl">🥉</span>
+                                          <span className="text-[8px] font-black text-orange-600 -mt-1">3RD</span>
+                                        </div>
+                                      ) : (
+                                        <span className="font-black text-muted-foreground/60">{res.position}</span>
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex flex-col">
+                                        <span className="font-black text-sm">{res.name}</span>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase">{res.gender === 'M' ? 'Male' : 'Female'}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <span className={`text-sm font-black tabular-nums ${isTop3 ? 'text-primary' : ''}`}>
+                                        {res.time}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      <Badge variant="secondary" className="text-[9px] font-black uppercase bg-muted/80">
+                                        {res.ageGroup}
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={4} className="h-32 text-center text-xs font-black text-muted-foreground uppercase italic">
+                                  No records found for this category.
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              );
+            })}
+          </Tabs>
+        </div>
       )}
 
       {/* VOLLEYBALL LAYOUT */}

@@ -44,6 +44,7 @@ export interface RunResult {
   time: string;
   gender: 'M' | 'F';
   ageGroup: string;
+  category: string;
 }
 
 export interface AuctionTeam {

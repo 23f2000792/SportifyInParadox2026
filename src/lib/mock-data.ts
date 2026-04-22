@@ -113,10 +113,33 @@ export const BADMINTON_STANDINGS: Standing[] = [
 ];
 
 export const RUN_RESULTS: RunResult[] = [
-  { position: 1, name: 'Alex Rivera', time: '18:45', gender: 'M', ageGroup: '18-25' },
-  { position: 2, name: 'Samantha Chen', time: '19:12', gender: 'F', ageGroup: '18-25' },
-  { position: 3, name: 'James Wilson', time: '19:30', gender: 'M', ageGroup: '26-35' },
-  { position: 4, name: 'Elena Gilbert', time: '20:05', gender: 'F', ageGroup: '18-25' },
+  // 3km Male
+  { position: 1, name: 'Alex Rivera', time: '10:45', gender: 'M', ageGroup: 'All', category: '3km Male' },
+  { position: 2, name: 'David Smith', time: '11:12', gender: 'M', ageGroup: 'All', category: '3km Male' },
+  { position: 3, name: 'Chris Evans', time: '11:30', gender: 'M', ageGroup: 'All', category: '3km Male' },
+  { position: 4, name: 'Tom Holland', time: '12:05', gender: 'M', ageGroup: 'All', category: '3km Male' },
+
+  // 3km Female
+  { position: 1, name: 'Samantha Chen', time: '12:15', gender: 'F', ageGroup: 'All', category: '3km Female' },
+  { position: 2, name: 'Elena Gilbert', time: '13:02', gender: 'F', ageGroup: 'All', category: '3km Female' },
+  { position: 3, name: 'Sarah Miller', time: '13:45', gender: 'F', ageGroup: 'All', category: '3km Female' },
+
+  // 5km Male 18-25
+  { position: 1, name: 'James Wilson', time: '18:30', gender: 'M', ageGroup: '18-25', category: '5km Male 18-25' },
+  { position: 2, name: 'Mark Ruffalo', time: '19:10', gender: 'M', ageGroup: '18-25', category: '5km Male 18-25' },
+  { position: 3, name: 'Robert Downey', time: '19:55', gender: 'M', ageGroup: '18-25', category: '5km Male 18-25' },
+
+  // 5km Male 26+
+  { position: 1, name: 'Paul Rudd', time: '20:15', gender: 'M', ageGroup: '26+', category: '5km Male 26+' },
+  { position: 2, name: 'Jeremy Renner', time: '21:05', gender: 'M', ageGroup: '26+', category: '5km Male 26+' },
+
+  // 5km Female 18-25
+  { position: 1, name: 'Scarlett Johansson', time: '21:30', gender: 'F', ageGroup: '18-25', category: '5km Female 18-25' },
+  { position: 2, name: 'Elizabeth Olsen', time: '22:12', gender: 'F', ageGroup: '18-25', category: '5km Female 18-25' },
+
+  // 5km Female 26+
+  { position: 1, name: 'Brie Larson', time: '23:45', gender: 'F', ageGroup: '26+', category: '5km Female 26+' },
+  { position: 2, name: 'Zoe Saldana', time: '24:12', gender: 'F', ageGroup: '26+', category: '5km Female 26+' },
 ];
 
 export const AUCTION_DATA: AuctionTeam[] = [
