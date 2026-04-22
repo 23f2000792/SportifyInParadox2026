@@ -4,32 +4,32 @@
 
 @layer base {
   :root {
-    --background: 105 15% 98%;
-    --foreground: 100 20% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 100 20% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 100 20% 10%;
-    --primary: 142 70% 35%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 105 10% 94%;
-    --secondary-foreground: 100 20% 20%;
-    --muted: 105 10% 94%;
-    --muted-foreground: 100 10% 45%;
-    --accent: 70 85% 60%;
-    --accent-foreground: 100 20% 10%;
-    --destructive: 0 84% 55%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 105 10% 90%;
-    --input: 105 10% 90%;
-    --ring: 142 70% 35%;
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222 47% 12%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 47% 12%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 47% 15%;
+    --input: 222 47% 15%;
+    --ring: 263 70% 60%;
     --radius: 0.5rem;
     
     /* Custom Status Colors */
-    --status-win: 142 70% 40%;
-    --status-loss: 0 84% 55%;
-    --status-live: 45 100% 45%;
-    --status-upcoming: 0 0% 45%;
+    --status-win: 142 70% 45%;
+    --status-loss: 0 84% 60%;
+    --status-live: 45 100% 50%;
+    --status-upcoming: 215 20% 65%;
   }
 }
 
@@ -38,7 +38,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   h1, h2, h3, h4, h5, h6 {
@@ -67,5 +67,21 @@
 .bg-upcoming { background-color: hsl(var(--status-upcoming)); }
 
 .fast-transition {
-  @apply transition-all duration-150 ease-in-out;
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Premium Gradient Borders */
+.premium-card {
+  @apply relative overflow-hidden bg-card border-none shadow-xl;
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(222, 47%, 9%) 100%);
+}
+
+.premium-card::after {
+  content: '';
+  @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
+  background: radial-gradient(circle at top left, hsla(var(--primary), 0.1), transparent 70%);
+}
+
+.premium-card:hover::after {
+  @apply opacity-100;
 }

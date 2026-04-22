@@ -5,7 +5,7 @@ import {Toaster} from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Sportify in Paradox 2026',
-  description: 'Real-time sports control dashboard for Sportify in Paradox 2026',
+  description: 'Premium real-time sports control dashboard for Sportify in Paradox 2026',
 };
 
 export default function RootLayout({
@@ -14,20 +14,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased bg-background">
+      <body className="font-body antialiased bg-background text-foreground selection:bg-primary/30">
         <div className="flex flex-col min-h-screen">
           <Navbar />
-          <main className="flex-grow container mx-auto px-4 py-6 md:py-8 max-w-5xl">
+          <main className="flex-grow container mx-auto px-6 py-10 md:py-12 max-w-5xl">
             {children}
           </main>
-          <footer className="py-6 border-t bg-white/50 text-center text-sm text-muted-foreground">
-            <p>© 2026 Sportify in Paradox. All rights reserved.</p>
+          <footer className="py-10 border-t border-white/5 bg-black/40 text-center space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
+              Sportify in Paradox 2026 • Real-Time Broadcast Control
+            </p>
+            <p className="text-[9px] font-medium text-muted-foreground/10 uppercase tracking-widest">
+              © 2026 Paradox Interactive Sports. All Rights Reserved.
+            </p>
           </footer>
         </div>
         <Toaster />
