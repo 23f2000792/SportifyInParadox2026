@@ -96,7 +96,7 @@ export default function AdminPage() {
   const { data: matches } = useCollection<Match>(matchesQuery);
 
   const standingsQuery = useMemo(() => {
-    if (!db || !selectedSportSlug) return null;
+    if (!db || !selectedSportSlug || selectedSportSlug === 'kampus-run') return null;
     return query(collection(db, 'standings'), where('sport', '==', selectedSportSlug));
   }, [db, selectedSportSlug]);
   const { data: standings } = useCollection<Standing>(standingsQuery);
@@ -133,6 +133,7 @@ export default function AdminPage() {
 
   const isSuperAdmin = adminProfile.role === 'super-admin';
   const currentSport = EVENTS.find(e => e.slug === selectedSportSlug);
+  const isKampusRun = selectedSportSlug === 'kampus-run';
 
   const handleUpdateMatch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -308,6 +309,12 @@ export default function AdminPage() {
     );
   }
 
+  // Calculate dynamic grid columns based on context
+  const tabsCount = (isKampusRun ? 3 : 4) + (isSuperAdmin ? 1 : 0);
+  const gridColsClass = tabsCount === 5 ? "grid-cols-5" : 
+                       tabsCount === 4 ? "grid-cols-4" : 
+                       tabsCount === 3 ? "grid-cols-3" : "grid-cols-2";
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
@@ -322,16 +329,19 @@ export default function AdminPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 bg-muted/20 h-14 p-1.5 border border-white/5 rounded-2xl">
+        <TabsList className={cn(
+          "grid w-full bg-muted/20 h-14 p-1.5 border border-white/5 rounded-2xl",
+          gridColsClass
+        )}>
           <TabsTrigger value="control" className="text-[9px] font-black uppercase rounded-xl">Live Scoring</TabsTrigger>
           <TabsTrigger value="schedule" className="text-[9px] font-black uppercase rounded-xl">Schedule</TabsTrigger>
-          <TabsTrigger value="standings" className="text-[9px] font-black uppercase rounded-xl">League Table</TabsTrigger>
+          {!isKampusRun && <TabsTrigger value="standings" className="text-[9px] font-black uppercase rounded-xl">League Table</TabsTrigger>}
           <TabsTrigger value="archive" className="text-[9px] font-black uppercase rounded-xl">Archives</TabsTrigger>
           {isSuperAdmin && <TabsTrigger value="access" className="text-[9px] font-black uppercase rounded-xl hidden md:flex">Security</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="control" className="space-y-6">
-          {selectedSportSlug === 'kampus-run' ? (
+          {isKampusRun ? (
             <Card className="premium-card border-primary/20">
               <CardHeader className="bg-primary/5 border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary">Race Result Injection Terminal</CardTitle></CardHeader>
               <CardContent className="p-8">
@@ -392,7 +402,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-8">
-          {selectedSportSlug === 'kampus-run' ? (
+          {isKampusRun ? (
             <Card className="premium-card border-white/5">
               <CardHeader className="bg-primary/5 border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><Clock className="h-4 w-4" /> Race Day Scheduling Terminal</CardTitle></CardHeader>
               <CardContent className="p-10">
@@ -478,40 +488,49 @@ export default function AdminPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="standings" className="space-y-8">
-           <Card className="premium-card border-white/5">
-             <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2">Group Stage Configuration</CardTitle></CardHeader>
-             <CardContent className="p-8">
-               <form onSubmit={handleAddStanding} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60">House Domain</Label><Select value={newStandingTeam} onValueChange={setNewStandingTeam}><SelectTrigger className="bg-white/5 border-white/10 h-12 text-xs font-black uppercase rounded-xl"><SelectValue placeholder="Select House" /></SelectTrigger><SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent></Select></div>
-                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60">Group Assignment</Label><Select value={newStandingGroup} onValueChange={setNewStandingGroup}><SelectTrigger className="bg-white/5 border-white/10 h-12 text-xs font-black uppercase rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g} className="text-[10px] font-black uppercase">Group {g}</SelectItem>)}</SelectContent></Select></div>
-                 <Button type="submit" className="h-12 uppercase font-black text-[10px] tracking-widest rounded-xl"><Plus className="h-4 w-4 mr-2" /> Assign to Group</Button>
-               </form>
-             </CardContent>
-           </Card>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             {GROUPS.map(group => {
-               const groupItems = standings?.filter(s => s.group === group).sort((a,b) => b.points - a.points);
-               if (!groupItems?.length) return null;
-               return (
-                 <Card key={group} className="premium-card border-white/5">
-                   <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-[11px] font-black uppercase text-center tracking-[0.4em] text-primary">Group {group} Matrix</CardTitle></CardHeader>
-                   <CardContent className="p-0">
-                     <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Team</TableHead><TableHead className="text-[9px] font-black uppercase text-center">P</TableHead><TableHead className="text-[9px] font-black uppercase text-center">W</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Pts</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Del</TableHead></TableRow></TableHeader>
-                       <TableBody>{groupItems.map(item => (<TableRow key={item.id} className="border-white/5 hover:bg-white/[0.01]"><TableCell className="text-xs font-black uppercase">{item.team}</TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-12 text-center text-[10px] font-black bg-white/5 mx-auto" value={item.played} onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} /></TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-12 text-center text-[10px] font-black bg-white/5 mx-auto" value={item.won} onChange={e => handleUpdateStanding(item.id, 'won', Number(e.target.value))} /></TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-14 text-center text-[10px] font-black bg-primary/10 border-primary/20 mx-auto" value={item.points} onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} /></TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => { if(confirm("Remove team from group?")) deleteDoc(doc(db!, 'standings', item.id)); }}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}
-                       </TableBody></Table></CardContent></Card>);})}</div>
-        </TabsContent>
+        {!isKampusRun && (
+          <TabsContent value="standings" className="space-y-8">
+             <Card className="premium-card border-white/5">
+               <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2">Group Stage Configuration</CardTitle></CardHeader>
+               <CardContent className="p-8">
+                 <form onSubmit={handleAddStanding} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60">House Domain</Label><Select value={newStandingTeam} onValueChange={setNewStandingTeam}><SelectTrigger className="bg-white/5 border-white/10 h-12 text-xs font-black uppercase rounded-xl"><SelectValue placeholder="Select House" /></SelectTrigger><SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}</SelectContent></Select></div>
+                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60">Group Assignment</Label><Select value={newStandingGroup} onValueChange={setNewStandingGroup}><SelectTrigger className="bg-white/5 border-white/10 h-12 text-xs font-black uppercase rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g} className="text-[10px] font-black uppercase">Group {g}</SelectItem>)}</SelectContent></Select></div>
+                   <Button type="submit" className="h-12 uppercase font-black text-[10px] tracking-widest rounded-xl"><Plus className="h-4 w-4 mr-2" /> Assign to Group</Button>
+                 </form>
+               </CardContent>
+             </Card>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               {GROUPS.map(group => {
+                 const groupItems = standings?.filter(s => s.group === group).sort((a,b) => b.points - a.points);
+                 if (!groupItems?.length) return null;
+                 return (
+                   <Card key={group} className="premium-card border-white/5">
+                     <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-[11px] font-black uppercase text-center tracking-[0.4em] text-primary">Group {group} Matrix</CardTitle></CardHeader>
+                     <CardContent className="p-0">
+                       <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Team</TableHead><TableHead className="text-[9px] font-black uppercase text-center">P</TableHead><TableHead className="text-[9px] font-black uppercase text-center">W</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Pts</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Del</TableHead></TableRow></TableHeader>
+                         <TableBody>{groupItems.map(item => (<TableRow key={item.id} className="border-white/5 hover:bg-white/[0.01]"><TableCell className="text-xs font-black uppercase">{item.team}</TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-12 text-center text-[10px] font-black bg-white/5 mx-auto" value={item.played} onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} /></TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-12 text-center text-[10px] font-black bg-white/5 mx-auto" value={item.won} onChange={e => handleUpdateStanding(item.id, 'won', Number(e.target.value))} /></TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-14 text-center text-[10px] font-black bg-primary/10 border-primary/20 mx-auto" value={item.points} onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} /></TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => { if(confirm("Remove team from group?")) deleteDoc(doc(db!, 'standings', item.id)); }}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}
+                         </TableBody></Table></CardContent></Card>);})}</div>
+          </TabsContent>
+        )}
 
         <TabsContent value="archive" className="space-y-6">
           <Card className="premium-card border-white/5">
              <CardHeader className="bg-white/[0.02] border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary flex items-center gap-2"><ListOrdered className="h-4 w-4" /> Historical Transmission Vectors</CardTitle></CardHeader>
              <CardContent className="p-0">
-               {selectedSportSlug === 'kampus-run' ? (
+               {isKampusRun ? (
                  <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="w-16 text-center text-[9px] font-black uppercase">Pos</TableHead><TableHead className="text-[9px] font-black uppercase">Participant</TableHead><TableHead className="text-[9px] font-black uppercase">Time</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
                    <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-white/5 hover:bg-white/[0.01] h-14"><TableCell className="text-center font-black">#{res.position}</TableCell><TableCell><p className="text-xs font-black uppercase">{res.name}</p><p className="text-[8px] font-black opacity-40 uppercase">{res.category} • {res.gender}</p></TableCell><TableCell className="text-xs font-black tabular-nums opacity-60">{res.time}</TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
                ) : (
                  <Table><TableHeader className="bg-white/5"><TableRow className="border-white/5"><TableHead className="text-[9px] font-black uppercase">Transmission Profile</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Final Score</TableHead><TableHead className="text-right text-[9px] font-black uppercase">Action</TableHead></TableRow></TableHeader>
-                   <TableBody>{matches?.filter(m => m.status === 'Completed').map(match => (<TableRow key={match.id} className="border-white/5 hover:bg-white/[0.01] h-16"><TableCell><p className="text-xs font-black uppercase italic">M#{match.matchNumber} | {match.teamA} vs {match.teamB}</p><p className="text-[8px] font-black opacity-30 uppercase">{match.phase} {match.group ? `• Group ${match.group}` : ''}</p></TableCell><TableCell className="text-center font-black text-lg tracking-tighter text-primary">{match.scoreA} - {match.scoreB}</TableCell><TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => { if(confirm("Permanently erase archival record?")) deleteDoc(doc(db!, 'matches', match.id)); }}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
+                   <TableBody>{matches?.filter(m => m.status === 'Completed').map(match => (
+                     <TableRow key={match.id} className="border-white/5 hover:bg-white/[0.01] h-16">
+                       <TableCell><p className="text-xs font-black uppercase italic">M#{match.matchNumber} | {match.teamA} vs {match.teamB}</p><p className="text-[8px] font-black opacity-30 uppercase">{match.phase} {match.group ? `• Group ${match.group}` : ''}</p></TableCell>
+                       <TableCell className="text-center font-black text-lg tracking-tighter text-primary">{match.scoreA} - {match.scoreB}</TableCell>
+                       <TableCell className="text-right"><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => { if(confirm("Permanently erase archival record?")) deleteDoc(doc(db!, 'matches', match.id)); }}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                     </TableRow>
+                   ))}</TableBody>
+                 </Table>
                )}
              </CardContent>
           </Card>
