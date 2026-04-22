@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { EVENTS, MOCK_MATCHES, FOOTBALL_STANDINGS, VOLLEYBALL_STANDINGS, RUN_RESULTS, AUCTION_DATA } from '@/lib/mock-data';
+import { EVENTS, MOCK_MATCHES, FOOTBALL_STANDINGS, VOLLEYBALL_STANDINGS, BADMINTON_STANDINGS, RUN_RESULTS, AUCTION_DATA } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -308,40 +308,114 @@ export default async function EventPage({ params }: { params: { sport: string } 
 
       {/* BADMINTON LAYOUT */}
       {sport === 'badminton' && (
-        <div className="space-y-3">
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Tournament Ties</h2>
-          <Accordion type="single" collapsible className="w-full space-y-2">
-            {[1, 2].map((i) => (
-              <AccordionItem key={i} value={`item-${i}`} className="border-none bg-white rounded-lg shadow-sm overflow-hidden">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline [&>svg]:h-4 [&>svg]:w-4">
-                  <div className="flex justify-between w-full pr-4 items-center">
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs font-bold">House {i}</span>
-                      <span className="text-lg font-black text-primary">3 - 1</span>
-                      <span className="text-xs font-bold">House {i+1}</span>
-                    </div>
-                    <Badge className="bg-green-100 text-green-700 text-[9px] font-black uppercase px-2">Final</Badge>
+        <div className="space-y-8">
+          <section className="space-y-3">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+              Group Standings
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {['A', 'B', 'C', 'D'].map((group) => (
+                <Card key={group} className="border-none shadow-sm overflow-hidden bg-white">
+                  <div className="bg-muted/50 px-4 py-2 border-b">
+                    <span className="text-[10px] font-black uppercase">Group {group}</span>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-0 border-t border-muted/50 bg-muted/5">
-                   <div className="divide-y divide-muted/20 text-[11px] font-medium">
-                      <div className="flex justify-between p-3 px-6">
-                        <span className="text-muted-foreground uppercase">Men's Singles</span>
-                        <span className="font-black tabular-nums">21-18, 21-15</span>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30 h-10">
+                          <TableHead className="text-[10px] font-black uppercase">House</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">P</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">W</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">L</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">Pts</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {BADMINTON_STANDINGS.filter(s => s.group === group).sort((a, b) => b.points - a.points).map((row, i) => (
+                          <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
+                            <TableCell className={`font-bold text-xs ${i === 0 ? 'text-primary' : ''}`}>
+                              {row.team}
+                            </TableCell>
+                            <TableCell className="text-center text-[11px] font-medium">{row.played}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium">{row.won}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium">{row.lost}</TableCell>
+                            <TableCell className={`text-center font-black ${i === 0 ? 'text-primary' : ''}`}>{row.points}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+              Match Ties
+            </h2>
+            <div className="space-y-3">
+              {sportMatches.map((match) => (
+                <Accordion key={match.id} type="single" collapsible className="w-full">
+                  <AccordionItem value={match.id} className="border-none bg-white rounded-lg shadow-sm overflow-hidden">
+                    <AccordionTrigger className="px-4 py-4 hover:no-underline [&>svg]:h-4 [&>svg]:w-4">
+                      <div className="flex justify-between w-full pr-4 items-center">
+                        <div className="flex items-center gap-6">
+                          <div className="flex flex-col items-end min-w-[80px]">
+                            <span className="text-xs font-bold truncate max-w-[100px]">{match.teamA}</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className={`text-lg font-black tabular-nums px-2 rounded ${match.status === 'Live' ? 'bg-yellow-100 text-yellow-700 animate-pulse' : 'bg-muted/30 text-primary'}`}>
+                              {match.scoreA} - {match.scoreB}
+                            </span>
+                            <span className="text-[8px] font-black uppercase text-muted-foreground/60 mt-0.5">{match.status}</span>
+                          </div>
+                          <div className="flex flex-col items-start min-w-[80px]">
+                            <span className="text-xs font-bold truncate max-w-[100px]">{match.teamB}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[9px] font-black text-muted-foreground uppercase">{match.time}</span>
+                          {match.status === 'Completed' && (
+                            <Badge className="bg-green-100 text-green-700 text-[8px] font-black uppercase px-2 h-5">Final</Badge>
+                          )}
+                          {match.status === 'Live' && (
+                            <Badge className="bg-yellow-400 text-yellow-900 text-[8px] font-black uppercase px-2 h-5 animate-pulse">Live</Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex justify-between p-3 px-6">
-                        <span className="text-muted-foreground uppercase">Women's Singles</span>
-                        <span className="font-black tabular-nums">15-21, 10-21</span>
-                      </div>
-                      <div className="flex justify-between p-3 px-6">
-                        <span className="text-muted-foreground uppercase">Men's Doubles</span>
-                        <span className="font-black tabular-nums">21-14, 21-19</span>
-                      </div>
-                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-0 border-t border-muted/50 bg-muted/5">
+                       {match.badmintonResults && match.badmintonResults.length > 0 ? (
+                         <div className="divide-y divide-muted/20 text-[11px] font-medium">
+                            {match.badmintonResults.map((res, idx) => (
+                              <div key={idx} className="flex justify-between p-3 px-6 hover:bg-white/50 transition-colors">
+                                <span className="text-muted-foreground uppercase font-black">{res.type}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-muted-foreground text-[10px]">{res.winner} wins</span>
+                                  <span className="font-black tabular-nums text-primary">{res.score}</span>
+                                </div>
+                              </div>
+                            ))}
+                         </div>
+                       ) : (
+                         <div className="p-4 text-center text-[10px] font-black uppercase text-muted-foreground italic">
+                            Lineup details will be visible once the match starts.
+                         </div>
+                       )}
+                       {match.status === 'Completed' && (
+                         <div className="flex justify-center border-t py-1.5 bg-muted/10">
+                            <MatchRecapButton match={match} />
+                         </div>
+                       )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              ))}
+            </div>
+          </section>
         </div>
       )}
 

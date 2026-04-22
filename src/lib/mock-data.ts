@@ -9,62 +9,107 @@ export const EVENTS: SportEvent[] = [
 ];
 
 export const MOCK_MATCHES: Match[] = [
+  // Football
   { id: 'm1', sport: 'football', teamA: 'Avengers FC', teamB: 'Guardians Utd', scoreA: 2, scoreB: 1, status: 'Completed', time: '10:00 AM', group: 'A', keyEvents: ['John Doe 15\'', 'Mike Smith 42\''] },
   { id: 'm2', sport: 'football', teamA: 'Phoenix Suns', teamB: 'Shadow Strikers', scoreA: 0, scoreB: 0, status: 'Live', time: '12:00 PM', group: 'B' },
-  { id: 'm3', sport: 'volleyball', teamA: 'Spike Squad', teamB: 'Net Ninjas', scoreA: 25, scoreB: 23, status: 'Completed', time: '11:00 AM', group: 'A' },
-  { id: 'm4', sport: 'volleyball', teamA: 'Volley Vipers', teamB: 'Thunder Bolts', scoreA: 12, scoreB: 15, status: 'Live', time: '12:30 PM', group: 'B' },
-  { id: 'm5', sport: 'badminton', teamA: 'House Alpha', teamB: 'House Beta', scoreA: 2, scoreB: 0, status: 'Completed', time: '09:00 AM' },
   { id: 'm6', sport: 'football', teamA: 'Titan Kings', teamB: 'Storm Breakers', scoreA: 1, scoreB: 3, status: 'Completed', time: '08:30 AM', group: 'A' },
-  { id: 'm7', sport: 'volleyball', teamA: 'Cloud 9', teamB: 'Gravity', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '02:00 PM', group: 'C' },
-  { id: 'm8', sport: 'badminton', teamA: 'Swift Strikes', teamB: 'Feather Flyers', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '03:30 PM' },
   { id: 'm9', sport: 'football', teamA: 'Rogue Legion', teamB: 'Star Knights', scoreA: 1, scoreB: 1, status: 'Completed', time: '07:00 AM', group: 'B' },
   { id: 'm10', sport: 'football', teamA: 'Shadow Strikers', teamB: 'Rogue Legion', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '04:00 PM', group: 'B' },
-  { id: 'm11', sport: 'football', teamA: 'Galactic Warriors', teamB: 'Nebula Navigators', scoreA: 3, scoreB: 0, status: 'Completed', time: '11:30 AM', group: 'C' },
   { id: 'm12', sport: 'football', teamA: 'Solar Flares', teamB: 'Lunar Legends', scoreA: 1, scoreB: 1, status: 'Live', time: '01:00 PM', group: 'D' },
+
+  // Volleyball
+  { id: 'm3', sport: 'volleyball', teamA: 'Spike Squad', teamB: 'Net Ninjas', scoreA: 2, scoreB: 1, status: 'Completed', time: '11:00 AM', group: 'A' },
+  { id: 'm4', sport: 'volleyball', teamA: 'Volley Vipers', teamB: 'Thunder Bolts', scoreA: 1, scoreB: 1, status: 'Live', time: '12:30 PM', group: 'B' },
+  { id: 'm7', sport: 'volleyball', teamA: 'Cloud 9', teamB: 'Gravity', scoreA: 0, scoreB: 0, status: 'Upcoming', time: '02:00 PM', group: 'C' },
+
+  // Badminton
+  { 
+    id: 'm5', 
+    sport: 'badminton', 
+    teamA: 'House Alpha', 
+    teamB: 'House Beta', 
+    scoreA: 3, 
+    scoreB: 1, 
+    status: 'Completed', 
+    time: '09:00 AM',
+    badmintonResults: [
+      { type: 'MS', score: '21-15, 21-18', winner: 'House Alpha' },
+      { type: 'WS', score: '18-21, 15-21', winner: 'House Beta' },
+      { type: 'MD', score: '21-10, 21-14', winner: 'House Alpha' },
+      { type: 'XD', score: '21-19, 21-17', winner: 'House Alpha' }
+    ]
+  },
+  { 
+    id: 'm8', 
+    sport: 'badminton', 
+    teamA: 'Swift Strikes', 
+    teamB: 'Feather Flyers', 
+    scoreA: 0, 
+    scoreB: 0, 
+    status: 'Upcoming', 
+    time: '03:30 PM' 
+  },
+  { 
+    id: 'm13', 
+    sport: 'badminton', 
+    teamA: 'House Gamma', 
+    teamB: 'House Delta', 
+    scoreA: 2, 
+    scoreB: 2, 
+    status: 'Live', 
+    time: '01:30 PM',
+    badmintonResults: [
+      { type: 'MS', score: '21-12, 21-10', winner: 'House Gamma' },
+      { type: 'WS', score: '14-21, 16-21', winner: 'House Delta' },
+      { type: 'MD', score: '21-18, 19-21, 21-15', winner: 'House Gamma' },
+      { type: 'XD', score: '17-21, 18-21', winner: 'House Delta' }
+    ]
+  },
 ];
 
 export const FOOTBALL_STANDINGS: Standing[] = [
-  // Group A
   { team: 'Avengers FC', played: 2, won: 2, drawn: 0, lost: 0, points: 6, group: 'A' },
-  { team: 'Storm Breakers', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'A' },
-  { team: 'Guardians Utd', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'A' },
-  
-  // Group B
+  { team: 'Storm Breakers', played: 2, won: 1, drawn: 0, lost: 1, points: 3, group: 'A' },
+  { team: 'Guardians Utd', played: 2, won: 0, drawn: 0, lost: 2, points: 0, group: 'A' },
   { team: 'Shadow Strikers', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'B' },
   { team: 'Star Knights', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'B' },
   { team: 'Rogue Legion', played: 2, won: 0, drawn: 1, lost: 1, points: 1, group: 'B' },
-
-  // Group C
-  { team: 'Galactic Warriors', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'C' },
-  { team: 'Nebula Navigators', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'C' },
+  { team: 'Galactic Warriors', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
+  { team: 'Nebula Navigators', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
   { team: 'Comet Crusaders', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
-
-  // Group D
   { team: 'Solar Flares', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'D' },
   { team: 'Lunar Legends', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'D' },
   { team: 'Nova Knights', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
 ];
 
 export const VOLLEYBALL_STANDINGS: Standing[] = [
-  // Group A
   { team: 'Spike Squad', played: 2, won: 2, drawn: 0, lost: 0, points: 6, group: 'A' },
   { team: 'Net Ninjas', played: 2, won: 0, drawn: 0, lost: 2, points: 0, group: 'A' },
   { team: 'Server Aces', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' },
-  
-  // Group B
   { team: 'Thunder Bolts', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'B' },
   { team: 'Volley Vipers', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'B' },
   { team: 'Sky Jumpers', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'B' },
-
-  // Group C
   { team: 'Cloud 9', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
   { team: 'Gravity', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
   { team: 'Zenith', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
-
-  // Group D
   { team: 'Nova', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
   { team: 'Pulse', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
   { team: 'Titan', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
+];
+
+export const BADMINTON_STANDINGS: Standing[] = [
+  { team: 'House Alpha', played: 1, won: 1, drawn: 0, lost: 0, points: 3, group: 'A' },
+  { team: 'House Beta', played: 1, won: 0, drawn: 0, lost: 1, points: 0, group: 'A' },
+  { team: 'House Omega', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' },
+  { team: 'House Gamma', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'B' },
+  { team: 'House Delta', played: 1, won: 0, drawn: 1, lost: 0, points: 1, group: 'B' },
+  { team: 'House Zeta', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'B' },
+  { team: 'House Sigma', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
+  { team: 'House Tau', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
+  { team: 'House Phi', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'C' },
+  { team: 'House Epsilon', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
+  { team: 'House Kappa', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
+  { team: 'House Iota', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'D' },
 ];
 
 export const RUN_RESULTS: RunResult[] = [
