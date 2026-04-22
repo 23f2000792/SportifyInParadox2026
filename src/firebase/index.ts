@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Central barrel file for Firebase functionality.
+ * Stable Barrel File for Firebase functionality.
  * Exports initialization logic, hooks, and providers.
  */
 

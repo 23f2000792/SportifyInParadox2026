@@ -8,21 +8,22 @@ import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
 
 /**
- * Client-side Firebase provider that ensures initialization occurs only
- * once after the component has safely mounted in the browser.
+ * Defensive Client-side Firebase provider.
+ * This component manages the singleton lifecycle and ensures the rest of the 
+ * app only sees stable, fully-initialized Firebase instances.
  */
 export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
   const [firebase, setFirebase] = useState<{ app: FirebaseApp, db: Firestore, auth: Auth } | null>(null);
 
   useEffect(() => {
-    // initializeFirebase uses a singleton pattern to prevent double-init errors
+    // initializeFirebase uses a global window-level registry to prevent double-init errors
     const instances = initializeFirebase();
     if (instances) {
       setFirebase(instances);
     }
   }, []);
 
-  // Wait for client-side initialization before rendering the tree
+  // Block rendering until the client-side singleton is stable
   if (!firebase) {
     return null;
   }

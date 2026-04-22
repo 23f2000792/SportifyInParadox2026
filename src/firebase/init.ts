@@ -5,37 +5,34 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
-let cachedInstances: { app: FirebaseApp; db: Firestore; auth: Auth } | null = null;
-
 /**
- * Strictly defensive Firebase initialization.
- * Prevents "INTERNAL ASSERTION FAILED: Unexpected state (ID: ca9)" by ensuring
- * getFirestore and getAuth are called exactly once per client session.
- * 
- * We use both module-level and global-level caching to handle Next.js hot-reloads
- * and React 18 Strict Mode double-renders.
+ * Advanced Singleton Registry for Firebase Services.
+ * This pattern ensures that getFirestore and getAuth are called EXACTLY once
+ * per client session, preventing internal assertion failures (ID: ca9).
  */
 export function initializeFirebase() {
+  // Prevent server-side initialization
   if (typeof window === 'undefined') return null;
 
   const _window = window as any;
 
-  // 1. Check local module cache
-  if (cachedInstances) return cachedInstances;
-
-  // 2. Check global window cache (resilient to module re-evaluations during HMR)
+  // 1. Return existing instances if they exist globally
   if (_window.__FIREBASE_INSTANCE__) {
-    cachedInstances = _window.__FIREBASE_INSTANCE__;
-    return cachedInstances;
+    return _window.__FIREBASE_INSTANCE__;
   }
 
-  // 3. Initialize fresh instances
+  // 2. Initialize the core app or retrieve the existing one
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+  // 3. Instantiate services strictly once
+  // Note: These must be called on the client only and only once per app instance
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  cachedInstances = { app, db, auth };
-  _window.__FIREBASE_INSTANCE__ = cachedInstances;
+  const instance = { app, db, auth };
 
-  return cachedInstances;
+  // 4. Cache globally to survive HMR (Hot Module Replacement) and React re-renders
+  _window.__FIREBASE_INSTANCE__ = instance;
+
+  return instance;
 }
