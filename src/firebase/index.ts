@@ -10,13 +10,24 @@ let db: Firestore;
 let auth: Auth;
 
 export function initializeFirebase() {
+  if (typeof window === 'undefined') {
+    throw new Error('Firebase can only be initialized on the client side.');
+  }
+
   if (getApps().length === 0) {
     app = initializeApp(firebaseConfig);
   } else {
     app = getApp();
   }
-  db = getFirestore(app);
-  auth = getAuth(app);
+
+  // Use existing instances if they exist to prevent re-initialization conflicts
+  if (!db) {
+    db = getFirestore(app);
+  }
+  if (!auth) {
+    auth = getAuth(app);
+  }
+
   return { app, db, auth };
 }
 

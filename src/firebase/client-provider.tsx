@@ -1,29 +1,29 @@
-
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
 import { initializeFirebase, FirebaseProvider } from './index';
 
 export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
-  const [firebase, setFirebase] = useState<{
-    app: FirebaseApp;
-    db: Firestore;
-    auth: Auth;
-  } | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const firebase = useMemo(() => {
+    if (!isMounted) return null;
     try {
-      const initialized = initializeFirebase();
-      setFirebase(initialized);
+      return initializeFirebase();
     } catch (e: any) {
       console.error("Firebase initialization failed:", e);
       setError(e);
+      return null;
     }
-  }, []);
+  }, [isMounted]);
 
   if (error) {
     return (
