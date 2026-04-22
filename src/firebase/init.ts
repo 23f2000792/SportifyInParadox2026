@@ -6,33 +6,35 @@ import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 /**
- * Advanced Singleton Registry for Firebase Services.
- * This pattern ensures that getFirestore and getAuth are called EXACTLY once
- * per client session, preventing internal assertion failures (ID: ca9).
+ * Enhanced Singleton Registry for Firebase Services.
+ * Specifically designed to prevent "INTERNAL ASSERTION FAILED (ID: ca9)" in Firestore v11
+ * by ensuring services are instantiated EXACTLY once per browser session.
  */
+
+let cachedInstances: { app: FirebaseApp, db: Firestore, auth: Auth } | null = null;
+
 export function initializeFirebase() {
-  // Prevent server-side initialization
   if (typeof window === 'undefined') return null;
 
-  const _window = window as any;
+  // 1. Check local module cache (fastest)
+  if (cachedInstances) return cachedInstances;
 
-  // 1. Return existing instances if they exist globally
-  if (_window.__FIREBASE_INSTANCE__) {
-    return _window.__FIREBASE_INSTANCE__;
+  // 2. Check window-level registry (survives HMR and React double-mounts)
+  const _window = window as any;
+  if (_window.__FIREBASE_SINGLETON__) {
+    cachedInstances = _window.__FIREBASE_SINGLETON__;
+    return cachedInstances;
   }
 
-  // 2. Initialize the core app or retrieve the existing one
+  // 3. Initialize or retrieve the core App
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-  // 3. Instantiate services strictly once
-  // Note: These must be called on the client only and only once per app instance
+  // 4. Instantiate services strictly once
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  const instance = { app, db, auth };
+  cachedInstances = { app, db, auth };
+  _window.__FIREBASE_SINGLETON__ = cachedInstances;
 
-  // 4. Cache globally to survive HMR (Hot Module Replacement) and React re-renders
-  _window.__FIREBASE_INSTANCE__ = instance;
-
-  return instance;
+  return cachedInstances;
 }

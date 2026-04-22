@@ -4,32 +4,62 @@
 
 @layer base {
   :root {
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 6%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 263 70% 60%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 222 47% 12%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 91% 60%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    /* Primary vibrant green: #4EAD1F */
+    --primary: 100 70% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Background: desaturated light green-grey #F4F7F3 */
+    --background: 105 15% 96%;
+    --foreground: 105 10% 10%;
+    
+    /* Accent chartreuse: #D5ED5E */
+    --accent: 70 80% 65%;
+    --accent-foreground: 105 10% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 105 10% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 105 10% 10%;
+    
+    --secondary: 105 10% 90%;
+    --secondary-foreground: 105 10% 10%;
+    
+    --muted: 105 10% 90%;
+    --muted-foreground: 105 10% 40%;
+    
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 222 47% 15%;
-    --input: 222 47% 15%;
-    --ring: 263 70% 60%;
-    --radius: 0.5rem;
+    
+    --border: 105 10% 85%;
+    --input: 105 10% 85%;
+    --ring: 100 70% 40%;
+    --radius: 0.75rem;
     
     /* Custom Status Colors */
     --status-win: 142 70% 45%;
     --status-loss: 0 84% 60%;
     --status-live: 45 100% 50%;
-    --status-upcoming: 215 20% 65%;
+  }
+
+  .dark {
+    --background: 105 20% 4%;
+    --foreground: 105 10% 95%;
+    --card: 105 20% 7%;
+    --card-foreground: 105 10% 95%;
+    --popover: 105 20% 6%;
+    --popover-foreground: 105 10% 95%;
+    --primary: 100 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 105 20% 12%;
+    --secondary-foreground: 105 10% 95%;
+    --muted: 105 20% 12%;
+    --muted-foreground: 105 5% 60%;
+    --accent: 70 80% 60%;
+    --accent-foreground: 105 10% 10%;
+    --border: 105 20% 15%;
+    --input: 105 20% 15%;
+    --ring: 100 70% 45%;
   }
 }
 
@@ -46,7 +76,6 @@
   }
 }
 
-/* Utilities */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -55,31 +84,27 @@
   scrollbar-width: none;
 }
 
-/* Status Utility Classes */
 .text-win { color: hsl(var(--status-win)); }
 .text-loss { color: hsl(var(--status-loss)); }
 .text-live { color: hsl(var(--status-live)); }
-.text-upcoming { color: hsl(var(--status-upcoming)); }
 
 .bg-win { background-color: hsl(var(--status-win)); }
 .bg-loss { background-color: hsl(var(--status-loss)); }
 .bg-live { background-color: hsl(var(--status-live)); }
-.bg-upcoming { background-color: hsl(var(--status-upcoming)); }
 
-.fast-transition {
-  @apply transition-all duration-200 ease-in-out;
+.premium-card {
+  @apply relative overflow-hidden bg-card border border-border/50 shadow-sm transition-all duration-300;
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, color-mix(in srgb, hsl(var(--card)), transparent 20%) 100%);
 }
 
-/* Premium Gradient Borders */
-.premium-card {
-  @apply relative overflow-hidden bg-card border-none shadow-xl;
-  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(222, 47%, 9%) 100%);
+.premium-card:hover {
+  @apply shadow-md border-primary/20 -translate-y-0.5;
 }
 
 .premium-card::after {
   content: '';
-  @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
-  background: radial-gradient(circle at top left, hsla(var(--primary), 0.1), transparent 70%);
+  @apply absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none;
+  background: radial-gradient(circle at top left, hsla(var(--primary), 0.05), transparent 70%);
 }
 
 .premium-card:hover::after {

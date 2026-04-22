@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FirebaseProvider } from './provider';
 import { initializeFirebase } from './init';
 import { FirebaseApp } from 'firebase/app';
@@ -8,22 +8,24 @@ import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
 
 /**
- * Defensive Client-side Firebase provider.
- * This component manages the singleton lifecycle and ensures the rest of the 
- * app only sees stable, fully-initialized Firebase instances.
+ * Orchestrates the Firebase singleton lifecycle on the client.
+ * Uses a ref to guarantee initialization logic runs exactly once,
+ * even with React's StrictMode double-rendering.
  */
 export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
   const [firebase, setFirebase] = useState<{ app: FirebaseApp, db: Firestore, auth: Auth } | null>(null);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    // initializeFirebase uses a global window-level registry to prevent double-init errors
+    if (initialized.current) return;
+    
     const instances = initializeFirebase();
     if (instances) {
       setFirebase(instances);
+      initialized.current = true;
     }
   }, []);
 
-  // Block rendering until the client-side singleton is stable
   if (!firebase) {
     return null;
   }

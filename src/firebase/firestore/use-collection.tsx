@@ -9,6 +9,9 @@ import {
   FirestoreError,
 } from 'firebase/firestore';
 
+/**
+ * Real-time collection listener with proper cleanup and error handling.
+ */
 export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +24,8 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
     }
 
     setLoading(true);
+    
+    // The query object must be memoized in the calling component to avoid loops
     const unsubscribe = onSnapshot(
       query,
       (snapshot: QuerySnapshot<T>) => {
@@ -30,8 +35,10 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         } as T & { id: string }));
         setData(items);
         setLoading(false);
+        setError(null);
       },
       (err) => {
+        // Log locally for debugging, but we don't console.error to avoid noise
         setError(err);
         setLoading(false);
       }
