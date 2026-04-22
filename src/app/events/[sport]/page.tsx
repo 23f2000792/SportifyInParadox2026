@@ -191,46 +191,51 @@ export default async function EventPage({ params }: { params: { sport: string } 
         </Card>
       )}
 
-      {/* VOLLEYBALL LAYOUT (Simpler version) */}
+      {/* VOLLEYBALL LAYOUT */}
       {sport === 'volleyball' && (
         <div className="space-y-8">
-          {/* 1. Simplified Points Table */}
           <section className="space-y-3">
             <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
               Rankings
             </h2>
-            <Card className="border-none shadow-sm overflow-hidden bg-white">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 h-10">
-                      <TableHead className="text-[10px] font-black uppercase">Team</TableHead>
-                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Played</TableHead>
-                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Won</TableHead>
-                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Lost</TableHead>
-                      <TableHead className="text-center text-[10px] font-black uppercase w-12">Pts</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {VOLLEYBALL_STANDINGS.sort((a, b) => b.points - a.points).map((row, i) => (
-                      <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
-                        <TableCell className={`font-bold text-xs ${i === 0 ? 'text-primary' : ''}`}>
-                          {row.team}
-                        </TableCell>
-                        <TableCell className="text-center text-[11px] font-medium">{row.played}</TableCell>
-                        <TableCell className="text-center text-[11px] font-medium">{row.won}</TableCell>
-                        <TableCell className="text-center text-[11px] font-medium">{row.lost}</TableCell>
-                        <TableCell className={`text-center font-black ${i === 0 ? 'text-primary' : ''}`}>{row.points}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {['A', 'B', 'C', 'D'].map((group) => (
+                <Card key={group} className="border-none shadow-sm overflow-hidden bg-white">
+                  <div className="bg-muted/50 px-4 py-2 border-b">
+                    <span className="text-[10px] font-black uppercase">Group {group}</span>
+                  </div>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30 h-10">
+                          <TableHead className="text-[10px] font-black uppercase">Team</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">Played</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">Won</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">Lost</TableHead>
+                          <TableHead className="text-center text-[10px] font-black uppercase w-12">Pts</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {VOLLEYBALL_STANDINGS.filter(s => s.group === group).sort((a, b) => b.points - a.points).map((row, i) => (
+                          <TableRow key={row.team} className={`h-10 ${i === 0 ? 'bg-primary/5' : ''}`}>
+                            <TableCell className={`font-bold text-xs ${i === 0 ? 'text-primary' : ''}`}>
+                              {row.team}
+                            </TableCell>
+                            <TableCell className="text-center text-[11px] font-medium">{row.played}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium">{row.won}</TableCell>
+                            <TableCell className="text-center text-[11px] font-medium">{row.lost}</TableCell>
+                            <TableCell className={`text-center font-black ${i === 0 ? 'text-primary' : ''}`}>{row.points}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </section>
 
-          {/* 2. Matches Results & Upcoming */}
           <section className="space-y-3">
             <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
@@ -255,7 +260,7 @@ export default async function EventPage({ params }: { params: { sport: string } 
                             <span className="text-xl font-black tabular-nums bg-muted/30 px-3 py-0.5 rounded">
                               {match.scoreA} - {match.scoreB}
                             </span>
-                            <span className="text-[8px] font-black text-muted-foreground uppercase mt-1">Sets</span>
+                            <span className="text-[8px] font-black text-muted-foreground uppercase mt-1">Sets {match.group ? `(Group ${match.group})` : ''}</span>
                           </div>
                           <div className="flex-1 text-left">
                             <p className="font-bold text-sm">{match.teamB}</p>
@@ -278,7 +283,10 @@ export default async function EventPage({ params }: { params: { sport: string } 
                     <Card key={match.id} className={`border-none shadow-sm ${match.status === 'Live' ? 'ring-1 ring-yellow-400' : ''}`}>
                       <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] font-black text-primary uppercase">{match.time}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-primary uppercase">{match.time}</span>
+                            {match.group && <span className="text-[9px] font-black text-muted-foreground uppercase bg-muted px-1 rounded">Group {match.group}</span>}
+                          </div>
                           <p className="font-bold text-sm">{match.teamA} v {match.teamB}</p>
                         </div>
                         {match.status === 'Live' ? (
