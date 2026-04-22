@@ -1,10 +1,14 @@
+
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Settings, Zap, Trophy, CircleDot, Target, Radio, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
+
+const LOGO_URL = "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970";
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -20,9 +24,15 @@ export function Navbar() {
     <>
       {/* Universal Top Bar */}
       <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md h-14 flex items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white text-[11px] font-black italic shadow-[0_0_15px_rgba(147,51,234,0.4)] group-hover:scale-110 transition-transform">
-            S
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="relative h-8 w-8 overflow-hidden rounded-lg bg-black/40 p-1 group-hover:scale-110 transition-transform">
+            <Image 
+              src={LOGO_URL}
+              alt="Sportify Logo"
+              fill
+              className="object-contain p-1"
+              priority
+            />
           </div>
           <span className="text-sm font-black tracking-tighter text-white uppercase bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
             Sportify 2026

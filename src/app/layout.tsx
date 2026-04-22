@@ -8,6 +8,10 @@ import {FirebaseClientProvider} from '@/firebase';
 export const metadata: Metadata = {
   title: 'Sportify in Paradox 2026',
   description: 'Premium real-time sports control dashboard for Sportify in Paradox 2026',
+  icons: {
+    icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
+    apple: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
+  }
 };
 
 export default function RootLayout({
@@ -26,10 +30,10 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
-            <main className="flex-grow container mx-auto px-6 py-10 md:py-12 max-w-5xl">
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-12 max-w-5xl">
               {children}
             </main>
-            <footer className="py-10 border-t border-white/5 bg-black/40 text-center space-y-2">
+            <footer className="py-10 border-t border-white/5 bg-black/40 text-center space-y-2 mb-16 md:mb-0">
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
                 Sportify in Paradox 2026 • Real-Time Broadcast Control
               </p>
