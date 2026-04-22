@@ -1,6 +1,6 @@
 
 export type SportType = 'kampus-run' | 'football' | 'volleyball' | 'badminton';
-export type MatchPhase = 'group' | 'semi-final' | 'third-place' | 'final';
+export type MatchPhase = 'group' | 'semi-final' | 'third-place' | 'final' | 'race';
 
 export interface SportEvent {
   id: string;
@@ -27,6 +27,7 @@ export interface Match {
   status: 'Upcoming' | 'Live' | 'Completed';
   phase: MatchPhase;
   time: string;
+  reportingTime?: string;
   date: string;
   day: string;
   venue: string;

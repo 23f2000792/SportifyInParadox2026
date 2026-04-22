@@ -29,6 +29,7 @@
         "status": { "type": "string", "enum": ["Upcoming", "Live", "Completed"] },
         "phase": { "type": "string" },
         "time": { "type": "string" },
+        "reportingTime": { "type": "string" },
         "date": { "type": "string" },
         "day": { "type": "string" },
         "venue": { "type": "string" },
