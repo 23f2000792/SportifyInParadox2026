@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -28,12 +27,11 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         const items = snapshot.docs.map((doc) => ({
           ...doc.data(),
           id: doc.id,
-        }));
+        } as T & { id: string }));
         setData(items);
         setLoading(false);
       },
       (err) => {
-        console.error('Error fetching collection:', err);
         setError(err);
         setLoading(false);
       }

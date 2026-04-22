@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,11 +24,10 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot: DocumentSnapshot<T>) => {
-        setData(snapshot.exists() ? { ...snapshot.data()!, id: snapshot.id } : null);
+        setData(snapshot.exists() ? ({ ...snapshot.data()!, id: snapshot.id } as T & { id: string }) : null);
         setLoading(false);
       },
       (err) => {
-        console.error('Error fetching document:', err);
         setError(err);
         setLoading(false);
       }
