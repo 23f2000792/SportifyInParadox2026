@@ -5,41 +5,45 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
+// Module-level variables to cache the singleton instances on the client.
+// These persist across re-renders and Strict Mode double-invocations.
+let cachedApp: FirebaseApp | undefined;
+let cachedDb: Firestore | undefined;
+let cachedAuth: Auth | undefined;
+
 /**
  * Defensive Firebase initialization for Next.js.
- * Uses a global singleton on the window object to prevent 
- * re-initialization of services (Firestore/Auth) which causes 
- * "INTERNAL ASSERTION FAILED (ID: ca9)" errors in Firebase v11.
+ * Ensures that the Firebase App and its services (Firestore, Auth) 
+ * are initialized exactly once on the client side.
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
     return null;
   }
 
-  const _window = window as any;
-
   // 1. Initialize or retrieve the App
-  let app: FirebaseApp;
-  if (getApps().length > 0) {
-    app = getApp();
-  } else {
-    app = initializeApp(firebaseConfig);
+  if (!cachedApp) {
+    if (getApps().length > 0) {
+      cachedApp = getApp();
+    } else {
+      cachedApp = initializeApp(firebaseConfig);
+    }
   }
 
   // 2. Initialize or retrieve Firestore instance
-  if (!_window.__FIREBASE_DB__) {
-    _window.__FIREBASE_DB__ = getFirestore(app);
+  if (!cachedDb) {
+    cachedDb = getFirestore(cachedApp);
   }
   
   // 3. Initialize or retrieve Auth instance
-  if (!_window.__FIREBASE_AUTH__) {
-    _window.__FIREBASE_AUTH__ = getAuth(app);
+  if (!cachedAuth) {
+    cachedAuth = getAuth(cachedApp);
   }
 
   return { 
-    app, 
-    db: _window.__FIREBASE_DB__ as Firestore, 
-    auth: _window.__FIREBASE_AUTH__ as Auth 
+    app: cachedApp, 
+    db: cachedDb, 
+    auth: cachedAuth 
   };
 }
 
