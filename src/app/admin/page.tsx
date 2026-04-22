@@ -14,7 +14,7 @@ import { EVENTS } from '@/lib/mock-data';
 import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, Users, UserPlus, Trash2, Edit2, X, MapPin, Calendar, ChevronLeft, ChevronRight, Zap, CircleDot, Target, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
-import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, orderBy, updateDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase, SportType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -89,12 +89,21 @@ export default function AdminPage() {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminSport, setNewAdminSport] = useState('all');
 
-  // Queries
-  const matchesQuery = useMemo(() => {
+  // Base Queries
+  const rawMatchesQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
-    return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug), orderBy('matchNumber', 'asc'));
+    return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug));
   }, [db, selectedSportSlug]);
-  const { data: matches } = useCollection<Match>(matchesQuery);
+  const { data: rawMatches } = useCollection<Match>(rawMatchesQuery);
+
+  // Client-side sorting to avoid Firestore index requirements for now
+  const matches = useMemo(() => {
+    return [...(rawMatches || [])].sort((a, b) => {
+      const numA = parseInt(a.matchNumber) || 0;
+      const numB = parseInt(b.matchNumber) || 0;
+      return numA - numB;
+    });
+  }, [rawMatches]);
 
   const standingsQuery = useMemo(() => {
     if (!db || !selectedSportSlug || selectedSportSlug === 'kampus-run') return null;
@@ -104,9 +113,13 @@ export default function AdminPage() {
 
   const runResultsQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'runResults'), orderBy('position', 'asc'));
+    return query(collection(db, 'runResults'));
   }, [db]);
-  const { data: runResults } = useCollection<RunResult>(runResultsQuery);
+  const { data: rawRunResults } = useCollection<RunResult>(runResultsQuery);
+
+  const runResults = useMemo(() => {
+    return [...(rawRunResults || [])].sort((a, b) => a.position - b.position);
+  }, [rawRunResults]);
 
   const adminsQuery = useMemo(() => {
     if (!db) return null;
@@ -182,6 +195,7 @@ export default function AdminPage() {
       });
       toast({ title: "New Match Initialized" });
     }
+    // Reset fields
     setSchedMatchNumber(''); setSchedTeamA(''); setSchedTeamB(''); setSchedTime(''); setSchedReportingTime(''); setSchedDate(''); setSchedDay(''); setSchedVenue(''); setSchedCourtNumber(''); setSchedGroundNumber('');
   };
 
@@ -310,7 +324,6 @@ export default function AdminPage() {
     );
   }
 
-  // Calculate dynamic grid columns based on context
   const tabsCount = (isKampusRun ? 3 : 4) + (isSuperAdmin ? 1 : 0);
   const gridColsClass = tabsCount === 5 ? "grid-cols-5" : 
                        tabsCount === 4 ? "grid-cols-4" : 
@@ -398,7 +411,19 @@ export default function AdminPage() {
           ) : (
             <Card className="premium-card border-white/5">
               <CardContent className="p-10 space-y-10">
-                <div className="space-y-3"><Label className="text-[10px] font-black uppercase opacity-50 tracking-[0.3em] ml-1">Target Broadcast Match</Label><Select value={selectedMatchId} onValueChange={setSelectedMatchId}><SelectTrigger className="bg-white/5 border-white/10 h-16 text-sm font-black uppercase rounded-2xl"><SelectValue placeholder="Selecting match vector..." /></SelectTrigger><SelectContent>{matches?.filter(m => m.status !== 'Completed').map(m => (<SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">M#{m.matchNumber} | {m.teamA} vs {m.teamB}</SelectItem>))}</SelectContent></Select></div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase opacity-50 tracking-[0.3em] ml-1">Target Broadcast Match</Label>
+                  <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+                    <SelectTrigger className="bg-white/5 border-white/10 h-16 text-sm font-black uppercase rounded-2xl">
+                      <SelectValue placeholder="Selecting match vector..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {matches?.filter(m => m.status !== 'Completed').map(m => (
+                        <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">M#{m.matchNumber} | {m.teamA} vs {m.teamB}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 {selectedMatchId && (
                   <form onSubmit={handleUpdateMatch} className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="flex items-center justify-between gap-12"><div className="flex-1 space-y-4"><Label className="text-[10px] font-black uppercase text-center block opacity-40 tracking-widest">{activeMatch?.teamA}</Label><Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-7xl font-black h-32 bg-white/5 border-white/10 shadow-inner rounded-3xl" /></div><div className="text-4xl font-black opacity-10 pt-10">:</div><div className="flex-1 space-y-4"><Label className="text-[10px] font-black uppercase text-center block opacity-40 tracking-widest">{activeMatch?.teamB}</Label><Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-7xl font-black h-32 bg-white/5 border-white/10 shadow-inner rounded-3xl" /></div></div>
