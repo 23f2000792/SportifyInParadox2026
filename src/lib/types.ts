@@ -9,10 +9,10 @@ export interface SportEvent {
   description: string;
 }
 
-export interface BadmintonResult {
+export interface BadmintonMatchResult {
   type: 'MS' | 'WS' | 'MD' | 'WD' | 'XD';
   score: string;
-  winner?: string;
+  winner: string;
 }
 
 export interface Match {
@@ -26,7 +26,8 @@ export interface Match {
   time: string;
   group?: string;
   keyEvents?: string[];
-  badmintonResults?: BadmintonResult[];
+  badmintonResults?: BadmintonMatchResult[];
+  updatedAt?: any;
 }
 
 export interface Standing {
@@ -37,9 +38,11 @@ export interface Standing {
   lost: number;
   points: number;
   group?: string;
+  sport: string;
 }
 
 export interface RunResult {
+  id: string;
   position: number;
   name: string;
   time: string;
