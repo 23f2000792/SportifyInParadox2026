@@ -72,6 +72,22 @@ export default function AdminPage() {
   const [run5kStart, setRun5kStart] = useState('');
   const [runDate, setRunDate] = useState('');
 
+  // Kampus Run Result Entry State
+  const [runnerName, setRunnerName] = useState('');
+  const [runnerPos, setRunnerPos] = useState<number>(1);
+  const [runnerTime, setRunnerTime] = useState('');
+  const [runnerCat, setRunnerCat] = useState('3km');
+  const [runnerGender, setRunnerGender] = useState<'M' | 'F'>('M');
+
+  // League Table State
+  const [newStandingTeam, setNewStandingTeam] = useState('');
+  const [newStandingGroup, setNewStandingGroup] = useState('A');
+
+  // Personnel Security State
+  const [newAdminUid, setNewAdminUid] = useState('');
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminSport, setNewAdminSport] = useState('all');
+
   // Queries
   const matchesQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
@@ -171,7 +187,6 @@ export default function AdminPage() {
     e.preventDefault();
     if (!db) return;
     
-    // Check if entries already exist to update them, or create new ones
     const run3k = matches?.find(m => m.matchNumber === '3km-race');
     const run5k = matches?.find(m => m.matchNumber === '5km-race');
 
@@ -179,7 +194,7 @@ export default function AdminPage() {
       sport: 'kampus-run' as SportType,
       phase: 'race' as MatchPhase,
       date: runDate,
-      day: 'Saturday', // Assuming or mapping
+      day: 'Saturday',
       venue: 'Paradox Stadium',
       status: 'Upcoming' as const,
       updatedAt: serverTimestamp(),
@@ -320,11 +335,40 @@ export default function AdminPage() {
             <Card className="premium-card border-primary/20">
               <CardHeader className="bg-primary/5 border-b border-white/5"><CardTitle className="text-xs font-black uppercase italic tracking-widest text-primary">Race Result Injection Terminal</CardTitle></CardHeader>
               <CardContent className="p-8">
-                <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                  <div className="space-y-2 md:col-span-2"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Participant Identity</Label><Input value={runnerName} onChange={e => setRunnerName(e.target.value)} className="bg-white/5 h-12 border-white/10 text-xs font-black uppercase" placeholder="Full Name" required /></div>
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Rank Vector</Label><Input type="number" value={runnerPos} onChange={e => setRunnerPos(Number(e.target.value))} className="bg-white/5 h-12 border-white/10 text-xs font-black" /></div>
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Chrono Record</Label><Input placeholder="00:00.0" value={runnerTime} onChange={e => setRunnerTime(e.target.value)} className="bg-white/5 h-12 border-white/10 text-xs font-black" required /></div>
-                  <Button type="submit" className="h-12 mt-auto uppercase font-black text-[10px] tracking-widest shadow-xl shadow-primary/20 rounded-xl"><Plus className="h-4 w-4 mr-2" /> Log Entry</Button>
+                <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Participant Identity</Label>
+                    <Input value={runnerName} onChange={e => setRunnerName(e.target.value)} className="bg-white/5 h-12 border-white/10 text-xs font-black uppercase" placeholder="Full Name" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Rank Vector</Label>
+                    <Input type="number" value={runnerPos} onChange={e => setRunnerPos(Number(e.target.value))} className="bg-white/5 h-12 border-white/10 text-xs font-black" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Chrono Record</Label>
+                    <Input placeholder="00:00.0" value={runnerTime} onChange={e => setRunnerTime(e.target.value)} className="bg-white/5 h-12 border-white/10 text-xs font-black" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Category</Label>
+                    <Select value={runnerCat} onValueChange={setRunnerCat}>
+                      <SelectTrigger className="bg-white/5 border-white/10 h-12 text-[10px] font-black uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3km" className="text-[10px] font-black uppercase">3KM</SelectItem>
+                        <SelectItem value="5km" className="text-[10px] font-black uppercase">5KM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60 ml-1">Gender</Label>
+                    <Select value={runnerGender} onValueChange={(v: any) => setRunnerGender(v)}>
+                      <SelectTrigger className="bg-white/5 border-white/10 h-12 text-[10px] font-black uppercase rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M" className="text-[10px] font-black uppercase">M</SelectItem>
+                        <SelectItem value="F" className="text-[10px] font-black uppercase">F</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="h-12 mt-auto uppercase font-black text-[10px] tracking-widest shadow-xl shadow-primary/20 rounded-xl md:col-span-1"><Plus className="h-4 w-4 mr-2" /> Log Entry</Button>
                 </form>
               </CardContent>
             </Card>
@@ -338,7 +382,7 @@ export default function AdminPage() {
                     {selectedSportSlug === 'badminton' && (
                       <div className="space-y-6 pt-10 border-t border-white/5"><h4 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Sub-Match Breakdown (Set Matrix)</h4><div className="grid grid-cols-2 md:grid-cols-5 gap-4">{badmintonResults.map((res, idx) => (<div key={idx} className="bg-white/5 p-5 rounded-2xl border border-white/5 space-y-4 group hover:border-primary/30 transition-all"><p className="text-[9px] font-black text-primary uppercase tracking-tighter opacity-70">{res.type} Vector</p><Input value={res.score} onChange={e => { const n = [...badmintonResults]; n[idx].score = e.target.value; setBadmintonResults(n); }} className="h-10 text-xs font-black text-center bg-black/20 border-white/5 rounded-xl" placeholder="0-0" /><Select value={res.winner} onValueChange={v => { const n = [...badmintonResults]; n[idx].winner = v; setBadmintonResults(n); }}><SelectTrigger className="h-8 text-[8px] font-black uppercase bg-transparent border-white/5"><SelectValue placeholder="Winner" /></SelectTrigger><SelectContent><SelectItem value={activeMatch?.teamA || 'Team A'} className="text-[8px] uppercase">{activeMatch?.teamA}</SelectItem><SelectItem value={activeMatch?.teamB || 'Team B'} className="text-[8px] uppercase">{activeMatch?.teamB}</SelectItem></SelectContent></Select></div>))}</div></div>
                     )}
-                    <div className="space-y-4"><Label className="text-[10px] font-black uppercase opacity-50 tracking-widest ml-1">Protocol Protocol Status</Label><Select value={status} onValueChange={(v: any) => setStatus(v)}><SelectTrigger className="bg-white/5 border-white/10 h-14 text-[11px] font-black uppercase tracking-wider rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Upcoming" className="text-[10px] font-black uppercase">Standby</SelectItem><SelectItem value="Live" className="text-[10px] font-black uppercase">Live Transmission</SelectItem><SelectItem value="Completed" className="text-[10px] font-black uppercase">Archive Result</SelectItem></SelectContent></Select></div>
+                    <div className="space-y-4"><Label className="text-[10px] font-black uppercase opacity-50 tracking-widest ml-1">Protocol Status</Label><Select value={status} onValueChange={(v: any) => setStatus(v)}><SelectTrigger className="bg-white/5 border-white/10 h-14 text-[11px] font-black uppercase tracking-wider rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Upcoming" className="text-[10px] font-black uppercase">Standby</SelectItem><SelectItem value="Live" className="text-[10px] font-black uppercase">Live Transmission</SelectItem><SelectItem value="Completed" className="text-[10px] font-black uppercase">Archive Result</SelectItem></SelectContent></Select></div>
                     <Button type="submit" className="w-full h-16 font-black uppercase text-xs tracking-[0.3em] gap-4 shadow-2xl shadow-primary/30 rounded-2xl"><ShieldCheck className="h-6 w-6" /> Push Live Update</Button>
                   </form>
                 )}
