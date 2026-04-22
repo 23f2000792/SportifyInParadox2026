@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EVENTS } from '@/lib/mock-data';
-import { Save, Plus, ShieldCheck, LogOut, Zap, Trophy, Timer, Settings, Calendar, ListOrdered, Users } from 'lucide-react';
+import { Save, Plus, ShieldCheck, LogOut, Zap, Trophy, Timer, Settings, Calendar, ListOrdered, Users, UserPlus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, orderBy } from 'firebase/firestore';
@@ -58,6 +58,11 @@ export default function AdminPage() {
   const [stdLost, setStdLost] = useState(0);
   const [stdPoints, setStdPoints] = useState(0);
 
+  // Personnel Management State
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminUid, setNewAdminUid] = useState('');
+  const [newAdminSport, setNewAdminSport] = useState('all');
+
   // Firestore Queries
   const matchesQuery = useMemo(() => {
     if (!db || !selectedSport) return null;
@@ -70,6 +75,12 @@ export default function AdminPage() {
     return query(collection(db, 'standings'), where('sport', '==', selectedSport));
   }, [db, selectedSport]);
   const { data: standings } = useCollection<Standing>(standingsQuery);
+
+  const adminsQuery = useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'admins');
+  }, [db]);
+  const { data: allAdmins } = useCollection<AdminUser>(adminsQuery);
 
   useEffect(() => {
     if (!userLoading && !user) router.push('/admin/login');
@@ -138,6 +149,29 @@ export default function AdminPage() {
     toast({ title: "Standing Saved", description: `${stdHouse} matrix updated.` });
   };
 
+  const handleAddAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdminUid || !newAdminEmail) return;
+    setDoc(doc(db, 'admins', newAdminUid), {
+      uid: newAdminUid,
+      email: newAdminEmail,
+      role: 'admin',
+      assignedSport: newAdminSport === 'all' ? null : newAdminSport,
+    });
+    setNewAdminEmail('');
+    setNewAdminUid('');
+    toast({ title: "Admin Registered", description: `Access granted to ${newAdminEmail}.` });
+  };
+
+  const handleDeleteAdmin = (uid: string) => {
+    if (uid === user.uid) {
+      toast({ variant: "destructive", title: "Error", description: "Cannot terminate your own root access." });
+      return;
+    }
+    deleteDoc(doc(db, 'admins', uid));
+    toast({ title: "Personnel Removed" });
+  };
+
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/admin/login');
@@ -175,11 +209,11 @@ export default function AdminPage() {
         </Card>
 
         <Tabs defaultValue="scoring" className="md:col-span-3">
-          <TabsList className="grid w-full grid-cols-4 bg-muted/50 h-12 p-1">
+          <TabsList className={cn("grid w-full bg-muted/50 h-12 p-1", isSuperAdmin ? "grid-cols-4" : "grid-cols-3")}>
             <TabsTrigger value="scoring" className="text-[9px] font-black uppercase">Live</TabsTrigger>
             <TabsTrigger value="schedule" className="text-[9px] font-black uppercase">Schedule</TabsTrigger>
             <TabsTrigger value="standings" className="text-[9px] font-black uppercase">League</TabsTrigger>
-            <TabsTrigger value="access" className="text-[9px] font-black uppercase">Personnel</TabsTrigger>
+            {isSuperAdmin && <TabsTrigger value="access" className="text-[9px] font-black uppercase">Personnel</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="scoring" className="space-y-6 pt-6">
@@ -331,15 +365,63 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="access" className="pt-6">
-             <Card className="premium-card">
-              <CardHeader><CardTitle className="text-xs font-black uppercase">Authority Management</CardTitle></CardHeader>
-              <CardContent className="text-center p-12 opacity-30">
-                <Users className="h-12 w-12 mx-auto mb-4" />
-                <p className="text-[10px] font-black uppercase tracking-widest">Global Personnel controls reserved for Root Admin</p>
-              </CardContent>
-             </Card>
-          </TabsContent>
+          {isSuperAdmin && (
+            <TabsContent value="access" className="pt-6 space-y-6">
+               <Card className="premium-card">
+                <CardHeader><CardTitle className="text-xs font-black uppercase italic">Personnel Authorization</CardTitle></CardHeader>
+                <CardContent className="space-y-6">
+                  <form onSubmit={handleAddAdmin} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div className="space-y-1.5 md:col-span-1">
+                      <Label className="text-[9px] font-black uppercase">Auth UID</Label>
+                      <Input placeholder="Firebase UID" value={newAdminUid} onChange={e => setNewAdminUid(e.target.value)} className="bg-white/5" required />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-1">
+                      <Label className="text-[9px] font-black uppercase">Email Identity</Label>
+                      <Input placeholder="operator@paradox.com" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} className="bg-white/5" required />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-1">
+                      <Label className="text-[9px] font-black uppercase">Sport Domain</Label>
+                      <Select value={newAdminSport} onValueChange={setNewAdminSport}>
+                        <SelectTrigger className="bg-white/5"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Global Control</SelectItem>
+                          {EVENTS.map(e => <SelectItem key={e.id} value={e.slug}>{e.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="submit" className="h-10 uppercase font-black text-[10px] gap-2"><UserPlus className="h-4 w-4" /> Grant Access</Button>
+                  </form>
+
+                  <div className="border border-white/5 rounded-xl overflow-hidden mt-6">
+                    <Table>
+                      <TableHeader className="bg-white/5">
+                        <TableRow>
+                          <TableHead className="text-[9px] font-black">Email</TableHead>
+                          <TableHead className="text-[9px] font-black">Role</TableHead>
+                          <TableHead className="text-[9px] font-black">Domain</TableHead>
+                          <TableHead className="text-right text-[9px] font-black">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {allAdmins?.map((adm) => (
+                          <TableRow key={adm.uid} className="border-white/5 h-12">
+                            <TableCell className="text-[10px] font-bold">{adm.email}</TableCell>
+                            <TableCell><Badge variant="outline" className="text-[8px] uppercase">{adm.role}</Badge></TableCell>
+                            <TableCell className="text-[10px] font-black uppercase text-primary">{adm.assignedSport || 'Universal'}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteAdmin(adm.uid)} className="h-8 w-8 text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+               </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
