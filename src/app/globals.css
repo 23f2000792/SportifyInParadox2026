@@ -24,7 +24,7 @@
     --secondary-foreground: 0 0% 98%;
     
     --muted: 240 5% 10%;
-    --muted-foreground: 240 5% 65%;
+    --muted-foreground: 240 5% 75%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
@@ -79,8 +79,4 @@
 
 .premium-card:hover::before {
   @apply opacity-100;
-}
-
-.broadcast-glow {
-  text-shadow: 0 0 15px hsla(var(--primary), 0.3);
 }
