@@ -4,43 +4,40 @@
 
 @layer base {
   :root {
-    /* Vibrant Electric Palette - Deep Violet & Cyan */
-    --primary: 262 83% 58%;
+    /* Refined High-Contrast Theme */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    
+    --primary: 263 70% 50%;
     --primary-foreground: 0 0% 100%;
     
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
     
-    --accent: 190 95% 39%;
-    --accent-foreground: 210 40% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
     
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 98%;
     
-    --popover: 222 47% 6%;
-    --popover-foreground: 210 40% 98%;
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 0 0% 98%;
     
-    --secondary: 222 47% 15%;
-    --secondary-foreground: 210 40% 98%;
+    --muted: 240 10% 10%;
+    --muted-foreground: 240 5% 75%;
     
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 65%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
     
-    --destructive: 346 84% 61%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 222 47% 15%;
-    --input: 222 47% 15%;
-    --ring: 262 83% 58%;
-    --radius: 1.25rem;
+    --border: 240 10% 12%;
+    --input: 240 10% 12%;
+    --ring: 263 70% 50%;
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 7%;
-    --primary: 262 83% 58%;
-    --accent: 190 95% 39%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
   }
 }
 
@@ -66,37 +63,28 @@
 }
 
 .premium-card {
-  @apply relative overflow-hidden bg-card border border-white/5 shadow-xl transition-all duration-300 rounded-[1.5rem];
-  background: linear-gradient(165deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.3) 100%);
+  @apply relative overflow-hidden bg-card border border-white/5 shadow-lg transition-all duration-300 rounded-2xl;
+  background: linear-gradient(165deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.4) 100%);
 }
 
 .premium-card:hover {
-  @apply border-primary/30 -translate-y-0.5 shadow-primary/10;
+  @apply border-primary/40 -translate-y-0.5 shadow-primary/5;
 }
 
 .premium-card::before {
   content: '';
   @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
-  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.05), transparent 60%);
+  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.08), transparent 70%);
 }
 
 .premium-card:hover::before {
   @apply opacity-100;
 }
 
-/* Typography for High-Impact Live Tables */
-.live-table-text {
-  @apply text-base md:text-lg font-black tracking-tight uppercase italic;
-}
-
-.live-table-header {
-  @apply text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 py-4;
-}
-
 .broadcast-glow {
-  text-shadow: 0 0 15px hsla(var(--primary), 0.4);
+  text-shadow: 0 0 10px hsla(var(--primary), 0.5);
 }
 
 .accent-glow {
-  text-shadow: 0 0 15px hsla(var(--accent), 0.4);
+  text-shadow: 0 0 10px hsla(var(--accent), 0.5);
 }
