@@ -83,6 +83,17 @@ export default function EventPage() {
     return filtered;
   }, [rawRunResults, searchQuery]);
 
+  const handleShareRunResult = (res: RunResult) => {
+    const text = `🏃‍♂️ *PARADOX 2026 - KAMPUS RUN ACHIEVER* 🏅\n\n` +
+      `🏅 *Name:* ${res.name.toUpperCase()}\n` +
+      `🏆 *Rank:* #${res.position}\n` +
+      `⏱️ *Time:* ${res.time}\n` +
+      `👟 *Category:* ${res.category}\n\n` +
+      `🔥 *Check the full board:* ${APP_URL}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    toast({ title: "Sharing result..." });
+  };
+
   const handleShareMatch = (match: Match) => {
     const winnerText = match.scoreA > match.scoreB 
       ? `🏆 *${match.teamA}* wins!` 
@@ -150,7 +161,7 @@ export default function EventPage() {
             </div>
             <Card className="premium-card overflow-hidden">
               <Table>
-                <TableHeader><TableRow><TableHead className="w-16 md:w-24 text-center px-2">Rank</TableHead><TableHead className="px-2">Participant</TableHead><TableHead className="text-right px-4 pr-8">Time</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead className="w-16 md:w-24 text-center px-2">Rank</TableHead><TableHead className="px-2">Participant</TableHead><TableHead className="text-right px-4 pr-8">Result</TableHead></TableRow></TableHeader>
                 <TableBody>{runResults?.map((res) => (
                   <TableRow key={res.id} className="h-16 md:h-20 group">
                     <TableCell className="text-center text-xl md:text-3xl font-black italic text-primary px-2">#{res.position}</TableCell>
@@ -158,7 +169,12 @@ export default function EventPage() {
                       <p className="text-sm md:text-lg font-black uppercase italic text-foreground leading-tight break-words">{res.name}</p>
                       <p className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase">{res.category}</p>
                     </TableCell>
-                    <TableCell className="text-right px-4 pr-8 text-xl md:text-3xl font-black text-foreground tabular-nums">{res.time}</TableCell>
+                    <TableCell className="text-right px-4 pr-8">
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-xl md:text-3xl font-black text-foreground tabular-nums">{res.time}</span>
+                        <Button variant="ghost" size="sm" onClick={() => handleShareRunResult(res)} className="h-6 text-[8px] font-black uppercase text-primary hover:bg-primary/5 gap-1 px-2"><Share2 className="h-2.5 w-2.5" /> Share</Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}</TableBody>
               </Table>
@@ -306,15 +322,15 @@ export default function EventPage() {
                       isMyMatch && "border-primary/20 bg-primary/[0.01]"
                     )}>
                       <CardContent className="p-0">
-                        <div className="p-4 sm:p-6 md:p-12 flex items-center justify-between gap-2 sm:gap-6">
+                        <div className="p-4 sm:p-6 md:p-12 flex items-center justify-between gap-2 sm:gap-6 overflow-hidden">
                           <p className={cn(
-                            "flex-1 text-right font-black text-xs sm:text-base md:text-3xl uppercase italic leading-tight break-words", 
+                            "flex-1 text-right font-black text-[10px] sm:text-base md:text-3xl uppercase italic leading-tight break-words hyphens-auto", 
                             match.scoreA > match.scoreB ? 'text-foreground' : 'text-muted-foreground/50',
                             match.teamA === myHouse && "text-primary"
                           )}>{match.teamA}</p>
-                          <div className="text-base sm:text-xl md:text-5xl font-black bg-muted/30 px-3 py-2 sm:px-4 sm:py-3 rounded-xl border border-border whitespace-nowrap">{match.scoreA} - {match.scoreB}</div>
+                          <div className="text-sm sm:text-xl md:text-5xl font-black bg-muted/30 px-2 py-1.5 sm:px-4 sm:py-3 rounded-xl border border-border whitespace-nowrap flex-shrink-0 mx-2">{match.scoreA} - {match.scoreB}</div>
                           <p className={cn(
-                            "flex-1 text-left font-black text-xs sm:text-base md:text-3xl uppercase italic leading-tight break-words", 
+                            "flex-1 text-left font-black text-[10px] sm:text-base md:text-3xl uppercase italic leading-tight break-words hyphens-auto", 
                             match.scoreB > match.scoreA ? 'text-foreground' : 'text-muted-foreground/50',
                             match.teamB === myHouse && "text-primary"
                           )}>{match.teamB}</p>
@@ -322,7 +338,7 @@ export default function EventPage() {
 
                         {match.badmintonResults && (
                           <div className="px-6 md:px-12 py-6 border-t border-border bg-muted/5">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 {match.badmintonResults.map(res => (
                                   <div key={res.type} className="bg-muted/10 p-3 rounded-lg border border-border">
                                     <div className="flex justify-between items-center mb-1">
@@ -330,7 +346,7 @@ export default function EventPage() {
                                         <span className="text-[10px] font-black text-foreground">{res.score}</span>
                                     </div>
                                     <p className={cn(
-                                      "text-[10px] font-black uppercase italic leading-tight",
+                                      "text-[9px] font-black uppercase italic leading-tight break-words",
                                       res.winner === myHouse ? "text-primary" : "text-foreground"
                                     )}>{res.winner || 'TBD'}</p>
                                   </div>

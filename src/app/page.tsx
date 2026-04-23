@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
@@ -38,7 +39,21 @@ export default function Home() {
     return query(collection(db, 'matches'), where('status', '==', 'Live'));
   }, [db]);
 
+  const upcomingMatchesQuery = useMemo(() => {
+    if (!db || !myHouse) return null;
+    return query(collection(db, 'matches'), where('status', '==', 'Upcoming'));
+  }, [db, myHouse]);
+
   const { data: liveMatches, loading: matchesLoading } = useCollection<Match>(liveMatchesQuery);
+  const { data: allUpcoming } = useCollection<Match>(upcomingMatchesQuery);
+
+  const houseUpcoming = useMemo(() => {
+    if (!myHouse || !allUpcoming) return [];
+    return allUpcoming
+      .filter(m => m.teamA === myHouse || m.teamB === myHouse)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 3);
+  }, [allUpcoming, myHouse]);
 
   if (matchesLoading) return <Loading />;
 
@@ -73,12 +88,43 @@ export default function Home() {
             </Select>
             {myHouse && (
               <p className="text-[9px] font-black text-primary uppercase animate-in fade-in slide-in-from-top-1">
-                Currently tracking: {myHouse}
+                Tracking: {myHouse}
               </p>
             )}
           </div>
         </div>
       </div>
+
+      {/* House Specific Timeline */}
+      {myHouse && houseUpcoming.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+              <CalendarClock className="h-4 w-4" /> {myHouse} Timeline
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {houseUpcoming.map((match) => (
+              <Link key={match.id} href={`/events/${match.sport}`}>
+                <Card className="premium-card bg-primary/[0.02] border-primary/20 h-full group">
+                  <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</p>
+                      <p className="text-lg font-black italic uppercase text-foreground leading-none">VS {match.teamA === myHouse ? match.teamB : match.teamA}</p>
+                    </div>
+                    <div className="space-y-1 border-t border-primary/10 pt-3">
+                      <p className="text-[10px] font-black text-foreground">{match.time} • {match.day}</p>
+                      <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                        <MapPin className="h-3 w-3" /> {match.venue}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Live Feed */}
       {liveMatches && liveMatches.length > 0 && (
@@ -122,12 +168,18 @@ export default function Home() {
                             {match.scoreA} : {match.scoreB}
                           </span>
                           <p className={cn(
-                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1",
+                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1 md:text-left",
                             match.teamB === myHouse && "text-primary"
                           )}>
                             {match.teamB}
                           </p>
                         </div>
+                        {match.keyEvents && match.keyEvents.length > 0 && (
+                          <div className="flex items-center gap-2 pt-2">
+                            <span className="text-[9px] font-black text-primary/60 uppercase">Latest:</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase truncate">{match.keyEvents[match.keyEvents.length - 1]}</span>
+                          </div>
+                        )}
                       </div>
                       <ChevronRight className="h-6 w-6 text-muted-foreground/20 group-hover:text-primary transition-colors shrink-0" />
                     </CardContent>
