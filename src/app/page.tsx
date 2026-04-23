@@ -144,7 +144,7 @@ export default function Home() {
                     isMyMatch && "border-primary/40 bg-primary/[0.02] shadow-lg shadow-primary/5"
                   )}>
                     <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
-                      <div className="space-y-3 flex-1">
+                      <div className="space-y-3 flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-3">
                           <span className="text-[10px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</span>
                           <span className="w-1 h-1 rounded-full bg-border hidden xs:block" />
@@ -157,7 +157,7 @@ export default function Home() {
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 overflow-hidden">
                           <p className={cn(
                             "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1",
                             match.teamA === myHouse && "text-primary"
@@ -175,9 +175,11 @@ export default function Home() {
                           </p>
                         </div>
                         {match.keyEvents && match.keyEvents.length > 0 && (
-                          <div className="flex items-center gap-2 pt-2">
-                            <span className="text-[9px] font-black text-primary/60 uppercase">Latest:</span>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase truncate">{match.keyEvents[match.keyEvents.length - 1]}</span>
+                          <div className="flex items-center gap-2 pt-2 min-w-0 overflow-hidden">
+                            <span className="text-[9px] font-black text-primary/60 uppercase shrink-0">Latest:</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase truncate flex-1">
+                              {match.keyEvents[match.keyEvents.length - 1]}
+                            </span>
                           </div>
                         )}
                       </div>

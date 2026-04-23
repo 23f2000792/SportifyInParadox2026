@@ -233,12 +233,12 @@ export default function EventPage() {
                       isMyMatch && "border-primary shadow-xl shadow-primary/10"
                     )}>
                       <CardContent className="p-0">
-                        <div className="p-4 sm:p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
+                        <div className="p-4 sm:p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 overflow-hidden">
                           <p className={cn(
                             "flex-1 text-center md:text-right text-sm sm:text-base md:text-4xl font-black uppercase italic text-foreground leading-tight break-words",
                             match.teamA === myHouse && "text-primary"
                           )}>{match.teamA}</p>
-                          <div className="flex flex-col items-center gap-2 sm:gap-4">
+                          <div className="flex flex-col items-center gap-2 sm:gap-4 flex-shrink-0">
                             <div className="text-2xl sm:text-4xl md:text-7xl font-black bg-muted/30 px-4 py-2 sm:px-6 sm:py-4 rounded-2xl border border-border whitespace-nowrap">{match.scoreA} : {match.scoreB}</div>
                             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /><span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Broadcast</span></div>
                           </div>
@@ -280,16 +280,16 @@ export default function EventPage() {
                       "premium-card group border-border",
                       isMyMatch && "border-primary/40 bg-primary/[0.02]"
                     )}>
-                      <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
-                          <div className="text-center md:pr-10 md:border-r border-border min-w-[100px]"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-xl md:text-2xl font-black text-foreground whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground uppercase">{match.day}</p></div>
-                          <p className="text-lg md:text-3xl font-black uppercase italic text-foreground leading-tight text-center md:text-left break-words">
+                      <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+                        <div className="flex flex-col md:flex-row items-center gap-8 flex-1 min-w-0">
+                          <div className="text-center md:pr-10 md:border-r border-border min-w-[100px] flex-shrink-0"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-xl md:text-2xl font-black text-foreground whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground uppercase">{match.day}</p></div>
+                          <p className="text-lg md:text-3xl font-black uppercase italic text-foreground leading-tight text-center md:text-left break-words min-w-0 flex-1">
                             <span className={cn(match.teamA === myHouse && "text-primary")}>{match.teamA}</span> 
                             <span className="text-muted-foreground/30 mx-2">VS</span> 
                             <span className={cn(match.teamB === myHouse && "text-primary")}>{match.teamB}</span>
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] font-black border-border px-5 py-1 uppercase whitespace-nowrap">{match.phase.replace('-', ' ')}</Badge>
+                        <Badge variant="outline" className="text-[9px] font-black border-border px-5 py-1 uppercase whitespace-nowrap flex-shrink-0">{match.phase.replace('-', ' ')}</Badge>
                       </CardContent>
                     </Card>
                   );
@@ -322,13 +322,13 @@ export default function EventPage() {
                       isMyMatch && "border-primary/20 bg-primary/[0.01]"
                     )}>
                       <CardContent className="p-0">
-                        <div className="p-4 sm:p-6 md:p-12 flex items-center justify-between gap-2 sm:gap-6 overflow-hidden">
+                        <div className="p-2 sm:p-6 md:p-12 flex items-center justify-between gap-1 sm:gap-6 overflow-hidden">
                           <p className={cn(
                             "flex-1 text-right font-black text-[10px] sm:text-base md:text-3xl uppercase italic leading-tight break-words hyphens-auto", 
                             match.scoreA > match.scoreB ? 'text-foreground' : 'text-muted-foreground/50',
                             match.teamA === myHouse && "text-primary"
                           )}>{match.teamA}</p>
-                          <div className="text-sm sm:text-xl md:text-5xl font-black bg-muted/30 px-2 py-1.5 sm:px-4 sm:py-3 rounded-xl border border-border whitespace-nowrap flex-shrink-0 mx-2">{match.scoreA} - {match.scoreB}</div>
+                          <div className="text-xs sm:text-xl md:text-5xl font-black bg-muted/30 px-1.5 py-1 sm:px-4 sm:py-3 rounded-lg border border-border whitespace-nowrap flex-shrink-0 mx-1">{match.scoreA} - {match.scoreB}</div>
                           <p className={cn(
                             "flex-1 text-left font-black text-[10px] sm:text-base md:text-3xl uppercase italic leading-tight break-words hyphens-auto", 
                             match.scoreB > match.scoreA ? 'text-foreground' : 'text-muted-foreground/50',
@@ -337,16 +337,16 @@ export default function EventPage() {
                         </div>
 
                         {match.badmintonResults && (
-                          <div className="px-6 md:px-12 py-6 border-t border-border bg-muted/5">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="px-4 md:px-12 py-4 border-t border-border bg-muted/5">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
                                 {match.badmintonResults.map(res => (
-                                  <div key={res.type} className="bg-muted/10 p-3 rounded-lg border border-border">
+                                  <div key={res.type} className="bg-muted/10 p-2 md:p-3 rounded-lg border border-border">
                                     <div className="flex justify-between items-center mb-1">
-                                        <span className="text-[9px] font-black uppercase text-primary/60">{res.type}</span>
-                                        <span className="text-[10px] font-black text-foreground">{res.score}</span>
+                                        <span className="text-[8px] md:text-[9px] font-black uppercase text-primary/60">{res.type}</span>
+                                        <span className="text-[9px] md:text-[10px] font-black text-foreground">{res.score}</span>
                                     </div>
                                     <p className={cn(
-                                      "text-[9px] font-black uppercase italic leading-tight break-words",
+                                      "text-[8px] md:text-[9px] font-black uppercase italic leading-tight break-words",
                                       res.winner === myHouse ? "text-primary" : "text-foreground"
                                     )}>{res.winner || 'TBD'}</p>
                                   </div>
@@ -355,15 +355,15 @@ export default function EventPage() {
                           </div>
                         )}
 
-                        <div className="flex flex-col md:flex-row items-center justify-between px-6 sm:px-8 py-5 border-t border-border bg-muted/5 gap-4">
-                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">M#{match.matchNumber} • {match.phase.toUpperCase()}</span>
+                        <div className="flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 py-4 border-t border-border bg-muted/5 gap-3">
+                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-4">
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">M#{match.matchNumber} • {match.phase.toUpperCase()}</span>
                             <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => handleShareMatch(match)} className="h-8 text-[10px] font-black text-primary hover:bg-primary/10 gap-2 px-3"><Share2 className="h-3.5 w-3.5" /> Share Result</Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleShareMatch(match)} className="h-7 text-[9px] font-black text-primary hover:bg-primary/10 gap-1.5 px-2"><Share2 className="h-3 w-3" /> Share</Button>
                               <MatchRecapButton match={match} />
                             </div>
                           </div>
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase text-center md:text-right tracking-widest">{match.date} • {match.venue}</span>
+                          <span className="text-[8px] font-bold text-muted-foreground uppercase text-center md:text-right tracking-widest">{match.date} • {match.venue}</span>
                         </div>
                       </CardContent>
                     </Card>
