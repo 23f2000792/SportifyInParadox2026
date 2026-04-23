@@ -56,20 +56,20 @@ export default function Home() {
             {liveMatches.map((match) => (
               <Link key={match.id} href={`/events/${match.sport}`}>
                 <Card className="premium-card group bg-white/[0.01] hover:bg-white/[0.03]">
-                  <CardContent className="p-6 md:p-8 flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
+                  <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex flex-wrap items-center gap-3">
                         <span className="text-[10px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</span>
-                        <span className="w-1 h-1 rounded-full bg-white/10" />
+                        <span className="w-1 h-1 rounded-full bg-white/10 hidden xs:block" />
                         <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-1">
                           <MapPin className="h-3 w-3" /> {match.venue}
                         </span>
                       </div>
-                      <p className="text-xl md:text-3xl font-black uppercase italic tracking-tighter text-white">
-                        {match.teamA} <span className="text-primary mx-3">{match.scoreA} : {match.scoreB}</span> {match.teamB}
+                      <p className="text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight">
+                        {match.teamA} <span className="text-primary mx-2 md:mx-3 whitespace-nowrap">{match.scoreA} : {match.scoreB}</span> {match.teamB}
                       </p>
                     </div>
-                    <ChevronRight className="h-6 w-6 text-white/20 group-hover:text-primary transition-colors" />
+                    <ChevronRight className="h-6 w-6 text-white/20 group-hover:text-primary transition-colors shrink-0" />
                   </CardContent>
                 </Card>
               </Link>
