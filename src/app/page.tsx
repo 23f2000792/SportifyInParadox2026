@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -36,7 +35,7 @@ export default function Home() {
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] mb-2">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Paradox 2026 Official</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Paradox 2026 Official</p>
         </div>
         <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] text-white">
           SPORTIFY
@@ -57,17 +56,25 @@ export default function Home() {
               <Link key={match.id} href={`/events/${match.sport}`}>
                 <Card className="premium-card group bg-white/[0.01] hover:bg-white/[0.03]">
                   <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
-                    <div className="space-y-2 flex-1">
+                    <div className="space-y-3 flex-1">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="text-[10px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</span>
                         <span className="w-1 h-1 rounded-full bg-white/10 hidden xs:block" />
-                        <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-1">
+                        <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1">
                           <MapPin className="h-3 w-3" /> {match.venue}
                         </span>
                       </div>
-                      <p className="text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight">
-                        {match.teamA} <span className="text-primary mx-2 md:mx-3 whitespace-nowrap">{match.scoreA} : {match.scoreB}</span> {match.teamB}
-                      </p>
+                      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                        <p className="text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1">
+                          {match.teamA}
+                        </p>
+                        <span className="text-2xl md:text-4xl font-black text-primary whitespace-nowrap">
+                          {match.scoreA} : {match.scoreB}
+                        </span>
+                        <p className="text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1">
+                          {match.teamB}
+                        </p>
+                      </div>
                     </div>
                     <ChevronRight className="h-6 w-6 text-white/20 group-hover:text-primary transition-colors shrink-0" />
                   </CardContent>

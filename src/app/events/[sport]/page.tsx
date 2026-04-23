@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -101,8 +100,8 @@ export default function EventPage() {
             </div>
           </div>
           <div className="space-y-3">
-            <h1 className="text-3xl md:text-8xl font-black italic text-white tracking-tighter uppercase leading-none">{event.name}</h1>
-            <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto opacity-70">{event.description}</p>
+            <h1 className="text-3xl md:text-8xl font-black italic text-white tracking-tighter uppercase leading-none break-words">{event.name}</h1>
+            <p className="text-[10px] md:text-sm text-muted-foreground/60 uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto opacity-70">{event.description}</p>
           </div>
         </div>
       </div>
@@ -141,7 +140,7 @@ export default function EventPage() {
                     <CardHeader className="p-4 border-b border-white/[0.05] text-center bg-white/[0.02]"><CardTitle className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">Pool {group}</CardTitle></CardHeader>
                     <CardContent className="p-0">
                       <Table><TableBody>{groupStandings.map((row) => (
-                        <TableRow key={row.team} className="h-14 border-none hover:bg-white/[0.03]"><TableCell className="text-sm font-black uppercase italic text-white pl-4 break-words max-w-[120px]">{row.team}</TableCell><TableCell className="text-right font-black text-xl pr-4">{row.points} <span className="text-[9px] text-muted-foreground/60 ml-0.5">PTS</span></TableCell></TableRow>
+                        <TableRow key={row.team} className="h-14 border-none hover:bg-white/[0.03]"><TableCell className="text-sm font-black uppercase italic text-white pl-4 break-words">{row.team}</TableCell><TableCell className="text-right font-black text-xl pr-4">{row.points} <span className="text-[9px] text-muted-foreground/60 ml-0.5">PTS</span></TableCell></TableRow>
                       ))}</TableBody></Table>
                     </CardContent>
                   </Card>
@@ -199,9 +198,11 @@ export default function EventPage() {
                 {sportMatches?.filter(m => m.status === 'Upcoming').map(match => (
                   <Card key={match.id} className="premium-card group bg-white/[0.01]">
                     <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                      <div className="flex flex-col md:flex-row items-center gap-8">
-                        <div className="text-center md:pr-10 md:border-r border-white/5"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-2xl font-black text-white whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{match.day}</p></div>
-                        <p className="text-lg md:text-3xl font-black uppercase italic text-white leading-tight text-center md:text-left break-words">{match.teamA} <span className="text-white/20 mx-2">VS</span> {match.teamB}</p>
+                      <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
+                        <div className="text-center md:pr-10 md:border-r border-white/5 min-w-[100px]"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-2xl font-black text-white whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{match.day}</p></div>
+                        <p className="text-lg md:text-3xl font-black uppercase italic text-white leading-tight text-center md:text-left break-words">
+                          {match.teamA} <span className="text-white/20 mx-2">VS</span> {match.teamB}
+                        </p>
                       </div>
                       <Badge variant="outline" className="text-[9px] font-black border-white/10 px-5 py-1 uppercase whitespace-nowrap">{match.phase.replace('-', ' ')}</Badge>
                     </CardContent>
@@ -218,6 +219,23 @@ export default function EventPage() {
                         <div className="text-xl md:text-5xl font-black bg-black/50 px-4 py-3 rounded-xl border border-white/[0.08] whitespace-nowrap">{match.scoreA} - {match.scoreB}</div>
                         <p className={cn("flex-1 text-left font-black text-lg md:text-4xl uppercase italic leading-tight break-words", match.scoreB > match.scoreA ? 'text-white' : 'text-muted-foreground/40')}>{match.teamB}</p>
                       </div>
+
+                      {match.badmintonResults && (
+                        <div className="px-6 md:px-12 py-6 border-t border-white/5 bg-black/10">
+                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                              {match.badmintonResults.map(res => (
+                                <div key={res.type} className="bg-white/5 p-3 rounded-lg border border-white/5">
+                                   <div className="flex justify-between items-center mb-1">
+                                      <span className="text-[9px] font-black uppercase text-primary/60">{res.type}</span>
+                                      <span className="text-[10px] font-black text-white">{res.score}</span>
+                                   </div>
+                                   <p className="text-[10px] font-black uppercase italic text-white/90">{res.winner || 'TBD'}</p>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                      )}
+
                       <div className="flex flex-col md:flex-row items-center justify-between px-8 py-4 border-t border-white/[0.05] bg-white/[0.01] gap-4">
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                           <span className="text-[9px] font-black uppercase text-muted-foreground/60">M#{match.matchNumber} • {match.phase.toUpperCase()}</span>
