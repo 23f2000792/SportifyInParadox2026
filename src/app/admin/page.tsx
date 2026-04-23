@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EVENTS } from '@/lib/mock-data';
-import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles } from 'lucide-react';
+import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles, Pencil, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -42,6 +42,9 @@ export default function AdminPage() {
   const [scoreB, setScoreB] = useState<number>(0);
   const [status, setStatus] = useState<'Upcoming' | 'Live' | 'Completed'>('Live');
   const [newHighlight, setNewHighlight] = useState('');
+  const [editingHighlightIndex, setEditingHighlightIndex] = useState<number | null>(null);
+  const [editingHighlightText, setEditingHighlightText] = useState('');
+
   const [badmintonResults, setBadmintonResults] = useState<BadmintonMatchResult[]>([
     { type: 'MS', score: '0-0', winner: '' },
     { type: 'WS', score: '0-0', winner: '' },
@@ -116,7 +119,16 @@ export default function AdminPage() {
       setScoreA(activeMatch.scoreA);
       setScoreB(activeMatch.scoreB);
       setStatus(activeMatch.status as any);
-      if (activeMatch.badmintonResults) setBadmintonResults(activeMatch.badmintonResults);
+      if (activeMatch.badmintonResults) {
+        setBadmintonResults(activeMatch.badmintonResults);
+      } else {
+        setBadmintonResults([
+          { type: 'MS', score: '0-0', winner: '' },
+          { type: 'WS', score: '0-0', winner: '' },
+          { type: 'MD', score: '0-0', winner: '' },
+          { type: 'XD', score: '0-0', winner: '' },
+        ]);
+      }
     }
   }, [activeMatch]);
 
@@ -131,7 +143,7 @@ export default function AdminPage() {
       badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
     });
-    toast({ title: "Scores updated." });
+    toast({ title: "Broadcast committed." });
   };
 
   const handleAddHighlight = () => {
@@ -142,6 +154,30 @@ export default function AdminPage() {
     });
     setNewHighlight('');
     toast({ title: "Highlight logged." });
+  };
+
+  const handleDeleteHighlight = (index: number) => {
+    if (!selectedMatchId || !db || !activeMatch) return;
+    const updatedEvents = [...(activeMatch.keyEvents || [])];
+    updatedEvents.splice(index, 1);
+    updateDoc(doc(db, 'matches', selectedMatchId), {
+      keyEvents: updatedEvents,
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: "Highlight removed." });
+  };
+
+  const handleSaveEditHighlight = () => {
+    if (!selectedMatchId || !db || !activeMatch || editingHighlightIndex === null) return;
+    const updatedEvents = [...(activeMatch.keyEvents || [])];
+    updatedEvents[editingHighlightIndex] = editingHighlightText;
+    updateDoc(doc(db, 'matches', selectedMatchId), {
+      keyEvents: updatedEvents,
+      updatedAt: serverTimestamp(),
+    });
+    setEditingHighlightIndex(null);
+    setEditingHighlightText('');
+    toast({ title: "Highlight refined." });
   };
 
   const handleCreateSchedule = (e: React.FormEvent) => {
@@ -311,6 +347,54 @@ export default function AdminPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Badminton Specific Sub-Match Controls */}
+                      {selectedSportSlug === 'badminton' && (
+                        <div className="space-y-6 pt-6 border-t border-white/5">
+                          <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Sub-Match Details (Badminton)</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {badmintonResults.map((res, idx) => (
+                              <Card key={res.type} className="bg-white/5 border-white/10 p-4 space-y-3">
+                                <Badge variant="outline" className="text-[9px] font-black">{res.type}</Badge>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-[8px] uppercase opacity-50">Score</Label>
+                                    <Input 
+                                      value={res.score} 
+                                      onChange={e => {
+                                        const newRes = [...badmintonResults];
+                                        newRes[idx].score = e.target.value;
+                                        setBadmintonResults(newRes);
+                                      }}
+                                      placeholder="21-15"
+                                      className="h-8 text-[10px] bg-black/20"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-[8px] uppercase opacity-50">Winner</Label>
+                                    <Select 
+                                      value={res.winner} 
+                                      onValueChange={v => {
+                                        const newRes = [...badmintonResults];
+                                        newRes[idx].winner = v;
+                                        setBadmintonResults(newRes);
+                                      }}
+                                    >
+                                      <SelectTrigger className="h-8 text-[9px] bg-black/20">
+                                        <SelectValue placeholder="House" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {HOUSES.map(h => <SelectItem key={h} value={h} className="text-[9px]">{h}</SelectItem>)}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="space-y-3">
                         <Label className="text-[10px] font-black uppercase opacity-60">Status</Label>
                         <Select value={status} onValueChange={(v: any) => setStatus(v)}>
@@ -322,13 +406,13 @@ export default function AdminPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20">Commit Scores</Button>
+                      <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20">Commit Broadcast</Button>
                     </form>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Advanced Feature: Highlight Console */}
+              {/* Highlight Management Console */}
               <div className="space-y-6">
                  <Card className="premium-card">
                    <CardHeader className="p-6 border-b border-white/5"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Sparkles className="h-4 w-4" /> Live Highlights</CardTitle></CardHeader>
@@ -336,21 +420,63 @@ export default function AdminPage() {
                      {selectedMatchId ? (
                        <>
                          <div className="space-y-2">
-                           <Label className="text-[10px] font-black uppercase opacity-60">Add Event (Scores, Fouls, etc.)</Label>
-                           <Input value={newHighlight} onChange={e => setNewHighlight(e.target.value)} placeholder="e.g. Penalty Goal at 35'" className="bg-white/5 text-[10px] font-black h-12" />
-                           <Button onClick={handleAddHighlight} className="w-full h-10 text-[9px] font-black uppercase gap-2"><Plus className="h-4 w-4" /> Log Highlight</Button>
+                           <Label className="text-[10px] font-black uppercase opacity-60">
+                             {editingHighlightIndex !== null ? 'Refine Highlight' : 'Log New Highlight'}
+                           </Label>
+                           <div className="flex gap-2">
+                             <Input 
+                               value={editingHighlightIndex !== null ? editingHighlightText : newHighlight} 
+                               onChange={e => editingHighlightIndex !== null ? setEditingHighlightText(e.target.value) : setNewHighlight(e.target.value)} 
+                               placeholder="e.g. Penalty Goal at 35'" 
+                               className="bg-white/5 text-[10px] font-black h-12" 
+                             />
+                             {editingHighlightIndex !== null ? (
+                               <div className="flex gap-1">
+                                 <Button size="icon" onClick={handleSaveEditHighlight} className="h-12 w-12"><Check className="h-4 w-4" /></Button>
+                                 <Button size="icon" variant="ghost" onClick={() => setEditingHighlightIndex(null)} className="h-12 w-12 text-destructive"><X className="h-4 w-4" /></Button>
+                               </div>
+                             ) : (
+                               <Button onClick={handleAddHighlight} className="h-12 px-6 text-[9px] font-black uppercase"><Plus className="h-4 w-4" /></Button>
+                             )}
+                           </div>
                          </div>
                          <div className="space-y-2 pt-4">
                            <p className="text-[9px] font-black uppercase opacity-40">Timeline</p>
-                           <div className="space-y-2 max-h-40 overflow-y-auto no-scrollbar">
-                             {activeMatch?.keyEvents?.slice().reverse().map((ev, i) => (
-                               <div key={i} className="bg-white/5 p-2 rounded text-[10px] border-l-2 border-primary">{ev}</div>
-                             ))}
+                           <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
+                             {activeMatch?.keyEvents?.slice().reverse().map((ev, i) => {
+                               const originalIndex = activeMatch.keyEvents!.length - 1 - i;
+                               return (
+                                 <div key={i} className="group bg-white/5 p-3 rounded text-[10px] border-l-2 border-primary flex justify-between items-center gap-3">
+                                   <span className="flex-1">{ev}</span>
+                                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                     <Button 
+                                       size="icon" 
+                                       variant="ghost" 
+                                       className="h-7 w-7 text-primary/60 hover:text-primary"
+                                       onClick={() => {
+                                         setEditingHighlightIndex(originalIndex);
+                                         setEditingHighlightText(ev);
+                                       }}
+                                     >
+                                       <Pencil className="h-3 w-3" />
+                                     </Button>
+                                     <Button 
+                                       size="icon" 
+                                       variant="ghost" 
+                                       className="h-7 w-7 text-destructive/60 hover:text-destructive"
+                                       onClick={() => handleDeleteHighlight(originalIndex)}
+                                     >
+                                       <Trash2 className="h-3 w-3" />
+                                     </Button>
+                                   </div>
+                                 </div>
+                               );
+                             })}
                            </div>
                          </div>
                        </>
                      ) : (
-                       <p className="text-[10px] font-black uppercase opacity-30 text-center py-10 italic">Select a match to log highlights</p>
+                       <p className="text-[10px] font-black uppercase opacity-30 text-center py-10 italic">Select a match to manage highlights</p>
                      )}
                    </CardContent>
                  </Card>
@@ -359,7 +485,7 @@ export default function AdminPage() {
           )}
           {isKampusRun && (
              <Card className="premium-card">
-               <CardHeader className="bg-primary/5 border-b border-white/5 py-5"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary">Log Result</CardTitle></CardHeader>
+               <CardHeader className="bg-primary/5 border-b border-white/5 py-5"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary">Log Demographic Result</CardTitle></CardHeader>
                <CardContent className="p-8">
                  <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2 md:col-span-2"><Label className="text-[10px] font-black uppercase opacity-50">Participant Name</Label><Input value={runnerName} onChange={e => setRunnerName(e.target.value)} className="bg-white/5 h-14 border-white/10 text-sm font-black uppercase" placeholder="Full Name" required /></div>
