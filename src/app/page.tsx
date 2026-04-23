@@ -2,13 +2,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, ListOrdered, Award } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Match, Standing, HOUSES } from '@/lib/types';
+import { Match } from '@/lib/types';
 import Loading from '@/app/loading';
 
 const ICON_MAP: Record<string, any> = {
@@ -26,32 +26,9 @@ export default function Home() {
     return query(collection(db, 'matches'), where('status', '==', 'Live'));
   }, [db]);
 
-  const allStandingsQuery = useMemo(() => {
-    if (!db) return null;
-    return collection(db, 'standings');
-  }, [db]);
-
   const { data: liveMatches, loading: matchesLoading } = useCollection<Match>(liveMatchesQuery);
-  const { data: allStandings, loading: standingsLoading } = useCollection<Standing>(allStandingsQuery);
 
-  const overallTally = useMemo(() => {
-    if (!allStandings) return [];
-    const tally: Record<string, number> = {};
-    HOUSES.forEach(house => { tally[house] = 0; });
-    
-    allStandings.forEach(s => {
-      if (tally[s.team] !== undefined) {
-        tally[s.team] += (s.points || 0);
-      }
-    });
-
-    return Object.entries(tally)
-      .map(([house, points]) => ({ house, points }))
-      .sort((a, b) => b.points - a.points)
-      .filter(item => item.points > 0);
-  }, [allStandings]);
-
-  if (matchesLoading || standingsLoading) return <Loading />;
+  if (matchesLoading) return <Loading />;
 
   return (
     <div className="space-y-12 max-w-5xl mx-auto py-10 md:py-16 px-4 mb-24">
@@ -66,33 +43,6 @@ export default function Home() {
         </h1>
         <p className="text-xs font-bold uppercase tracking-[0.5em] text-primary/60">Broadcast Hub</p>
       </div>
-
-      {/* Overall Medal Tally (Advanced Feature) */}
-      {overallTally.length > 0 && (
-        <section className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-              <Award className="h-4 w-4" /> Championship Leaderboard
-            </h2>
-            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">Cross-Sport Total</p>
-          </div>
-          <Card className="premium-card bg-white/[0.01]">
-            <CardContent className="p-0">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.05]">
-                {overallTally.slice(0, 4).map((item, idx) => (
-                  <div key={item.house} className="bg-background p-6 text-center space-y-1">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">
-                      {idx === 0 ? '🥇 Leader' : idx === 1 ? '🥈 Second' : idx === 2 ? '🥉 Third' : 'Rank 4'}
-                    </p>
-                    <p className="text-lg md:text-xl font-black uppercase italic text-white truncate">{item.house}</p>
-                    <p className="text-2xl font-black text-primary/80">{item.points} <span className="text-[10px] uppercase opacity-40">Pts</span></p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
 
       {/* Live Feed */}
       {liveMatches && liveMatches.length > 0 && (
