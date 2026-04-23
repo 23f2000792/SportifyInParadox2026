@@ -95,17 +95,25 @@ export default function EventPage() {
   };
 
   const handleShareMatch = (match: Match) => {
-    const winnerText = match.scoreA > match.scoreB 
-      ? `🏆 *${match.teamA}* wins!` 
-      : match.scoreB > match.scoreA 
-      ? `🏆 *${match.teamB}* wins!` 
-      : `🤝 Draw!`;
+    const isLive = match.status === 'Live';
+    
+    let statusText = isLive ? `🔴 *LIVE BROADCAST*` : `🏁 *MATCH COMPLETED*`;
+    
+    let winnerText = "";
+    if (!isLive) {
+      winnerText = match.scoreA > match.scoreB 
+        ? `🏆 *${match.teamA}* wins!` 
+        : match.scoreB > match.scoreA 
+        ? `🏆 *${match.teamB}* wins!` 
+        : `🤝 Draw!`;
+    }
 
     const highlightsText = match.keyEvents?.length 
-      ? `🔥 *HIGHLIGHTS:*\n` + match.keyEvents.map(ev => `• ${ev}`).join('\n') + `\n\n`
+      ? `🔥 *HIGHLIGHTS:*\n` + match.keyEvents.slice().reverse().slice(0, 3).map(ev => `• ${ev}`).join('\n') + `\n\n`
       : "";
 
-    const text = `🏅 *PARADOX 2026 - MATCH CENTER* 🏅\n\n` +
+    const text = `🏅 *PARADOX 2026 - ${isLive ? 'LIVE UPDATE' : 'RESULTS'}* 🏅\n\n` +
+      `${statusText}\n` +
       `🏅 *Sport:* ${match.sport.replace('-', ' ').toUpperCase()}\n` +
       `⚔️ *BATTLE:* ${match.teamA} (${match.scoreA}) vs ${match.teamB} (${match.scoreB})\n\n` +
       `${winnerText}\n\n` +
@@ -114,7 +122,7 @@ export default function EventPage() {
       `📲 *Check all scores here:* ${APP_URL}`;
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    toast({ title: "Sharing result..." });
+    toast({ title: isLive ? "Sharing live update..." : "Sharing match result..." });
   };
 
   if (matchesLoading || stdLoading || runLoading) return <Loading />;
@@ -250,9 +258,19 @@ export default function EventPage() {
                         
                         {match.keyEvents && match.keyEvents.length > 0 && (
                           <div className="border-t border-border bg-muted/10 p-4 sm:p-6 md:p-10">
-                            <div className="flex items-center gap-2 mb-4">
-                              <Activity className="h-4 w-4 text-primary" />
-                              <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Live Timeline</h3>
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                <Activity className="h-4 w-4 text-primary" />
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Live Timeline</h3>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleShareMatch(match)}
+                                className="h-7 text-[9px] font-black uppercase text-primary hover:bg-primary/10 gap-1.5 px-3"
+                              >
+                                <Share2 className="h-3 w-3" /> Share Live
+                              </Button>
                             </div>
                             <div className="space-y-3">
                               {match.keyEvents.slice().reverse().map((ev, i) => (
