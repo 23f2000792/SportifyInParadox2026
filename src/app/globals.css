@@ -4,7 +4,39 @@
 
 @layer base {
   :root {
-    /* Platinum & Midnight Palette: High Contrast Edition */
+    /* Platinum Light Palette */
+    --background: 240 5% 96%;
+    --foreground: 240 10% 3.9%;
+    
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --accent: 215 20% 65%;
+    --accent-foreground: 240 10% 3.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    
+    --secondary: 240 5% 90%;
+    --secondary-foreground: 240 10% 3.9%;
+    
+    --muted: 240 5% 90%;
+    --muted-foreground: 240 5% 45%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 5% 85%;
+    --input: 240 5% 85%;
+    --ring: 263 70% 50%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    /* Midnight Dark Palette */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     
@@ -24,20 +56,11 @@
     --secondary-foreground: 0 0% 98%;
     
     --muted: 240 5% 15%;
-    --muted-foreground: 240 5% 85%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --muted-foreground: 240 5% 65%;
     
     --border: 240 10% 15%;
     --input: 240 10% 15%;
     --ring: 263 70% 50%;
-    --radius: 1rem;
-  }
-
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
   }
 }
 
@@ -63,12 +86,12 @@
 }
 
 .premium-card {
-  @apply relative overflow-hidden bg-card border border-white/[0.05] shadow-sm transition-all duration-500 rounded-2xl;
+  @apply relative overflow-hidden bg-card border border-border shadow-sm transition-all duration-500 rounded-2xl;
   background: linear-gradient(180deg, hsla(var(--card), 1) 0%, hsla(var(--secondary), 0.4) 100%);
 }
 
 .premium-card:hover {
-  @apply border-white/[0.1] shadow-xl shadow-black/40;
+  @apply border-primary/20 shadow-xl shadow-black/10 dark:shadow-black/40;
 }
 
 .premium-card::before {
