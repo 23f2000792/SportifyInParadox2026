@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -47,12 +46,12 @@ export default function Home() {
     <div className="space-y-12 max-w-5xl mx-auto py-10 md:py-16 px-4 mb-24">
       {/* Hero Section */}
       <div className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] mb-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/20 border border-border mb-2">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Paradox 2026 Official</p>
         </div>
         <div className="space-y-2">
-          <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] text-white">
+          <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] text-foreground">
             SPORTIFY
           </h1>
           <p className="text-xs font-bold uppercase tracking-[0.5em] text-primary/60">Broadcast Hub</p>
@@ -60,10 +59,10 @@ export default function Home() {
 
         {/* My House Personalization */}
         <div className="max-w-xs mx-auto pt-6">
-          <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-4 space-y-3">
+          <div className="bg-card border border-border rounded-2xl p-4 space-y-3 shadow-sm">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Follow Your House</p>
             <Select value={myHouse} onValueChange={handleFollowHouse}>
-              <SelectTrigger className="bg-black/20 border-white/10 h-11 text-[11px] font-black uppercase">
+              <SelectTrigger className="bg-muted/30 border-border h-11 text-[11px] font-black uppercase">
                 <SelectValue placeholder="Select Team" />
               </SelectTrigger>
               <SelectContent>
@@ -95,14 +94,14 @@ export default function Home() {
               return (
                 <Link key={match.id} href={`/events/${match.sport}`}>
                   <Card className={cn(
-                    "premium-card group bg-white/[0.01] hover:bg-white/[0.03]",
+                    "premium-card group",
                     isMyMatch && "border-primary/40 bg-primary/[0.02] shadow-lg shadow-primary/5"
                   )}>
                     <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
                       <div className="space-y-3 flex-1">
                         <div className="flex flex-wrap items-center gap-3">
                           <span className="text-[10px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</span>
-                          <span className="w-1 h-1 rounded-full bg-white/10 hidden xs:block" />
+                          <span className="w-1 h-1 rounded-full bg-border hidden xs:block" />
                           <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> {match.venue}
                           </span>
@@ -114,7 +113,7 @@ export default function Home() {
                         </div>
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                           <p className={cn(
-                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1",
+                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1",
                             match.teamA === myHouse && "text-primary"
                           )}>
                             {match.teamA}
@@ -123,14 +122,14 @@ export default function Home() {
                             {match.scoreA} : {match.scoreB}
                           </span>
                           <p className={cn(
-                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1",
+                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1",
                             match.teamB === myHouse && "text-primary"
                           )}>
                             {match.teamB}
                           </p>
                         </div>
                       </div>
-                      <ChevronRight className="h-6 w-6 text-white/20 group-hover:text-primary transition-colors shrink-0" />
+                      <ChevronRight className="h-6 w-6 text-muted-foreground/20 group-hover:text-primary transition-colors shrink-0" />
                     </CardContent>
                   </Card>
                 </Link>
@@ -150,14 +149,14 @@ export default function Home() {
             const IconComp = ICON_MAP[event.icon];
             return (
               <Link key={event.id} href={`/events/${event.slug}`}>
-                <Card className="premium-card group h-full hover:bg-white/[0.02]">
+                <Card className="premium-card group h-full">
                   <CardContent className="p-0">
                     <div className="flex h-36 md:h-44">
-                      <div className="w-1/4 bg-white/[0.01] flex items-center justify-center border-r border-white/[0.03] group-hover:bg-primary/[0.02] transition-colors">
-                        <IconComp className="h-8 w-8 text-white/20 group-hover:text-primary transition-all duration-500" />
+                      <div className="w-1/4 bg-muted/10 flex items-center justify-center border-r border-border group-hover:bg-primary/[0.05] transition-colors">
+                        <IconComp className="h-8 w-8 text-muted-foreground/20 group-hover:text-primary transition-all duration-500" />
                       </div>
                       <div className="w-3/4 p-6 flex flex-col justify-center space-y-1">
-                        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors">{event.name}</h2>
+                        <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground group-hover:text-primary transition-colors">{event.name}</h2>
                         <p className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-widest leading-relaxed">
                           {event.description}
                         </p>
