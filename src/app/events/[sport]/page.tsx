@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -112,7 +111,7 @@ export default function EventPage() {
 
   return (
     <div className="space-y-10 max-w-6xl mx-auto pb-32 px-4 md:px-0">
-      <div className="relative overflow-hidden rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-6 md:p-14 text-center">
+      <div className="relative overflow-hidden rounded-[2rem] bg-white/[0.02] dark:bg-white/[0.02] border border-border p-6 md:p-14 text-center">
         <div className="space-y-6">
           <div className="flex justify-center">
             <div className="p-4 rounded-2xl bg-primary/10 border border-primary/30">
@@ -120,11 +119,10 @@ export default function EventPage() {
             </div>
           </div>
           <div className="space-y-3">
-            <h1 className="text-3xl md:text-7xl font-black italic text-white tracking-tighter uppercase leading-none break-words">{event.name}</h1>
-            <p className="text-[10px] md:text-xs text-muted-foreground/60 uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto opacity-70">{event.description}</p>
+            <h1 className="text-3xl md:text-7xl font-black italic text-foreground tracking-tighter uppercase leading-none break-words">{event.name}</h1>
+            <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto">{event.description}</p>
           </div>
           
-          {/* Quick Filter Toggle */}
           {myHouse && sport !== 'kampus-run' && (
             <div className="flex items-center justify-center gap-3 pt-4">
               <Label htmlFor="focus-mode" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Focus on {myHouse}</Label>
@@ -143,7 +141,7 @@ export default function EventPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                 <Input 
                   placeholder="Search Runner..." 
-                  className="pl-9 bg-white/5 border-white/10 h-10 text-xs font-black uppercase"
+                  className="pl-9 bg-muted/30 border-border h-10 text-xs font-black uppercase"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -156,19 +154,13 @@ export default function EventPage() {
                   <TableRow key={res.id} className="h-16 md:h-20 group">
                     <TableCell className="text-center text-xl md:text-3xl font-black italic text-primary px-2">#{res.position}</TableCell>
                     <TableCell className="px-2">
-                      <p className="text-sm md:text-lg font-black uppercase italic text-white leading-tight break-words">{res.name}</p>
-                      <p className="text-[9px] font-bold text-muted-foreground/60 tracking-widest uppercase">{res.category}</p>
+                      <p className="text-sm md:text-lg font-black uppercase italic text-foreground leading-tight break-words">{res.name}</p>
+                      <p className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase">{res.category}</p>
                     </TableCell>
-                    <TableCell className="text-right px-4 pr-8 text-xl md:text-3xl font-black text-white tabular-nums">{res.time}</TableCell>
+                    <TableCell className="text-right px-4 pr-8 text-xl md:text-3xl font-black text-foreground tabular-nums">{res.time}</TableCell>
                   </TableRow>
                 ))}</TableBody>
               </Table>
-              {runResults.length === 0 && (
-                <div className="p-20 text-center space-y-2 opacity-30">
-                  <Search className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">No matching runners found</p>
-                </div>
-              )}
             </Card>
           </div>
         </section>
@@ -181,22 +173,22 @@ export default function EventPage() {
                 const groupStandings = standings?.filter(s => s.group === group).sort((a,b) => b.points - a.points);
                 if (!groupStandings?.length) return null;
                 return (
-                  <Card key={group} className="premium-card border-none bg-white/[0.01]">
-                    <CardHeader className="p-4 border-b border-white/[0.05] text-center bg-white/[0.02]"><CardTitle className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">Pool {group}</CardTitle></CardHeader>
+                  <Card key={group} className="premium-card border-border">
+                    <CardHeader className="p-4 border-b border-border text-center bg-muted/10"><CardTitle className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">Pool {group}</CardTitle></CardHeader>
                     <CardContent className="p-0">
                       <Table><TableBody>{groupStandings.map((row) => (
                         <TableRow key={row.team} className={cn(
-                          "h-14 border-none hover:bg-white/[0.03]",
-                          row.team === myHouse && "bg-primary/[0.05]"
+                          "h-14 border-none hover:bg-muted/5",
+                          row.team === myHouse && "bg-primary/5"
                         )}>
                           <TableCell className={cn(
-                            "text-xs font-black uppercase italic text-white pl-4 break-words leading-tight flex items-center gap-2",
+                            "text-xs font-black uppercase italic text-foreground pl-4 break-words leading-tight flex items-center gap-2",
                             row.team === myHouse && "text-primary"
                           )}>
                             {row.team}
                             {row.team === myHouse && <Star className="h-2.5 w-2.5 fill-primary" />}
                           </TableCell>
-                          <TableCell className="text-right font-black text-lg pr-4">{row.points} <span className="text-[9px] text-muted-foreground/60 ml-0.5">PTS</span></TableCell>
+                          <TableCell className="text-right font-black text-lg pr-4">{row.points} <span className="text-[9px] text-muted-foreground ml-0.5">PTS</span></TableCell>
                         </TableRow>
                       ))}</TableBody></Table>
                     </CardContent>
@@ -209,7 +201,7 @@ export default function EventPage() {
           <section className="space-y-8">
             <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary text-center">Match Center</h2>
             <Tabs defaultValue="live" className="w-full">
-              <TabsList className="flex w-full bg-white/[0.03] border border-white/[0.08] p-1 h-14 rounded-2xl max-w-md mx-auto gap-1">
+              <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-2xl max-w-md mx-auto gap-1">
                 <TabsTrigger value="live" className="flex-1 text-[9px] font-black uppercase rounded-xl">Live</TabsTrigger>
                 <TabsTrigger value="upcoming" className="flex-1 text-[9px] font-black uppercase rounded-xl">Schedule</TabsTrigger>
                 <TabsTrigger value="completed" className="flex-1 text-[9px] font-black uppercase rounded-xl">Archives</TabsTrigger>
@@ -226,21 +218,21 @@ export default function EventPage() {
                       <CardContent className="p-0">
                         <div className="p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-6">
                           <p className={cn(
-                            "flex-1 text-center md:text-right text-lg md:text-4xl font-black uppercase italic text-white leading-tight break-words",
+                            "flex-1 text-center md:text-right text-lg md:text-4xl font-black uppercase italic text-foreground leading-tight break-words",
                             match.teamA === myHouse && "text-primary"
                           )}>{match.teamA}</p>
                           <div className="flex flex-col items-center gap-4">
-                            <div className="text-4xl md:text-7xl font-black bg-black/50 px-6 py-4 rounded-2xl border border-white/[0.08] whitespace-nowrap">{match.scoreA} : {match.scoreB}</div>
+                            <div className="text-4xl md:text-7xl font-black bg-muted/30 px-6 py-4 rounded-2xl border border-border whitespace-nowrap">{match.scoreA} : {match.scoreB}</div>
                             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /><span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Broadcast</span></div>
                           </div>
                           <p className={cn(
-                            "flex-1 text-center md:text-left text-lg md:text-4xl font-black uppercase italic text-white leading-tight break-words",
+                            "flex-1 text-center md:text-left text-lg md:text-4xl font-black uppercase italic text-foreground leading-tight break-words",
                             match.teamB === myHouse && "text-primary"
                           )}>{match.teamB}</p>
                         </div>
                         
                         {match.keyEvents && match.keyEvents.length > 0 && (
-                          <div className="border-t border-white/[0.05] bg-black/20 p-6 md:p-10">
+                          <div className="border-t border-border bg-muted/10 p-6 md:p-10">
                             <div className="flex items-center gap-2 mb-4">
                               <Activity className="h-4 w-4 text-primary" />
                               <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Live Timeline</h3>
@@ -248,8 +240,8 @@ export default function EventPage() {
                             <div className="space-y-3">
                               {match.keyEvents.slice().reverse().map((ev, i) => (
                                 <div key={i} className={cn(
-                                  "flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border-l-2 border-primary text-[11px] font-bold leading-relaxed",
-                                  i === 0 && "bg-primary/[0.05] border-primary"
+                                  "flex items-start gap-3 p-4 rounded-xl bg-muted/20 border-l-2 border-primary text-[11px] font-bold leading-relaxed",
+                                  i === 0 && "bg-primary/5 border-primary"
                                 )}>
                                   {ev}
                                 </div>
@@ -268,19 +260,19 @@ export default function EventPage() {
                   const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
                   return (
                     <Card key={match.id} className={cn(
-                      "premium-card group bg-white/[0.01]",
+                      "premium-card group border-border",
                       isMyMatch && "border-primary/40 bg-primary/[0.02]"
                     )}>
                       <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
-                          <div className="text-center md:pr-10 md:border-r border-white/5 min-w-[100px]"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-xl md:text-2xl font-black text-white whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{match.day}</p></div>
-                          <p className="text-lg md:text-3xl font-black uppercase italic text-white leading-tight text-center md:text-left break-words">
+                          <div className="text-center md:pr-10 md:border-r border-border min-w-[100px]"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-xl md:text-2xl font-black text-foreground whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground uppercase">{match.day}</p></div>
+                          <p className="text-lg md:text-3xl font-black uppercase italic text-foreground leading-tight text-center md:text-left break-words">
                             <span className={cn(match.teamA === myHouse && "text-primary")}>{match.teamA}</span> 
-                            <span className="text-white/20 mx-2">VS</span> 
+                            <span className="text-muted-foreground/30 mx-2">VS</span> 
                             <span className={cn(match.teamB === myHouse && "text-primary")}>{match.teamB}</span>
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] font-black border-white/10 px-5 py-1 uppercase whitespace-nowrap">{match.phase.replace('-', ' ')}</Badge>
+                        <Badge variant="outline" className="text-[9px] font-black border-border px-5 py-1 uppercase whitespace-nowrap">{match.phase.replace('-', ' ')}</Badge>
                       </CardContent>
                     </Card>
                   );
@@ -288,12 +280,11 @@ export default function EventPage() {
               </TabsContent>
 
               <TabsContent value="completed" className="space-y-6 mt-10">
-                {/* Search Bar for History */}
                 <div className="relative max-w-md mx-auto mb-8">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                   <Input 
                     placeholder="Search Teams or Events..." 
-                    className="pl-9 bg-white/5 border-white/10 h-11 text-xs font-black uppercase rounded-xl"
+                    className="pl-9 bg-muted/20 border-border h-11 text-xs font-black uppercase rounded-xl"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -310,36 +301,36 @@ export default function EventPage() {
                   const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
                   return (
                     <Card key={match.id} className={cn(
-                      "premium-card border-none bg-white/[0.01]",
+                      "premium-card border-border",
                       isMyMatch && "border-primary/20 bg-primary/[0.01]"
                     )}>
                       <CardContent className="p-0">
                         <div className="p-6 md:p-12 flex items-center justify-between gap-6">
                           <p className={cn(
                             "flex-1 text-right font-black text-base md:text-3xl uppercase italic leading-tight break-words", 
-                            match.scoreA > match.scoreB ? 'text-white' : 'text-muted-foreground/40',
+                            match.scoreA > match.scoreB ? 'text-foreground' : 'text-muted-foreground/50',
                             match.teamA === myHouse && "text-primary"
                           )}>{match.teamA}</p>
-                          <div className="text-xl md:text-5xl font-black bg-black/50 px-4 py-3 rounded-xl border border-white/[0.08] whitespace-nowrap">{match.scoreA} - {match.scoreB}</div>
+                          <div className="text-xl md:text-5xl font-black bg-muted/30 px-4 py-3 rounded-xl border border-border whitespace-nowrap">{match.scoreA} - {match.scoreB}</div>
                           <p className={cn(
                             "flex-1 text-left font-black text-base md:text-3xl uppercase italic leading-tight break-words", 
-                            match.scoreB > match.scoreA ? 'text-white' : 'text-muted-foreground/40',
+                            match.scoreB > match.scoreA ? 'text-foreground' : 'text-muted-foreground/50',
                             match.teamB === myHouse && "text-primary"
                           )}>{match.teamB}</p>
                         </div>
 
                         {match.badmintonResults && (
-                          <div className="px-6 md:px-12 py-6 border-t border-white/5 bg-black/10">
+                          <div className="px-6 md:px-12 py-6 border-t border-border bg-muted/5">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {match.badmintonResults.map(res => (
-                                  <div key={res.type} className="bg-white/5 p-3 rounded-lg border border-white/5">
+                                  <div key={res.type} className="bg-muted/10 p-3 rounded-lg border border-border">
                                     <div className="flex justify-between items-center mb-1">
                                         <span className="text-[9px] font-black uppercase text-primary/60">{res.type}</span>
-                                        <span className="text-[10px] font-black text-white">{res.score}</span>
+                                        <span className="text-[10px] font-black text-foreground">{res.score}</span>
                                     </div>
                                     <p className={cn(
                                       "text-[10px] font-black uppercase italic leading-tight",
-                                      res.winner === myHouse ? "text-primary" : "text-white/90"
+                                      res.winner === myHouse ? "text-primary" : "text-foreground"
                                     )}>{res.winner || 'TBD'}</p>
                                   </div>
                                 ))}
@@ -347,15 +338,15 @@ export default function EventPage() {
                           </div>
                         )}
 
-                        <div className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-white/[0.05] bg-white/[0.01] gap-4">
+                        <div className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-border bg-muted/5 gap-4">
                           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                            <span className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-wider">M#{match.matchNumber} • {match.phase.toUpperCase()}</span>
+                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">M#{match.matchNumber} • {match.phase.toUpperCase()}</span>
                             <div className="flex items-center gap-1">
                               <Button variant="ghost" size="sm" onClick={() => handleShareMatch(match)} className="h-8 text-[10px] font-black text-primary hover:bg-primary/10 gap-2 px-3"><Share2 className="h-3.5 w-3.5" /> Share Result</Button>
                               <MatchRecapButton match={match} />
                             </div>
                           </div>
-                          <span className="text-[9px] font-bold text-muted-foreground/60 uppercase text-center md:text-right tracking-widest">{match.date} • {match.venue}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase text-center md:text-right tracking-widest">{match.date} • {match.venue}</span>
                         </div>
                       </CardContent>
                     </Card>

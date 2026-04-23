@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    /* Platinum Light Palette */
-    --background: 240 5% 96%;
+    /* Platinum Light Palette - Fixed Contrast */
+    --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     
     --primary: 263 70% 50%;
@@ -14,23 +14,23 @@
     --accent: 215 20% 65%;
     --accent-foreground: 240 10% 3.9%;
     
-    --card: 0 0% 100%;
+    --card: 240 5% 98%;
     --card-foreground: 240 10% 3.9%;
     
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
     
-    --secondary: 240 5% 90%;
+    --secondary: 240 5% 94%;
     --secondary-foreground: 240 10% 3.9%;
     
     --muted: 240 5% 90%;
-    --muted-foreground: 240 5% 45%;
+    --muted-foreground: 240 5% 35%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 240 5% 85%;
-    --input: 240 5% 85%;
+    --border: 240 5% 88%;
+    --input: 240 5% 88%;
     --ring: 263 70% 50%;
     --radius: 1rem;
   }
