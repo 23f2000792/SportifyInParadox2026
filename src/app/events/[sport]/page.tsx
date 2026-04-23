@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { EVENTS } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,13 +11,15 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Match, RunResult, Standing, GROUPS } from '@/lib/types';
+import { Match, RunResult, Standing, GROUPS, HOUSES } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Sparkles, Activity } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Sparkles, Activity, Star, Filter, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -33,6 +35,15 @@ export default function EventPage() {
   const sport = params.sport as string;
   const db = useFirestore();
   const { toast } = useToast();
+
+  const [myHouse, setMyHouse] = useState<string>('');
+  const [focusMode, setFocusMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('followedHouse');
+    if (saved) setMyHouse(saved);
+  }, []);
 
   const event = EVENTS.find(e => e.slug === sport);
   if (!event) notFound();
@@ -57,12 +68,20 @@ export default function EventPage() {
   const { data: rawRunResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
 
   const sportMatches = useMemo(() => {
-    return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
-  }, [rawMatches]);
+    let filtered = [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
+    if (focusMode && myHouse) {
+      filtered = filtered.filter(m => m.teamA === myHouse || m.teamB === myHouse);
+    }
+    return filtered;
+  }, [rawMatches, focusMode, myHouse]);
 
   const runResults = useMemo(() => {
-    return [...(rawRunResults || [])].sort((a, b) => a.position - b.position);
-  }, [rawRunResults]);
+    let filtered = [...(rawRunResults || [])].sort((a, b) => a.position - b.position);
+    if (searchQuery) {
+      filtered = filtered.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    return filtered;
+  }, [rawRunResults, searchQuery]);
 
   const handleShareMatch = (match: Match) => {
     const winnerText = match.scoreA > match.scoreB 
@@ -104,13 +123,32 @@ export default function EventPage() {
             <h1 className="text-3xl md:text-7xl font-black italic text-white tracking-tighter uppercase leading-none break-words">{event.name}</h1>
             <p className="text-[10px] md:text-xs text-muted-foreground/60 uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto opacity-70">{event.description}</p>
           </div>
+          
+          {/* Quick Filter Toggle */}
+          {myHouse && sport !== 'kampus-run' && (
+            <div className="flex items-center justify-center gap-3 pt-4">
+              <Label htmlFor="focus-mode" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Focus on {myHouse}</Label>
+              <Switch id="focus-mode" checked={focusMode} onCheckedChange={setFocusMode} />
+            </div>
+          )}
         </div>
       </div>
 
       {sport === 'kampus-run' ? (
         <section className="space-y-12">
           <div className="space-y-6">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary text-center">Race Board</h2>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-2">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Race Board</h2>
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                <Input 
+                  placeholder="Search Runner..." 
+                  className="pl-9 bg-white/5 border-white/10 h-10 text-xs font-black uppercase"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
             <Card className="premium-card overflow-hidden">
               <Table>
                 <TableHeader><TableRow><TableHead className="w-16 md:w-24 text-center px-2">Rank</TableHead><TableHead className="px-2">Participant</TableHead><TableHead className="text-right px-4 pr-8">Time</TableHead></TableRow></TableHeader>
@@ -125,13 +163,19 @@ export default function EventPage() {
                   </TableRow>
                 ))}</TableBody>
               </Table>
+              {runResults.length === 0 && (
+                <div className="p-20 text-center space-y-2 opacity-30">
+                  <Search className="h-8 w-8 mx-auto mb-2" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">No matching runners found</p>
+                </div>
+              )}
             </Card>
           </div>
         </section>
       ) : (
         <>
           <section className="space-y-6">
-             <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary text-center">House Table</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary text-center">House Table</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {GROUPS.map(group => {
                 const groupStandings = standings?.filter(s => s.group === group).sort((a,b) => b.points - a.points);
@@ -141,7 +185,19 @@ export default function EventPage() {
                     <CardHeader className="p-4 border-b border-white/[0.05] text-center bg-white/[0.02]"><CardTitle className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">Pool {group}</CardTitle></CardHeader>
                     <CardContent className="p-0">
                       <Table><TableBody>{groupStandings.map((row) => (
-                        <TableRow key={row.team} className="h-14 border-none hover:bg-white/[0.03]"><TableCell className="text-xs font-black uppercase italic text-white pl-4 break-words leading-tight">{row.team}</TableCell><TableCell className="text-right font-black text-lg pr-4">{row.points} <span className="text-[9px] text-muted-foreground/60 ml-0.5">PTS</span></TableCell></TableRow>
+                        <TableRow key={row.team} className={cn(
+                          "h-14 border-none hover:bg-white/[0.03]",
+                          row.team === myHouse && "bg-primary/[0.05]"
+                        )}>
+                          <TableCell className={cn(
+                            "text-xs font-black uppercase italic text-white pl-4 break-words leading-tight flex items-center gap-2",
+                            row.team === myHouse && "text-primary"
+                          )}>
+                            {row.team}
+                            {row.team === myHouse && <Star className="h-2.5 w-2.5 fill-primary" />}
+                          </TableCell>
+                          <TableCell className="text-right font-black text-lg pr-4">{row.points} <span className="text-[9px] text-muted-foreground/60 ml-0.5">PTS</span></TableCell>
+                        </TableRow>
                       ))}</TableBody></Table>
                     </CardContent>
                   </Card>
@@ -160,96 +216,151 @@ export default function EventPage() {
               </TabsList>
 
               <TabsContent value="live" className="space-y-6 mt-10">
-                {sportMatches?.filter(m => m.status === 'Live').map(match => (
-                  <Card key={match.id} className="premium-card border-primary/20 bg-primary/[0.02]">
-                    <CardContent className="p-0">
-                      <div className="p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <p className="flex-1 text-center md:text-right text-lg md:text-4xl font-black uppercase italic text-white leading-tight break-words">{match.teamA}</p>
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="text-4xl md:text-7xl font-black bg-black/50 px-6 py-4 rounded-2xl border border-white/[0.08] whitespace-nowrap">{match.scoreA} : {match.scoreB}</div>
-                          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /><span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Broadcast</span></div>
-                        </div>
-                        <p className="flex-1 text-center md:text-left text-lg md:text-4xl font-black uppercase italic text-white leading-tight break-words">{match.teamB}</p>
-                      </div>
-                      
-                      {match.keyEvents && match.keyEvents.length > 0 && (
-                        <div className="border-t border-white/[0.05] bg-black/20 p-6 md:p-10">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Activity className="h-4 w-4 text-primary" />
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Live Timeline</h3>
+                {sportMatches?.filter(m => m.status === 'Live').map(match => {
+                  const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
+                  return (
+                    <Card key={match.id} className={cn(
+                      "premium-card border-primary/20 bg-primary/[0.02]",
+                      isMyMatch && "border-primary shadow-xl shadow-primary/10"
+                    )}>
+                      <CardContent className="p-0">
+                        <div className="p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-6">
+                          <p className={cn(
+                            "flex-1 text-center md:text-right text-lg md:text-4xl font-black uppercase italic text-white leading-tight break-words",
+                            match.teamA === myHouse && "text-primary"
+                          )}>{match.teamA}</p>
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="text-4xl md:text-7xl font-black bg-black/50 px-6 py-4 rounded-2xl border border-white/[0.08] whitespace-nowrap">{match.scoreA} : {match.scoreB}</div>
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /><span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Broadcast</span></div>
                           </div>
-                          <div className="space-y-3">
-                            {match.keyEvents.slice().reverse().map((ev, i) => (
-                              <div key={i} className={cn(
-                                "flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border-l-2 border-primary text-[11px] font-bold leading-relaxed",
-                                i === 0 && "bg-primary/[0.05] border-primary"
-                              )}>
-                                {ev}
-                              </div>
-                            ))}
-                          </div>
+                          <p className={cn(
+                            "flex-1 text-center md:text-left text-lg md:text-4xl font-black uppercase italic text-white leading-tight break-words",
+                            match.teamB === myHouse && "text-primary"
+                          )}>{match.teamB}</p>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                        
+                        {match.keyEvents && match.keyEvents.length > 0 && (
+                          <div className="border-t border-white/[0.05] bg-black/20 p-6 md:p-10">
+                            <div className="flex items-center gap-2 mb-4">
+                              <Activity className="h-4 w-4 text-primary" />
+                              <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Live Timeline</h3>
+                            </div>
+                            <div className="space-y-3">
+                              {match.keyEvents.slice().reverse().map((ev, i) => (
+                                <div key={i} className={cn(
+                                  "flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border-l-2 border-primary text-[11px] font-bold leading-relaxed",
+                                  i === 0 && "bg-primary/[0.05] border-primary"
+                                )}>
+                                  {ev}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </TabsContent>
 
               <TabsContent value="upcoming" className="space-y-4 mt-10">
-                {sportMatches?.filter(m => m.status === 'Upcoming').map(match => (
-                  <Card key={match.id} className="premium-card group bg-white/[0.01]">
-                    <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                      <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
-                        <div className="text-center md:pr-10 md:border-r border-white/5 min-w-[100px]"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-xl md:text-2xl font-black text-white whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{match.day}</p></div>
-                        <p className="text-lg md:text-3xl font-black uppercase italic text-white leading-tight text-center md:text-left break-words">
-                          {match.teamA} <span className="text-white/20 mx-2">VS</span> {match.teamB}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] font-black border-white/10 px-5 py-1 uppercase whitespace-nowrap">{match.phase.replace('-', ' ')}</Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+                {sportMatches?.filter(m => m.status === 'Upcoming').map(match => {
+                  const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
+                  return (
+                    <Card key={match.id} className={cn(
+                      "premium-card group bg-white/[0.01]",
+                      isMyMatch && "border-primary/40 bg-primary/[0.02]"
+                    )}>
+                      <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
+                          <div className="text-center md:pr-10 md:border-r border-white/5 min-w-[100px]"><p className="text-[9px] font-black text-primary/60 uppercase mb-1">M#{match.matchNumber}</p><p className="text-xl md:text-2xl font-black text-white whitespace-nowrap">{match.time}</p><p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{match.day}</p></div>
+                          <p className="text-lg md:text-3xl font-black uppercase italic text-white leading-tight text-center md:text-left break-words">
+                            <span className={cn(match.teamA === myHouse && "text-primary")}>{match.teamA}</span> 
+                            <span className="text-white/20 mx-2">VS</span> 
+                            <span className={cn(match.teamB === myHouse && "text-primary")}>{match.teamB}</span>
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-[9px] font-black border-white/10 px-5 py-1 uppercase whitespace-nowrap">{match.phase.replace('-', ' ')}</Badge>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </TabsContent>
 
               <TabsContent value="completed" className="space-y-6 mt-10">
-                {sportMatches?.filter(m => m.status === 'Completed').map(match => (
-                  <Card key={match.id} className="premium-card border-none bg-white/[0.01]">
-                    <CardContent className="p-0">
-                      <div className="p-6 md:p-12 flex items-center justify-between gap-6">
-                        <p className={cn("flex-1 text-right font-black text-base md:text-3xl uppercase italic leading-tight break-words", match.scoreA > match.scoreB ? 'text-white' : 'text-muted-foreground/40')}>{match.teamA}</p>
-                        <div className="text-xl md:text-5xl font-black bg-black/50 px-4 py-3 rounded-xl border border-white/[0.08] whitespace-nowrap">{match.scoreA} - {match.scoreB}</div>
-                        <p className={cn("flex-1 text-left font-black text-base md:text-3xl uppercase italic leading-tight break-words", match.scoreB > match.scoreA ? 'text-white' : 'text-muted-foreground/40')}>{match.teamB}</p>
-                      </div>
+                {/* Search Bar for History */}
+                <div className="relative max-w-md mx-auto mb-8">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                  <Input 
+                    placeholder="Search Teams or Events..." 
+                    className="pl-9 bg-white/5 border-white/10 h-11 text-xs font-black uppercase rounded-xl"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
 
-                      {match.badmintonResults && (
-                        <div className="px-6 md:px-12 py-6 border-t border-white/5 bg-black/10">
-                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                              {match.badmintonResults.map(res => (
-                                <div key={res.type} className="bg-white/5 p-3 rounded-lg border border-white/5">
-                                   <div className="flex justify-between items-center mb-1">
-                                      <span className="text-[9px] font-black uppercase text-primary/60">{res.type}</span>
-                                      <span className="text-[10px] font-black text-white">{res.score}</span>
-                                   </div>
-                                   <p className="text-[10px] font-black uppercase italic text-white/90 leading-tight">{res.winner || 'TBD'}</p>
-                                </div>
-                              ))}
-                           </div>
+                {sportMatches?.filter(m => m.status === 'Completed').filter(m => {
+                  if (!searchQuery) return true;
+                  const query = searchQuery.toLowerCase();
+                  return m.teamA.toLowerCase().includes(query) || 
+                         m.teamB.toLowerCase().includes(query) || 
+                         m.phase.toLowerCase().includes(query) ||
+                         m.matchNumber.includes(query);
+                }).map(match => {
+                  const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
+                  return (
+                    <Card key={match.id} className={cn(
+                      "premium-card border-none bg-white/[0.01]",
+                      isMyMatch && "border-primary/20 bg-primary/[0.01]"
+                    )}>
+                      <CardContent className="p-0">
+                        <div className="p-6 md:p-12 flex items-center justify-between gap-6">
+                          <p className={cn(
+                            "flex-1 text-right font-black text-base md:text-3xl uppercase italic leading-tight break-words", 
+                            match.scoreA > match.scoreB ? 'text-white' : 'text-muted-foreground/40',
+                            match.teamA === myHouse && "text-primary"
+                          )}>{match.teamA}</p>
+                          <div className="text-xl md:text-5xl font-black bg-black/50 px-4 py-3 rounded-xl border border-white/[0.08] whitespace-nowrap">{match.scoreA} - {match.scoreB}</div>
+                          <p className={cn(
+                            "flex-1 text-left font-black text-base md:text-3xl uppercase italic leading-tight break-words", 
+                            match.scoreB > match.scoreA ? 'text-white' : 'text-muted-foreground/40',
+                            match.teamB === myHouse && "text-primary"
+                          )}>{match.teamB}</p>
                         </div>
-                      )}
 
-                      <div className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-white/[0.05] bg-white/[0.01] gap-4">
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                          <span className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-wider">M#{match.matchNumber} • {match.phase.toUpperCase()}</span>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => handleShareMatch(match)} className="h-8 text-[10px] font-black text-primary hover:bg-primary/10 gap-2 px-3"><Share2 className="h-3.5 w-3.5" /> Share Result</Button>
-                            <MatchRecapButton match={match} />
+                        {match.badmintonResults && (
+                          <div className="px-6 md:px-12 py-6 border-t border-white/5 bg-black/10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {match.badmintonResults.map(res => (
+                                  <div key={res.type} className="bg-white/5 p-3 rounded-lg border border-white/5">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-[9px] font-black uppercase text-primary/60">{res.type}</span>
+                                        <span className="text-[10px] font-black text-white">{res.score}</span>
+                                    </div>
+                                    <p className={cn(
+                                      "text-[10px] font-black uppercase italic leading-tight",
+                                      res.winner === myHouse ? "text-primary" : "text-white/90"
+                                    )}>{res.winner || 'TBD'}</p>
+                                  </div>
+                                ))}
+                            </div>
                           </div>
+                        )}
+
+                        <div className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-white/[0.05] bg-white/[0.01] gap-4">
+                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                            <span className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-wider">M#{match.matchNumber} • {match.phase.toUpperCase()}</span>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" onClick={() => handleShareMatch(match)} className="h-8 text-[10px] font-black text-primary hover:bg-primary/10 gap-2 px-3"><Share2 className="h-3.5 w-3.5" /> Share Result</Button>
+                              <MatchRecapButton match={match} />
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-bold text-muted-foreground/60 uppercase text-center md:text-right tracking-widest">{match.date} • {match.venue}</span>
                         </div>
-                        <span className="text-[9px] font-bold text-muted-foreground/60 uppercase text-center md:text-right tracking-widest">{match.date} • {match.venue}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </TabsContent>
             </Tabs>
           </section>

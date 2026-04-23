@@ -1,14 +1,17 @@
+
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Match } from '@/lib/types';
+import { Match, HOUSES } from '@/lib/types';
 import Loading from '@/app/loading';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -19,6 +22,17 @@ const ICON_MAP: Record<string, any> = {
 
 export default function Home() {
   const db = useFirestore();
+  const [myHouse, setMyHouse] = useState<string>('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('followedHouse');
+    if (saved) setMyHouse(saved);
+  }, []);
+
+  const handleFollowHouse = (house: string) => {
+    setMyHouse(house);
+    localStorage.setItem('followedHouse', house);
+  };
 
   const liveMatchesQuery = useMemo(() => {
     if (!db) return null;
@@ -32,15 +46,39 @@ export default function Home() {
   return (
     <div className="space-y-12 max-w-5xl mx-auto py-10 md:py-16 px-4 mb-24">
       {/* Hero Section */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] mb-2">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Paradox 2026 Official</p>
         </div>
-        <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] text-white">
-          SPORTIFY
-        </h1>
-        <p className="text-xs font-bold uppercase tracking-[0.5em] text-primary/60">Broadcast Hub</p>
+        <div className="space-y-2">
+          <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] text-white">
+            SPORTIFY
+          </h1>
+          <p className="text-xs font-bold uppercase tracking-[0.5em] text-primary/60">Broadcast Hub</p>
+        </div>
+
+        {/* My House Personalization */}
+        <div className="max-w-xs mx-auto pt-6">
+          <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-4 space-y-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Follow Your House</p>
+            <Select value={myHouse} onValueChange={handleFollowHouse}>
+              <SelectTrigger className="bg-black/20 border-white/10 h-11 text-[11px] font-black uppercase">
+                <SelectValue placeholder="Select Team" />
+              </SelectTrigger>
+              <SelectContent>
+                {HOUSES.map(h => (
+                  <SelectItem key={h} value={h} className="text-[11px] font-black uppercase">{h}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {myHouse && (
+              <p className="text-[9px] font-black text-primary uppercase animate-in fade-in slide-in-from-top-1">
+                Currently tracking: {myHouse}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Live Feed */}
@@ -52,35 +90,52 @@ export default function Home() {
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-4">
-            {liveMatches.map((match) => (
-              <Link key={match.id} href={`/events/${match.sport}`}>
-                <Card className="premium-card group bg-white/[0.01] hover:bg-white/[0.03]">
-                  <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
-                    <div className="space-y-3 flex-1">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</span>
-                        <span className="w-1 h-1 rounded-full bg-white/10 hidden xs:block" />
-                        <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1">
-                          <MapPin className="h-3 w-3" /> {match.venue}
-                        </span>
+            {liveMatches.map((match) => {
+              const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
+              return (
+                <Link key={match.id} href={`/events/${match.sport}`}>
+                  <Card className={cn(
+                    "premium-card group bg-white/[0.01] hover:bg-white/[0.03]",
+                    isMyMatch && "border-primary/40 bg-primary/[0.02] shadow-lg shadow-primary/5"
+                  )}>
+                    <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
+                      <div className="space-y-3 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="text-[10px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</span>
+                          <span className="w-1 h-1 rounded-full bg-white/10 hidden xs:block" />
+                          <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {match.venue}
+                          </span>
+                          {isMyMatch && (
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-[9px] font-black text-white uppercase ml-auto">
+                              <Star className="h-2.5 w-2.5 fill-white" /> My House
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                          <p className={cn(
+                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1",
+                            match.teamA === myHouse && "text-primary"
+                          )}>
+                            {match.teamA}
+                          </p>
+                          <span className="text-2xl md:text-4xl font-black text-primary whitespace-nowrap">
+                            {match.scoreA} : {match.scoreB}
+                          </span>
+                          <p className={cn(
+                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1",
+                            match.teamB === myHouse && "text-primary"
+                          )}>
+                            {match.teamB}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                        <p className="text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1">
-                          {match.teamA}
-                        </p>
-                        <span className="text-2xl md:text-4xl font-black text-primary whitespace-nowrap">
-                          {match.scoreA} : {match.scoreB}
-                        </span>
-                        <p className="text-lg md:text-3xl font-black uppercase italic tracking-tighter text-white leading-tight break-words flex-1">
-                          {match.teamB}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-6 w-6 text-white/20 group-hover:text-primary transition-colors shrink-0" />
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                      <ChevronRight className="h-6 w-6 text-white/20 group-hover:text-primary transition-colors shrink-0" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
