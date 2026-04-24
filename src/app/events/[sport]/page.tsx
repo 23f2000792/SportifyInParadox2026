@@ -154,6 +154,12 @@ export default function EventPage() {
 
   const IconComp = ICON_MAP[event.icon];
 
+  // Logic to separate tagline and sub-tagline for Kampus Run
+  const isKampusRun = event.slug === 'kampus-run';
+  const descriptionParts = event.description.split('. ');
+  const primaryTagline = isKampusRun ? descriptionParts[0] : event.description;
+  const subTagline = isKampusRun ? descriptionParts.slice(1).join('. ') : null;
+
   return (
     <div className="space-y-10 max-w-6xl mx-auto pb-32 px-4 md:px-0">
       <div className="relative overflow-hidden rounded-[2rem] bg-white/[0.02] dark:bg-white/[0.02] border border-border p-6 md:p-14 text-center">
@@ -165,9 +171,16 @@ export default function EventPage() {
           </div>
           <div className="space-y-4">
             <h1 className="text-3xl md:text-7xl font-black italic text-foreground tracking-tighter uppercase leading-none break-words">{event.name}</h1>
-            <p className="text-[11px] md:text-sm text-primary uppercase tracking-[0.4em] font-black max-w-2xl mx-auto leading-relaxed border-t border-primary/20 pt-4">
-              {event.description}
-            </p>
+            <div className="space-y-2 border-t border-primary/20 pt-4">
+              <p className="text-[11px] md:text-sm text-primary uppercase tracking-[0.4em] font-black max-w-2xl mx-auto leading-relaxed">
+                {primaryTagline}
+              </p>
+              {subTagline && (
+                <p className="text-[9px] md:text-[11px] text-muted-foreground/60 uppercase tracking-[0.3em] font-bold max-w-2xl mx-auto italic">
+                  {subTagline}
+                </p>
+              )}
+            </div>
           </div>
           
           {myHouse && sport !== 'kampus-run' && (
