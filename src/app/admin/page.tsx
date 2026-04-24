@@ -258,7 +258,13 @@ export default function AdminPage() {
 
   const handleUpdateStanding = (id: string, field: string, value: number) => {
     if (!db) return;
-    updateDoc(doc(db, 'standings', id), { [field]: value, updatedAt: serverTimestamp() });
+    // We use updateDoc for direct database commitment
+    updateDoc(doc(db, 'standings', id), { 
+      [field]: value, 
+      updatedAt: serverTimestamp() 
+    }).catch(err => {
+      toast({ variant: "destructive", title: "Update failed", description: err.message });
+    });
   };
 
   const handleAddPersonnel = (e: React.FormEvent) => {
@@ -607,9 +613,74 @@ export default function AdminPage() {
                  <Card key={group} className="premium-card">
                    <CardHeader className="bg-muted/10 border-b border-border py-4"><CardTitle className="text-[11px] font-black uppercase text-center tracking-widest text-primary">Pool {group}</CardTitle></CardHeader>
                    <CardContent className="p-0 overflow-x-auto">
-                     <Table><TableHeader className="bg-muted/20"><TableRow className="border-border"><TableHead className="text-[9px] font-black uppercase px-4">House</TableHead><TableHead className="text-[9px] font-black uppercase text-center">P</TableHead><TableHead className="text-[9px] font-black uppercase text-center">Pts</TableHead><TableHead className="text-right text-[9px] font-black uppercase px-4">X</TableHead></TableRow></TableHeader>
-                       <TableBody>{groupItems.map(item => (<TableRow key={item.id} className="border-border h-14"><TableCell className="text-xs md:text-sm font-black uppercase italic px-4 text-foreground">{item.team}</TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-10 text-center text-xs font-black bg-muted/20 mx-auto" value={item.played} onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} /></TableCell><TableCell className="p-1"><Input type="number" className="h-8 w-14 text-center text-xs font-black bg-primary/20 border-primary/30 mx-auto" value={item.points} onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} /></TableCell><TableCell className="text-right px-4"><Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'standings', item.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}
-                       </TableBody></Table></CardContent></Card>);})}</div>
+                     <Table>
+                       <TableHeader className="bg-muted/20">
+                         <TableRow className="border-border">
+                           <TableHead className="text-[9px] font-black uppercase px-4">House</TableHead>
+                           <TableHead className="text-[9px] font-black uppercase text-center">P</TableHead>
+                           <TableHead className="text-[9px] font-black uppercase text-center">W</TableHead>
+                           <TableHead className="text-[9px] font-black uppercase text-center">D</TableHead>
+                           <TableHead className="text-[9px] font-black uppercase text-center">L</TableHead>
+                           <TableHead className="text-[9px] font-black uppercase text-center">Pts</TableHead>
+                           <TableHead className="text-right text-[9px] font-black uppercase px-4">X</TableHead>
+                         </TableRow>
+                       </TableHeader>
+                       <TableBody>
+                        {groupItems.map(item => (
+                          <TableRow key={item.id} className="border-border h-14">
+                            <TableCell className="text-[10px] font-black uppercase italic px-4 text-foreground">{item.team}</TableCell>
+                            <TableCell className="p-1">
+                              <Input 
+                                type="number" 
+                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                value={item.played} 
+                                onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} 
+                              />
+                            </TableCell>
+                            <TableCell className="p-1">
+                              <Input 
+                                type="number" 
+                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                value={item.won} 
+                                onChange={e => handleUpdateStanding(item.id, 'won', Number(e.target.value))} 
+                              />
+                            </TableCell>
+                            <TableCell className="p-1">
+                              <Input 
+                                type="number" 
+                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                value={item.drawn} 
+                                onChange={e => handleUpdateStanding(item.id, 'drawn', Number(e.target.value))} 
+                              />
+                            </TableCell>
+                            <TableCell className="p-1">
+                              <Input 
+                                type="number" 
+                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                value={item.lost} 
+                                onChange={e => handleUpdateStanding(item.id, 'lost', Number(e.target.value))} 
+                              />
+                            </TableCell>
+                            <TableCell className="p-1">
+                              <Input 
+                                type="number" 
+                                className="h-8 w-12 text-center text-[10px] font-black bg-primary/20 border-primary/30 mx-auto" 
+                                value={item.points} 
+                                onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} 
+                              />
+                            </TableCell>
+                            <TableCell className="text-right px-4">
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'standings', item.id))}><Trash2 className="h-4 w-4" /></Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                       </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
         </TabsContent>
 
         <TabsContent value="history" className="space-y-6">
