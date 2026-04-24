@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -9,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { useMemo, useState, useEffect } from 'react';
 import { Broadcast } from '@/lib/types';
 
@@ -27,13 +26,19 @@ export function Navbar() {
   const db = useFirestore();
   const [showTicker, setShowTicker] = useState(false);
 
+  // Simplified query to avoid composite index requirements in high-traffic scenarios
   const broadcastQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'broadcasts'), where('active', '==', true), orderBy('timestamp', 'desc'), limit(1));
+    return query(collection(db, 'broadcasts'), orderBy('timestamp', 'desc'), limit(1));
   }, [db]);
 
-  const { data: latestBroadcast } = useCollection<Broadcast>(broadcastQuery);
-  const activeBroadcast = latestBroadcast?.[0];
+  const { data: latestBroadcasts } = useCollection<Broadcast>(broadcastQuery);
+  
+  // Only show the ticker if the latest message is explicitly active
+  const activeBroadcast = useMemo(() => {
+    const latest = latestBroadcasts?.[0];
+    return (latest && latest.active) ? latest : null;
+  }, [latestBroadcasts]);
 
   useEffect(() => {
     if (activeBroadcast) {
@@ -87,7 +92,7 @@ export function Navbar() {
       {activeBroadcast && showTicker && (
         <div className="w-full bg-primary py-2.5 px-6 flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-500">
            <div className="flex items-center gap-3 overflow-hidden">
-              <Megaphone className="h-4 w-4 text-white shrink-0 animate-bounce" />
+              <Megaphone className="h-4 w-4 text-white shrink-0" />
               <p className="text-[10px] font-black uppercase italic tracking-widest text-white truncate">
                 Bulletin: {activeBroadcast.message}
               </p>

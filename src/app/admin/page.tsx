@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -18,6 +17,7 @@ import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteD
 import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase, SportType, Broadcast } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -151,7 +151,7 @@ export default function AdminPage() {
       timestamp: serverTimestamp(),
     });
     setBroadcastMessage('');
-    toast({ title: "Global bulletin published." });
+    toast({ title: "Global announcement published." });
   };
 
   const handleUpdateMatch = (e: React.FormEvent) => {
@@ -164,7 +164,7 @@ export default function AdminPage() {
       badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
     });
-    toast({ title: "Broadcast committed." });
+    toast({ title: "Match status updated." });
   };
 
   const handleAddHighlight = () => {
@@ -268,7 +268,7 @@ export default function AdminPage() {
       uid: newAdminUid, email: newAdminEmail, role: 'admin', assignedSport: newAdminSport,
     });
     setNewAdminUid(''); setNewAdminEmail('');
-    toast({ title: "Admin assigned." });
+    toast({ title: "Admin permissions assigned." });
   };
 
   const handleShareResultBroadcast = (match: Match) => {
@@ -278,7 +278,7 @@ export default function AdminPage() {
       `• Match: ${match.teamA} vs ${match.teamB}\n` +
       `• Final Score: ${match.scoreA} - ${match.scoreB}\n` +
       `• Result: ${winner === 'DRAW' ? 'MATCH DRAWN' : winner.toUpperCase() + ' WINS'}\n\n` +
-      `View the official tournament board here: https://sportify-in-paradox2026.vercel.app/`;
+      `Official Paradox Tournament Portal: https://sportify-in-paradox2026.vercel.app/`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 

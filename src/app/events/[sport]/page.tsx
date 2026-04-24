@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -84,19 +83,18 @@ export default function EventPage() {
   }, [rawRunResults, searchQuery]);
 
   const handleShareRunResult = (res: RunResult) => {
-    const text = `*PARADOX 2026: KAMPUS RUN RESULT*\n\n` +
-      `• Name: ${res.name.toUpperCase()}\n` +
+    const text = `*OFFICIAL: KAMPUS RUN RESULT*\n\n` +
+      `• Participant: ${res.name.toUpperCase()}\n` +
       `• Rank: #${res.position}\n` +
-      `• Time: ${res.time}\n` +
+      `• Finish Time: ${res.time}\n` +
       `• Category: ${res.category}\n\n` +
-      `Official Board: ${APP_URL}`;
+      `Full leaderboard: ${APP_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    toast({ title: "Sharing result..." });
   };
 
   const handleShareMatch = (match: Match) => {
     const isLive = match.status === 'Live';
-    const statusHeader = isLive ? `*LIVE UPDATE: ${match.sport.toUpperCase()}*` : `*MATCH RESULT: ${match.sport.toUpperCase()}*`;
+    const statusHeader = isLive ? `*LIVE UPDATE: ${match.sport.toUpperCase()}*` : `*OFFICIAL RESULT: ${match.sport.toUpperCase()}*`;
     
     let resultLine = "";
     if (!isLive) {
@@ -104,7 +102,7 @@ export default function EventPage() {
         ? `• Winner: *${match.teamA}*` 
         : match.scoreB > match.scoreA 
         ? `• Winner: *${match.teamB}*` 
-        : `• Result: *Draw*`;
+        : `• Result: *Match Drawn*`;
     }
 
     const highlightsText = match.keyEvents?.length 
@@ -115,43 +113,41 @@ export default function EventPage() {
       `*${match.teamA}* (${match.scoreA}) vs *${match.teamB}* (${match.scoreB})\n` +
       `${resultLine}\n` +
       `${highlightsText}\n` +
-      `• Venue: ${match.venue}\n\n` +
-      `Tournament Board: ${APP_URL}`;
+      `• Location: ${match.venue}\n\n` +
+      `Real-time Updates: ${APP_URL}`;
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    toast({ title: isLive ? "Sharing live update..." : "Sharing match result..." });
   };
 
   const handleAddToCalendar = (match: Match) => {
     const title = `Paradox 2026: ${match.teamA} vs ${match.teamB} (${match.sport})`;
     const details = `Match #${match.matchNumber} | Venue: ${match.venue} | Broadcast: ${APP_URL}`;
     
-    // Parse Scheduled Date and Time
-    // Date: YYYY-MM-DD, Time: HH:MM AM/PM
     try {
+      // Precise Date Parsing
       const [year, month, day] = match.date.split('-');
       let [timePart, modifier] = match.time.split(' ');
       let [hoursStr, minutesStr] = timePart.split(':');
       
       let hours = parseInt(hoursStr, 10);
       if (hours === 12) {
-        hours = 0;
-      }
-      if (modifier === 'PM') {
+        hours = (modifier === 'AM') ? 0 : 12;
+      } else if (modifier === 'PM') {
         hours += 12;
       }
       
-      const startStr = `${year}${month}${day}T${hours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
+      const formattedDate = `${year}${month}${day}`;
+      const startStr = `${formattedDate}T${hours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
       
-      // Assume 1 hour duration
-      const endHours = hours + 1;
-      const endStr = `${year}${month}${day}T${endHours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
+      // Default duration: 1 hour
+      const endHours = (hours + 1) % 24;
+      const endStr = `${formattedDate}T${endHours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
 
       const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(match.venue)}`;
       window.open(url, '_blank');
-      toast({ title: "Opening Calendar..." });
+      toast({ title: "Opening Google Calendar..." });
     } catch (e) {
-      toast({ variant: "destructive", title: "Could not schedule reminder." });
+      toast({ variant: "destructive", title: "Could not parse schedule. Please try again." });
     }
   };
 
