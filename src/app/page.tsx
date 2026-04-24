@@ -212,7 +212,7 @@ export default function Home() {
                       <div className="w-3/4 p-6 flex flex-col justify-center space-y-1">
                         <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground group-hover:text-primary transition-colors">{event.name}</h2>
                         <p className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-widest leading-relaxed">
-                          {event.description}
+                          {event.slug === 'kampus-run' ? event.description.split('. ')[0] : event.description}
                         </p>
                       </div>
                     </div>
