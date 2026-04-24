@@ -317,43 +317,42 @@ export default function AdminPage() {
           </Button>
         </div>
         
-        {isSuperAdmin && (
-          <Card className="premium-card border-primary/20 overflow-visible">
-            <CardHeader className="p-4 md:p-6 border-b border-border flex flex-row items-center justify-between">
-              <CardTitle className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <Megaphone className="h-4 w-4" /> Global Announcement
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6">
-              <form onSubmit={handlePostBroadcast} className="flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Input 
-                    value={broadcastMessage} 
-                    onChange={e => setBroadcastMessage(e.target.value)} 
-                    placeholder="Announcement message..." 
-                    className="bg-muted/20 h-12 text-xs md:text-sm font-black"
-                  />
-                  <Button type="submit" className="h-12 px-8 uppercase font-black text-[10px] tracking-widest w-full sm:w-auto">Broadcast</Button>
-                </div>
-              </form>
-              <div className="mt-6 space-y-3">
-                 <p className="text-[9px] font-black uppercase text-muted-foreground/40 tracking-wider">Recent Bulletins</p>
-                 <div className="space-y-2">
-                   {recentBroadcasts?.map(b => (
-                     <div key={b.id} className="flex justify-between items-center p-3 bg-muted/10 rounded-lg border border-border">
-                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                         <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", b.active ? "bg-primary animate-pulse" : "bg-muted")} />
-                         <span className="text-[10px] font-bold text-foreground break-words truncate">{b.message}</span>
-                       </div>
-                       <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive shrink-0 ml-2" onClick={() => deleteDoc(doc(db!, 'broadcasts', b.id))}><Trash2 className="h-4 w-4" /></Button>
-                     </div>
-                   ))}
-                   {!recentBroadcasts?.length && <p className="text-[10px] italic text-muted-foreground/30 text-center py-4">No recent broadcasts</p>}
-                 </div>
+        {/* Global Announcement for ALL admins on root selection screen */}
+        <Card className="premium-card border-primary/20 overflow-visible">
+          <CardHeader className="p-4 md:p-6 border-b border-border flex flex-row items-center justify-between">
+            <CardTitle className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+              <Megaphone className="h-4 w-4" /> Global Announcement
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            <form onSubmit={handlePostBroadcast} className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input 
+                  value={broadcastMessage} 
+                  onChange={e => setBroadcastMessage(e.target.value)} 
+                  placeholder="Announcement message..." 
+                  className="bg-muted/20 h-12 text-xs md:text-sm font-black"
+                />
+                <Button type="submit" className="h-12 px-8 uppercase font-black text-[10px] tracking-widest w-full sm:w-auto">Broadcast</Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </form>
+            <div className="mt-6 space-y-3">
+               <p className="text-[9px] font-black uppercase text-muted-foreground/40 tracking-wider">Recent Bulletins</p>
+               <div className="space-y-2">
+                 {recentBroadcasts?.map(b => (
+                   <div key={b.id} className="flex justify-between items-center p-3 bg-muted/10 rounded-lg border border-border">
+                     <div className="flex items-center gap-3 flex-1 min-w-0">
+                       <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", b.active ? "bg-primary animate-pulse" : "bg-muted")} />
+                       <span className="text-[10px] font-bold text-foreground break-words truncate">{b.message}</span>
+                     </div>
+                     <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive shrink-0 ml-2" onClick={() => deleteDoc(doc(db!, 'broadcasts', b.id))}><Trash2 className="h-4 w-4" /></Button>
+                   </div>
+                 ))}
+                 {!recentBroadcasts?.length && <p className="text-[10px] italic text-muted-foreground/30 text-center py-4">No recent broadcasts</p>}
+               </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {EVENTS.map((event) => {
@@ -364,7 +363,7 @@ export default function AdminPage() {
                 <Card className="premium-card w-full h-28 md:h-32">
                   <CardContent className="p-0 flex h-full">
                     <div className="w-1/4 bg-muted/20 flex items-center justify-center border-r border-border">
-                      <IconComp className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                      {IconComp && <IconComp className="h-6 w-6 md:h-8 md:w-8 text-primary" />}
                     </div>
                     <div className="w-3/4 p-4 md:p-6 flex flex-col justify-center overflow-hidden">
                       <h2 className="text-lg md:text-xl font-black italic uppercase text-foreground group-hover:text-primary transition-colors truncate">{shortName}</h2>
@@ -728,4 +727,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
