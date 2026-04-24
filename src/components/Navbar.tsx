@@ -4,11 +4,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home } from 'lucide-react';
+import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const LOGO_URL = "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970";
 
@@ -17,6 +19,13 @@ const ICON_MAP: Record<string, any> = {
   Trophy: Trophy,
   CircleDot: CircleDot,
   Target: Target,
+};
+
+const SHORT_NAMES: Record<string, string> = {
+  'kampus-run': 'Run',
+  'football': 'Football',
+  'volleyball': 'Volleyball',
+  'badminton': 'Badminton',
 };
 
 export function Navbar() {
@@ -42,12 +51,32 @@ export function Navbar() {
           </div>
         </Link>
         
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-border rounded-full">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-border rounded-full mr-2">
             <Radio className="h-3 w-3 text-primary" />
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Broadcast Active</span>
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Live Broadcast</span>
           </div>
           
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className="h-9 w-9 rounded-xl border border-border bg-white/[0.03] hover:bg-white/[0.06] text-muted-foreground hover:text-primary transition-all"
+                >
+                  <a href="mailto:Thesportify.society@study.iitm.ac.in">
+                    <HelpCircle className="h-[18px] w-[18px]" />
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="text-[10px] font-black uppercase tracking-widest">
+                Quick Help
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <NotificationCenter />
           <ThemeToggle />
 
@@ -81,6 +110,7 @@ export function Navbar() {
           </Link>
           {EVENTS.map((event) => {
             const isActive = pathname === `/events/${event.slug}`;
+            const shortName = SHORT_NAMES[event.slug] || event.name;
             return (
               <Link
                 key={event.id}
@@ -92,7 +122,7 @@ export function Navbar() {
                     : "text-muted-foreground/40 border-transparent hover:text-foreground hover:bg-white/[0.01]"
                 )}
               >
-                {event.name}
+                {shortName}
               </Link>
             );
           })}
@@ -108,6 +138,7 @@ export function Navbar() {
         {EVENTS.map((event) => {
           const IconComp = ICON_MAP[event.icon];
           const isActive = pathname === `/events/${event.slug}`;
+          const shortName = SHORT_NAMES[event.slug] || event.name.split(' ')[0];
           return (
             <Link
               key={event.id}
@@ -115,7 +146,7 @@ export function Navbar() {
               className={cn("flex flex-col items-center gap-1 transition-all", isActive ? "text-primary" : "text-muted-foreground/30")}
             >
               {IconComp && <IconComp className="h-4 w-4" />}
-              <span className="text-[9px] font-black uppercase tracking-widest">{event.name.split(' ')[0]}</span>
+              <span className="text-[9px] font-black uppercase tracking-widest">{shortName}</span>
             </Link>
           );
         })}
