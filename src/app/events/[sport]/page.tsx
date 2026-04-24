@@ -89,7 +89,7 @@ export default function EventPage() {
       `🏅 *Rank:* #${res.position}\n` +
       `⏱️ *Finish Time:* ${res.time}\n` +
       `📍 *Category:* ${res.category}\n\n` +
-      `Can anyone beat this blistering pace? Check the full leaderboard and highlights now:\n` +
+      `Can anyone beat this blistering pace? Check the full leaderboard and highlights now on the Official Sportify Portal:\n` +
       `🔗 ${APP_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -118,7 +118,7 @@ export default function EventPage() {
       `${resultLine}\n` +
       `${highlightsText}\n` +
       `📍 *Location:* ${match.venue}\n\n` +
-      `Don't miss a single moment of the action. Tune into the Live Stream now:\n` +
+      `Don't miss a single moment of the action. Tune into the Live Stream now on the Official Sportify Portal:\n` +
       `🔗 ${APP_URL}`;
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -126,7 +126,7 @@ export default function EventPage() {
 
   const handleAddToCalendar = (match: Match) => {
     const title = `Paradox 2026: ${match.teamA} vs ${match.teamB} (${match.sport})`;
-    const details = `Match #${match.matchNumber} | Venue: ${match.venue} | Broadcast: ${APP_URL}`;
+    const details = `Match #${match.matchNumber} | Venue: ${match.venue} | Official Sportify Portal: ${APP_URL}`;
     
     try {
       const dateParts = match.date.split('-');

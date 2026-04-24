@@ -63,7 +63,7 @@ export default function AdminPage() {
     { type: 'XD', score: '0-0', winner: '' },
   ]);
 
-  // --- Schedule State ---
+  // --- Schedule Schedule State ---
   const [schedMatchNumber, setSchedMatchNumber] = useState('');
   const [schedTeamA, setSchedTeamA] = useState('');
   const [schedTeamB, setSchedTeamB] = useState('');
@@ -293,7 +293,7 @@ export default function AdminPage() {
       `⚔️ *Battle:* ${match.teamA} vs ${match.teamB}\n` +
       `📊 *Final Score:* ${match.scoreA} - ${match.scoreB}\n\n` +
       `✨ *RESULT:* ${winner === 'DRAW' ? 'THE BATTLE ENDS IN A DRAW!' : winner.toUpperCase() + ' TAKES THE GLORY!'} ✨\n\n` +
-      `Check the updated House Table and highlights on the Official Paradox Portal:\n` +
+      `Check the updated House Table and highlights on the Official Sportify Portal:\n` +
       `🔗 https://sportify-in-paradox2026.vercel.app/`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };

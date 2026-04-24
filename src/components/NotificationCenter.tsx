@@ -61,7 +61,7 @@ export function NotificationCenter() {
         <div className="p-4 border-b border-border bg-muted/20">
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Live Bulletins</h3>
-            <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Paradox Broadcast</span>
+            <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Sportify Broadcast</span>
           </div>
         </div>
         <ScrollArea className="h-[350px]">
@@ -106,7 +106,7 @@ export function NotificationCenter() {
           )}
         </ScrollArea>
         <div className="p-3 border-t border-border bg-muted/10 text-center">
-          <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/20">Official Paradox 2026 Feed</p>
+          <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/20">Official Sportify Feed</p>
         </div>
       </PopoverContent>
     </Popover>

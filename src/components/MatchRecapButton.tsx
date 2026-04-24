@@ -38,7 +38,7 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
 
   const handleShareRecap = () => {
     if (!recap) return;
-    const text = `🎙️ *AI MATCH RECAP: ${match.teamA} vs ${match.teamB}* 🎙️\n\n"${recap}"\n\nCheck full stats and highlights on the Paradox Portal:\n🔗 https://sportify-in-paradox2026.vercel.app/`;
+    const text = `🎙️ *AI MATCH RECAP: ${match.teamA} vs ${match.teamB}* 🎙️\n\n"${recap}"\n\nCheck full stats and highlights on the Official Sportify Portal:\n🔗 https://sportify-in-paradox2026.vercel.app/`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -59,7 +59,7 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
           <DialogHeader className="p-6 bg-primary text-white">
             <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase tracking-tight italic">
               <Sparkles className="h-5 w-5" />
-              Paradox Recap
+              Sportify Recap
             </DialogTitle>
             <DialogDescription className="text-primary-foreground/80 font-black text-[10px] uppercase tracking-widest">
               {match.teamA} {match.scoreA} - {match.scoreB} {match.teamB}
