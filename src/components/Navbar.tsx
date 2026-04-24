@@ -25,7 +25,7 @@ const ICON_MAP: Record<string, any> = {
 export function Navbar() {
   const pathname = usePathname();
   const db = useFirestore();
-  const [showTicker, setShowTicker] = useState(true);
+  const [showTicker, setShowTicker] = useState(false);
 
   const broadcastQuery = useMemo(() => {
     if (!db) return null;
@@ -36,7 +36,9 @@ export function Navbar() {
   const activeBroadcast = latestBroadcast?.[0];
 
   useEffect(() => {
-    if (activeBroadcast) setShowTicker(true);
+    if (activeBroadcast) {
+      setShowTicker(true);
+    }
   }, [activeBroadcast]);
 
   return (
@@ -87,7 +89,7 @@ export function Navbar() {
            <div className="flex items-center gap-3 overflow-hidden">
               <Megaphone className="h-4 w-4 text-white shrink-0 animate-bounce" />
               <p className="text-[10px] font-black uppercase italic tracking-widest text-white truncate">
-                Official: {activeBroadcast.message}
+                Bulletin: {activeBroadcast.message}
               </p>
            </div>
            <button onClick={() => setShowTicker(false)} className="ml-4 text-white/60 hover:text-white transition-colors">

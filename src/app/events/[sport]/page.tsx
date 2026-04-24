@@ -84,42 +84,39 @@ export default function EventPage() {
   }, [rawRunResults, searchQuery]);
 
   const handleShareRunResult = (res: RunResult) => {
-    const text = `🏃‍♂️ *PARADOX 2026 - KAMPUS RUN ACHIEVER* 🏅\n\n` +
-      `🏅 *Name:* ${res.name.toUpperCase()}\n` +
-      `🏆 *Rank:* #${res.position}\n` +
-      `⏱️ *Time:* ${res.time}\n` +
-      `👟 *Category:* ${res.category}\n\n` +
-      `🔥 *Check the full board:* ${APP_URL}`;
+    const text = `*PARADOX 2026: KAMPUS RUN RESULT*\n\n` +
+      `• Name: ${res.name.toUpperCase()}\n` +
+      `• Rank: #${res.position}\n` +
+      `• Time: ${res.time}\n` +
+      `• Category: ${res.category}\n\n` +
+      `Official Board: ${APP_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     toast({ title: "Sharing result..." });
   };
 
   const handleShareMatch = (match: Match) => {
     const isLive = match.status === 'Live';
+    const statusHeader = isLive ? `*LIVE UPDATE: ${match.sport.toUpperCase()}*` : `*MATCH RESULT: ${match.sport.toUpperCase()}*`;
     
-    let statusText = isLive ? `🔴 *LIVE BROADCAST*` : `🏁 *MATCH COMPLETED*`;
-    
-    let winnerText = "";
+    let resultLine = "";
     if (!isLive) {
-      winnerText = match.scoreA > match.scoreB 
-        ? `🏆 *${match.teamA}* wins!` 
+      resultLine = match.scoreA > match.scoreB 
+        ? `• Winner: *${match.teamA}*` 
         : match.scoreB > match.scoreA 
-        ? `🏆 *${match.teamB}* wins!` 
-        : `🤝 Draw!`;
+        ? `• Winner: *${match.teamB}*` 
+        : `• Result: *Draw*`;
     }
 
     const highlightsText = match.keyEvents?.length 
-      ? `🔥 *HIGHLIGHTS:*\n` + match.keyEvents.slice().reverse().slice(0, 3).map(ev => `• ${ev}`).join('\n') + `\n\n`
+      ? `\n*LATEST HIGHLIGHTS:*\n` + match.keyEvents.slice().reverse().slice(0, 3).map(ev => `• ${ev}`).join('\n') + `\n`
       : "";
 
-    const text = `🏅 *PARADOX 2026 - ${isLive ? 'LIVE UPDATE' : 'RESULTS'}* 🏅\n\n` +
-      `${statusText}\n` +
-      `🏅 *Sport:* ${match.sport.replace('-', ' ').toUpperCase()}\n` +
-      `⚔️ *BATTLE:* ${match.teamA} (${match.scoreA}) vs ${match.teamB} (${match.scoreB})\n\n` +
-      `${winnerText}\n\n` +
-      `${highlightsText}` +
-      `🏟️ *Venue:* ${match.venue}\n\n` +
-      `📲 *Check all scores here:* ${APP_URL}`;
+    const text = `${statusHeader}\n\n` +
+      `*${match.teamA}* (${match.scoreA}) vs *${match.teamB}* (${match.scoreB})\n` +
+      `${resultLine}\n` +
+      `${highlightsText}\n` +
+      `• Venue: ${match.venue}\n\n` +
+      `Tournament Board: ${APP_URL}`;
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     toast({ title: isLive ? "Sharing live update..." : "Sharing match result..." });
@@ -128,11 +125,34 @@ export default function EventPage() {
   const handleAddToCalendar = (match: Match) => {
     const title = `Paradox 2026: ${match.teamA} vs ${match.teamB} (${match.sport})`;
     const details = `Match #${match.matchNumber} | Venue: ${match.venue} | Broadcast: ${APP_URL}`;
-    // Simple google calendar link generator (requires ISO date format usually, but we'll use a simplified version)
-    const dateStr = match.date.replace(/-/g, '');
-    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(match.venue)}`;
-    window.open(url, '_blank');
-    toast({ title: "Opening Calendar..." });
+    
+    // Parse Scheduled Date and Time
+    // Date: YYYY-MM-DD, Time: HH:MM AM/PM
+    try {
+      const [year, month, day] = match.date.split('-');
+      let [timePart, modifier] = match.time.split(' ');
+      let [hoursStr, minutesStr] = timePart.split(':');
+      
+      let hours = parseInt(hoursStr, 10);
+      if (hours === 12) {
+        hours = 0;
+      }
+      if (modifier === 'PM') {
+        hours += 12;
+      }
+      
+      const startStr = `${year}${month}${day}T${hours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
+      
+      // Assume 1 hour duration
+      const endHours = hours + 1;
+      const endStr = `${year}${month}${day}T${endHours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
+
+      const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(match.venue)}`;
+      window.open(url, '_blank');
+      toast({ title: "Opening Calendar..." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Could not schedule reminder." });
+    }
   };
 
   if (matchesLoading || stdLoading || runLoading) return <Loading />;
@@ -266,34 +286,36 @@ export default function EventPage() {
                           )}>{match.teamB}</p>
                         </div>
                         
-                        {match.keyEvents && match.keyEvents.length > 0 && (
-                          <div className="border-t border-border bg-muted/10 p-4 sm:p-6 md:p-10">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2">
-                                <Activity className="h-4 w-4 text-primary" />
-                                <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Live Timeline</h3>
-                              </div>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleShareMatch(match)}
-                                className="h-7 text-[9px] font-black uppercase text-primary hover:bg-primary/10 gap-1.5 px-3"
-                              >
-                                <Share2 className="h-3 w-3" /> Share Live
-                              </Button>
+                        <div className="border-t border-border bg-muted/10 p-4 sm:p-6 md:p-10">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-4 w-4 text-primary" />
+                              <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Live Timeline</h3>
                             </div>
-                            <div className="space-y-3">
-                              {match.keyEvents.slice().reverse().map((ev, i) => (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleShareMatch(match)}
+                              className="h-7 text-[9px] font-black uppercase text-primary hover:bg-primary/10 gap-1.5 px-3"
+                            >
+                              <Share2 className="h-3 w-3" /> Share Live
+                            </Button>
+                          </div>
+                          <div className="space-y-3">
+                            {(match.keyEvents && match.keyEvents.length > 0) ? (
+                              match.keyEvents.slice().reverse().map((ev, i) => (
                                 <div key={i} className={cn(
                                   "flex items-start gap-3 p-4 rounded-xl bg-muted/20 border-l-2 border-primary text-[11px] font-bold leading-relaxed",
                                   i === 0 && "bg-primary/5 border-primary"
                                 )}>
                                   {ev}
                                 </div>
-                              ))}
-                            </div>
+                              ))
+                            ) : (
+                              <p className="text-[10px] font-black uppercase opacity-30 text-center py-4">Awaiting key moments...</p>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </CardContent>
                     </Card>
                   );

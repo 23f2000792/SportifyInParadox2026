@@ -112,7 +112,7 @@ export default function AdminPage() {
 
   const broadcastQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'broadcasts'), orderBy('timestamp', 'desc'), limit(5));
+    return query(collection(db, 'broadcasts'), orderBy('timestamp', 'desc'), limit(10));
   }, [db]);
   const { data: recentBroadcasts } = useCollection<Broadcast>(broadcastQuery);
 
@@ -151,7 +151,7 @@ export default function AdminPage() {
       timestamp: serverTimestamp(),
     });
     setBroadcastMessage('');
-    toast({ title: "Bulletin published to all users." });
+    toast({ title: "Global bulletin published." });
   };
 
   const handleUpdateMatch = (e: React.FormEvent) => {
@@ -273,12 +273,12 @@ export default function AdminPage() {
 
   const handleShareResultBroadcast = (match: Match) => {
     const winner = match.scoreA > match.scoreB ? match.teamA : match.scoreB > match.scoreA ? match.teamB : "DRAW";
-    const text = `📢 *OFFICIAL BROADCAST: MATCH COMPLETED* 📢\n\n` +
-      `🏅 *Sport:* ${match.sport.replace('-', ' ').toUpperCase()}\n` +
-      `⚔️ *Battle:* ${match.teamA} vs ${match.teamB}\n` +
-      `📈 *Result:* ${match.scoreA} - ${match.scoreB}\n` +
-      `🏆 *Winner:* ${winner.toUpperCase()}\n\n` +
-      `📲 *View Tournament Board:* https://sportify-in-paradox2026.vercel.app/`;
+    const text = `*OFFICIAL ANNOUNCEMENT: MATCH COMPLETED*\n\n` +
+      `• Sport: ${match.sport.replace('-', ' ').toUpperCase()}\n` +
+      `• Match: ${match.teamA} vs ${match.teamB}\n` +
+      `• Final Score: ${match.scoreA} - ${match.scoreB}\n` +
+      `• Result: ${winner === 'DRAW' ? 'MATCH DRAWN' : winner.toUpperCase() + ' WINS'}\n\n` +
+      `View the official tournament board here: https://sportify-in-paradox2026.vercel.app/`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -315,19 +315,27 @@ export default function AdminPage() {
                 <Input 
                   value={broadcastMessage} 
                   onChange={e => setBroadcastMessage(e.target.value)} 
-                  placeholder="e.g. Volleyball semis delayed by 15 mins due to rain..." 
+                  placeholder="e.g. Volleyball finals starting in 15 mins..." 
                   className="bg-muted/20 h-12 text-sm font-black"
                 />
                 <Button type="submit" className="h-12 px-8 uppercase font-black text-[10px] tracking-widest">Broadcast</Button>
               </form>
-              <div className="mt-4 space-y-2">
-                 <p className="text-[8px] font-black uppercase text-muted-foreground/40">Recent Bulletins</p>
-                 {recentBroadcasts?.map(b => (
-                   <div key={b.id} className="flex justify-between items-center p-2 bg-muted/10 rounded border border-border">
-                     <span className="text-[10px] font-bold text-foreground">{b.message}</span>
-                     <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive/40" onClick={() => deleteDoc(doc(db!, 'broadcasts', b.id))}><Trash2 className="h-3 w-3" /></Button>
-                   </div>
-                 ))}
+              <div className="mt-6 space-y-3">
+                 <p className="text-[9px] font-black uppercase text-muted-foreground/40 tracking-wider">Recent Bulletins</p>
+                 <div className="space-y-2">
+                   {recentBroadcasts?.map(b => (
+                     <div key={b.id} className="flex justify-between items-center p-3 bg-muted/10 rounded-lg border border-border">
+                       <div className="flex items-center gap-3">
+                         <div className={cn("w-1.5 h-1.5 rounded-full", b.active ? "bg-primary animate-pulse" : "bg-muted")} />
+                         <span className="text-[10px] font-bold text-foreground">{b.message}</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'broadcasts', b.id))}><Trash2 className="h-4 w-4" /></Button>
+                       </div>
+                     </div>
+                   ))}
+                   {!recentBroadcasts?.length && <p className="text-[10px] italic text-muted-foreground/30 text-center py-4">No recent broadcasts</p>}
+                 </div>
               </div>
             </CardContent>
           </Card>
