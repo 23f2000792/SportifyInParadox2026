@@ -84,38 +84,42 @@ export default function EventPage() {
   }, [rawRunResults, searchQuery]);
 
   const handleShareRunResult = (res: RunResult) => {
-    const text = `*OFFICIAL: KAMPUS RUN RESULT*\n\n` +
-      `• Participant: ${res.name.toUpperCase()}\n` +
-      `• Rank: #${res.position}\n` +
-      `• Finish Time: ${res.time}\n` +
-      `• Category: ${res.category}\n\n` +
-      `Full leaderboard: ${APP_URL}`;
+    const text = `🔥 *TRACK ON FIRE! MOMENT OF GLORY!* 🔥\n\n` +
+      `[${res.name.toUpperCase()}] just dominated the track at the Paradox 2026 Kampus Run! 🏃‍♂️💨\n\n` +
+      `🏅 *Rank:* #${res.position}\n` +
+      `⏱️ *Finish Time:* ${res.time}\n` +
+      `📍 *Category:* ${res.category}\n\n` +
+      `Can anyone beat this blistering pace? Check the full leaderboard and highlights now:\n` +
+      `🔗 ${APP_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleShareMatch = (match: Match) => {
     const isLive = match.status === 'Live';
-    const statusHeader = isLive ? `*LIVE UPDATE: ${match.sport.toUpperCase()}*` : `*OFFICIAL RESULT: ${match.sport.toUpperCase()}*`;
+    const statusHeader = isLive ? `📢 *LIVE BROADCAST: THE ARENA IS ELECTRIC!* 📢` : `🏆 *FINAL WHISTLE: THE BATTLE IS OVER!* 🏆`;
     
     let resultLine = "";
     if (!isLive) {
       resultLine = match.scoreA > match.scoreB 
-        ? `• Winner: *${match.teamA}*` 
+        ? `✨ *WINNER:* ${match.teamA.toUpperCase()} TAKES THE GLORY!` 
         : match.scoreB > match.scoreA 
-        ? `• Winner: *${match.teamB}*` 
-        : `• Result: *Match Drawn*`;
+        ? `✨ *WINNER:* ${match.teamB.toUpperCase()} TAKES THE GLORY!` 
+        : `🤝 *RESULT:* A legendary draw!`;
+    } else {
+      resultLine = `Current Score: *${match.scoreA} - ${match.scoreB}*`;
     }
 
     const highlightsText = match.keyEvents?.length 
-      ? `\n*LATEST HIGHLIGHTS:*\n` + match.keyEvents.slice().reverse().slice(0, 3).map(ev => `• ${ev}`).join('\n') + `\n`
+      ? `\n*LATEST ACTION:*\n` + match.keyEvents.slice().reverse().slice(0, 2).map(ev => `⚡ ${ev}`).join('\n') + `\n`
       : "";
 
     const text = `${statusHeader}\n\n` +
-      `*${match.teamA}* (${match.scoreA}) vs *${match.teamB}* (${match.scoreB})\n` +
+      `⚔️ *${match.teamA}* vs *${match.teamB}* (${match.sport.toUpperCase()})\n` +
       `${resultLine}\n` +
       `${highlightsText}\n` +
-      `• Location: ${match.venue}\n\n` +
-      `Real-time Updates: ${APP_URL}`;
+      `📍 *Location:* ${match.venue}\n\n` +
+      `Don't miss a single moment of the action. Tune into the Live Stream now:\n` +
+      `🔗 ${APP_URL}`;
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };

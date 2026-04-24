@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -278,12 +279,14 @@ export default function AdminPage() {
 
   const handleShareResultBroadcast = (match: Match) => {
     const winner = match.scoreA > match.scoreB ? match.teamA : match.scoreB > match.scoreA ? match.teamB : "DRAW";
-    const text = `*OFFICIAL ANNOUNCEMENT: MATCH COMPLETED*\n\n` +
-      `• Sport: ${match.sport.replace('-', ' ').toUpperCase()}\n` +
-      `• Match: ${match.teamA} vs ${match.teamB}\n` +
-      `• Final Score: ${match.scoreA} - ${match.scoreB}\n` +
-      `• Result: ${winner === 'DRAW' ? 'MATCH DRAWN' : winner.toUpperCase() + ' WINS'}\n\n` +
-      `Official Paradox Tournament Portal: https://sportify-in-paradox2026.vercel.app/`;
+    const text = `🏆 *OFFICIAL ANNOUNCEMENT: A CHAMPION RISES!* 🏆\n\n` +
+      `The final whistle has blown at the Paradox arena!\n\n` +
+      `🏅 *Sport:* ${match.sport.replace('-', ' ').toUpperCase()}\n` +
+      `⚔️ *Battle:* ${match.teamA} vs ${match.teamB}\n` +
+      `📊 *Final Score:* ${match.scoreA} - ${match.scoreB}\n\n` +
+      `✨ *RESULT:* ${winner === 'DRAW' ? 'THE BATTLE ENDS IN A DRAW!' : winner.toUpperCase() + ' TAKES THE GLORY!'} ✨\n\n` +
+      `Check the updated House Table and highlights on the Official Paradox Portal:\n` +
+      `🔗 https://sportify-in-paradox2026.vercel.app/`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -315,25 +318,25 @@ export default function AdminPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handlePostBroadcast} className="flex gap-4">
+              <form onSubmit={handlePostBroadcast} className="flex flex-col sm:flex-row gap-4">
                 <Input 
                   value={broadcastMessage} 
                   onChange={e => setBroadcastMessage(e.target.value)} 
                   placeholder="e.g. Volleyball finals starting in 15 mins..." 
                   className="bg-muted/20 h-12 text-sm font-black"
                 />
-                <Button type="submit" className="h-12 px-8 uppercase font-black text-[10px] tracking-widest">Broadcast</Button>
+                <Button type="submit" className="h-12 px-8 uppercase font-black text-[10px] tracking-widest w-full sm:w-auto">Broadcast</Button>
               </form>
               <div className="mt-6 space-y-3">
                  <p className="text-[9px] font-black uppercase text-muted-foreground/40 tracking-wider">Recent Bulletins</p>
                  <div className="space-y-2">
                    {recentBroadcasts?.map(b => (
                      <div key={b.id} className="flex justify-between items-center p-3 bg-muted/10 rounded-lg border border-border">
-                       <div className="flex items-center gap-3">
-                         <div className={cn("w-1.5 h-1.5 rounded-full", b.active ? "bg-primary animate-pulse" : "bg-muted")} />
-                         <span className="text-[10px] font-bold text-foreground">{b.message}</span>
+                       <div className="flex items-center gap-3 flex-1">
+                         <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", b.active ? "bg-primary animate-pulse" : "bg-muted")} />
+                         <span className="text-[10px] font-bold text-foreground break-words">{b.message}</span>
                        </div>
-                       <div className="flex items-center gap-2">
+                       <div className="flex items-center gap-2 ml-4">
                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'broadcasts', b.id))}><Trash2 className="h-4 w-4" /></Button>
                        </div>
                      </div>

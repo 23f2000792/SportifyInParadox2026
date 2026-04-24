@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import {Navbar} from '@/components/Navbar';
@@ -49,9 +50,6 @@ export default function RootLayout({
             <footer className="py-10 border-t border-border bg-black/5 dark:bg-black/40 text-center space-y-2 mb-16 md:mb-0">
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
                 Sportify in Paradox 2026 • Real-Time Broadcast Control
-              </p>
-              <p className="text-[9px] font-medium text-muted-foreground/30 uppercase tracking-widest">
-                © 2026 Paradox Interactive Sports. All Rights Reserved.
               </p>
             </footer>
           </div>

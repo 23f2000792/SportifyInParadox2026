@@ -22,7 +22,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 const SHORT_NAMES: Record<string, string> = {
-  'kampus-run': 'Run',
+  'kampus-run': 'Kampus Run',
   'football': 'Football',
   'volleyball': 'Volleyball',
   'badminton': 'Badminton',
