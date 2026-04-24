@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EVENTS } from '@/lib/mock-data';
-import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles, Pencil, Check, X, Megaphone, Share2 } from 'lucide-react';
+import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles, Pencil, Check, X, Megaphone, Share2, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, updateDoc, arrayUnion, orderBy, limit } from 'firebase/firestore';
@@ -150,15 +150,16 @@ export default function AdminPage() {
   }, [activeMatch]);
 
   // --- Handlers ---
-  const handlePostBroadcast = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!db || !broadcastMessage) return;
+  const handlePostBroadcast = (e?: React.FormEvent, customMsg?: string) => {
+    if (e) e.preventDefault();
+    const msg = customMsg || broadcastMessage;
+    if (!db || !msg) return;
     addDoc(collection(db, 'broadcasts'), {
-      message: broadcastMessage,
+      message: msg,
       active: true,
       timestamp: serverTimestamp(),
     });
-    setBroadcastMessage('');
+    if (!customMsg) setBroadcastMessage('');
     toast({ title: "Global announcement published." });
   };
 
@@ -295,6 +296,12 @@ export default function AdminPage() {
       `Check the updated House Table and highlights on the Official Paradox Portal:\n` +
       `🔗 https://sportify-in-paradox2026.vercel.app/`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handlePushResultToPortal = (match: Match) => {
+    const winner = match.scoreA > match.scoreB ? match.teamA : match.scoreB > match.scoreA ? match.teamB : "Draw";
+    const msg = `OFFICIAL: ${match.teamA} vs ${match.teamB} ended ${match.scoreA}-${match.scoreB}. ${winner === 'Draw' ? 'Match ends in a draw!' : winner + ' wins!'}`;
+    handlePostBroadcast(undefined, msg);
   };
 
   if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin text-primary" /></div>;
@@ -706,6 +713,7 @@ export default function AdminPage() {
                        <TableCell className="text-center font-black text-base md:text-xl text-primary px-2">{match.scoreA} - {match.scoreB}</TableCell>
                        <TableCell className="text-right px-4">
                          <div className="flex justify-end gap-1 md:gap-2">
+                            <Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-primary/60 hover:text-primary" title="Push Result to Portal" onClick={() => handlePushResultToPortal(match)}><Globe className="h-4 w-4" /></Button>
                             <Button size="icon" variant="outline" className="h-7 w-7 md:h-8 md:w-8 text-primary" onClick={() => handleShareResultBroadcast(match)}><Share2 className="h-3 w-3 md:h-4 md:w-4" /></Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', match.id))}><Trash2 className="h-3 w-3 md:h-4 md:w-4" /></Button>
                          </div>

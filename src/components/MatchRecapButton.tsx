@@ -5,13 +5,15 @@ import { useState, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { generateMatchRecap } from '@/ai/flows/ai-match-recap-tool';
 import { Match } from '@/lib/types';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Share2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export const MatchRecapButton = memo(function MatchRecapButton({ match }: { match: Match }) {
   const [loading, setLoading] = useState(false);
   const [recap, setRecap] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (loading) return;
@@ -32,6 +34,12 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleShareRecap = () => {
+    if (!recap) return;
+    const text = `🎙️ *AI MATCH RECAP: ${match.teamA} vs ${match.teamB}* 🎙️\n\n"${recap}"\n\nCheck full stats and highlights on the Paradox Portal:\n🔗 https://sportify-in-paradox2026.vercel.app/`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
@@ -74,8 +82,13 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
               </div>
             )}
           </div>
-          <div className="px-6 pb-6 flex justify-end">
-            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase h-9 px-6 hover:bg-white/5" onClick={() => setOpen(false)}>Dismiss</Button>
+          <div className="px-6 pb-6 flex items-center justify-between gap-3">
+            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase h-9 px-4 hover:bg-white/5" onClick={() => setOpen(false)}>Dismiss</Button>
+            {!loading && recap && (
+              <Button onClick={handleShareRecap} className="h-9 px-6 text-[10px] font-black uppercase tracking-widest gap-2">
+                <Share2 className="h-3.5 w-3.5" /> Share Recap
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

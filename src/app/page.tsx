@@ -4,7 +4,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
@@ -140,50 +140,56 @@ export default function Home() {
               return (
                 <Link key={match.id} href={`/events/${match.sport}`}>
                   <Card className={cn(
-                    "premium-card group",
-                    isMyMatch && "border-primary/40 bg-primary/[0.02] shadow-lg shadow-primary/5"
+                    "premium-card group border-primary/20",
+                    isMyMatch && "border-primary shadow-xl shadow-primary/10 bg-primary/[0.02]"
                   )}>
                     <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
                       <div className="space-y-3 flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-3">
-                          <span className="text-[10px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</span>
-                          <span className="w-1 h-1 rounded-full bg-border hidden xs:block" />
+                          <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                            <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Arena</span>
+                          </div>
                           <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> {match.venue}
                           </span>
                           {isMyMatch && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-[9px] font-black text-white uppercase ml-auto">
-                              <Star className="h-2.5 w-2.5 fill-white" /> My House
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-[9px] font-black text-white uppercase">
+                              <Star className="h-2.5 w-2.5 fill-white" /> Followed
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 overflow-hidden">
                           <p className={cn(
-                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1",
+                            "text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1",
                             match.teamA === myHouse && "text-primary"
                           )}>
                             {match.teamA}
                           </p>
-                          <span className="text-2xl md:text-4xl font-black text-primary whitespace-nowrap">
-                            {match.scoreA} : {match.scoreB}
-                          </span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-3xl md:text-5xl font-black text-primary whitespace-nowrap bg-muted/20 px-4 py-1 rounded-xl border border-border">
+                              {match.scoreA} : {match.scoreB}
+                            </span>
+                          </div>
                           <p className={cn(
-                            "text-lg md:text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1 md:text-left",
+                            "text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1 md:text-left",
                             match.teamB === myHouse && "text-primary"
                           )}>
                             {match.teamB}
                           </p>
                         </div>
                         {match.keyEvents && match.keyEvents.length > 0 && (
-                          <div className="flex items-center gap-2 pt-2 min-w-0 overflow-hidden">
-                            <span className="text-[9px] font-black text-primary/60 uppercase shrink-0">Latest:</span>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase truncate flex-1">
-                              {match.keyEvents[match.keyEvents.length - 1]}
+                          <div className="flex items-center gap-3 pt-4 border-t border-border mt-4">
+                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                               <Activity className="h-3 w-3 text-primary" />
+                            </div>
+                            <span className="text-[11px] font-bold text-foreground leading-tight italic truncate">
+                              "{match.keyEvents[match.keyEvents.length - 1]}"
                             </span>
                           </div>
                         )}
                       </div>
-                      <ChevronRight className="h-6 w-6 text-muted-foreground/20 group-hover:text-primary transition-colors shrink-0" />
+                      <ChevronRight className="h-8 w-8 text-muted-foreground/20 group-hover:text-primary transition-all shrink-0" />
                     </CardContent>
                   </Card>
                 </Link>
