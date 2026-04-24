@@ -300,7 +300,8 @@ export default function AdminPage() {
 
   const handlePushResultToPortal = (match: Match) => {
     const winner = match.scoreA > match.scoreB ? match.teamA : match.scoreB > match.scoreA ? match.teamB : "Draw";
-    const msg = `OFFICIAL: ${match.teamA} vs ${match.teamB} ended ${match.scoreA}-${match.scoreB}. ${winner === 'Draw' ? 'Match ends in a draw!' : winner + ' wins!'}`;
+    const sportName = (ADMIN_SPORT_NAMES[match.sport] || match.sport).toUpperCase();
+    const msg = `OFFICIAL [${sportName}]: ${match.teamA} vs ${match.teamB} ended ${match.scoreA}-${match.scoreB}. ${winner === 'Draw' ? 'Match ends in a draw!' : winner + ' wins!'}`;
     handlePostBroadcast(undefined, msg);
   };
 
@@ -324,7 +325,7 @@ export default function AdminPage() {
           </Button>
         </div>
         
-        {/* Global Announcement for ALL admins on root selection screen */}
+        {/* Global Announcement Card */}
         <Card className="premium-card border-primary/20 overflow-visible">
           <CardHeader className="p-4 md:p-6 border-b border-border flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
