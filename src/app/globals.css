@@ -103,3 +103,13 @@
 .premium-card:hover::before {
   @apply opacity-100;
 }
+
+/* Hide arrows/spinners in number inputs for cleaner UI */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}

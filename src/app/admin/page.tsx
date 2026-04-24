@@ -258,7 +258,6 @@ export default function AdminPage() {
 
   const handleUpdateStanding = (id: string, field: string, value: number) => {
     if (!db) return;
-    // We use updateDoc for direct database commitment
     updateDoc(doc(db, 'standings', id), { 
       [field]: value, 
       updatedAt: serverTimestamp() 
@@ -308,7 +307,6 @@ export default function AdminPage() {
           </Button>
         </div>
         
-        {/* Global Broadcast Control for Main Admin */}
         {isSuperAdmin && (
           <Card className="premium-card border-primary/20">
             <CardHeader className="p-6 border-b border-border flex flex-row items-center justify-between">
@@ -632,7 +630,7 @@ export default function AdminPage() {
                             <TableCell className="p-1">
                               <Input 
                                 type="number" 
-                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                className="h-8 w-14 text-center text-[11px] font-black bg-muted/20 mx-auto text-foreground" 
                                 value={item.played} 
                                 onChange={e => handleUpdateStanding(item.id, 'played', Number(e.target.value))} 
                               />
@@ -640,7 +638,7 @@ export default function AdminPage() {
                             <TableCell className="p-1">
                               <Input 
                                 type="number" 
-                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                className="h-8 w-14 text-center text-[11px] font-black bg-muted/20 mx-auto text-foreground" 
                                 value={item.won} 
                                 onChange={e => handleUpdateStanding(item.id, 'won', Number(e.target.value))} 
                               />
@@ -648,7 +646,7 @@ export default function AdminPage() {
                             <TableCell className="p-1">
                               <Input 
                                 type="number" 
-                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                className="h-8 w-14 text-center text-[11px] font-black bg-muted/20 mx-auto text-foreground" 
                                 value={item.drawn} 
                                 onChange={e => handleUpdateStanding(item.id, 'drawn', Number(e.target.value))} 
                               />
@@ -656,7 +654,7 @@ export default function AdminPage() {
                             <TableCell className="p-1">
                               <Input 
                                 type="number" 
-                                className="h-8 w-10 text-center text-[10px] font-black bg-muted/20 mx-auto" 
+                                className="h-8 w-14 text-center text-[11px] font-black bg-muted/20 mx-auto text-foreground" 
                                 value={item.lost} 
                                 onChange={e => handleUpdateStanding(item.id, 'lost', Number(e.target.value))} 
                               />
@@ -664,7 +662,7 @@ export default function AdminPage() {
                             <TableCell className="p-1">
                               <Input 
                                 type="number" 
-                                className="h-8 w-12 text-center text-[10px] font-black bg-primary/20 border-primary/30 mx-auto" 
+                                className="h-8 w-14 text-center text-[11px] font-black bg-primary/20 border-primary/30 mx-auto text-foreground" 
                                 value={item.points} 
                                 onChange={e => handleUpdateStanding(item.id, 'points', Number(e.target.value))} 
                               />
