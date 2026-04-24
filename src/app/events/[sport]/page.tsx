@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -124,7 +125,6 @@ export default function EventPage() {
     const details = `Match #${match.matchNumber} | Venue: ${match.venue} | Broadcast: ${APP_URL}`;
     
     try {
-      // Precise Date Parsing
       const [year, month, day] = match.date.split('-');
       let [timePart, modifier] = match.time.split(' ');
       let [hoursStr, minutesStr] = timePart.split(':');
@@ -139,7 +139,6 @@ export default function EventPage() {
       const formattedDate = `${year}${month}${day}`;
       const startStr = `${formattedDate}T${hours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
       
-      // Default duration: 1 hour
       const endHours = (hours + 1) % 24;
       const endStr = `${formattedDate}T${endHours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
 
@@ -164,9 +163,11 @@ export default function EventPage() {
               {IconComp && <IconComp className="h-6 w-6 md:h-8 md:w-8 text-primary" />}
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h1 className="text-3xl md:text-7xl font-black italic text-foreground tracking-tighter uppercase leading-none break-words">{event.name}</h1>
-            <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-[0.4em] font-bold max-w-2xl mx-auto">{event.description}</p>
+            <p className="text-[11px] md:text-sm text-primary uppercase tracking-[0.4em] font-black max-w-2xl mx-auto leading-relaxed border-t border-primary/20 pt-4">
+              {event.description}
+            </p>
           </div>
           
           {myHouse && sport !== 'kampus-run' && (
