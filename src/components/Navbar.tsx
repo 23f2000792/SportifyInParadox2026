@@ -1,12 +1,17 @@
+
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home } from 'lucide-react';
+import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, Megaphone, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { useMemo, useState, useEffect } from 'react';
+import { Broadcast } from '@/lib/types';
 
 const LOGO_URL = "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970";
 
@@ -19,6 +24,20 @@ const ICON_MAP: Record<string, any> = {
 
 export function Navbar() {
   const pathname = usePathname();
+  const db = useFirestore();
+  const [showTicker, setShowTicker] = useState(true);
+
+  const broadcastQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'broadcasts'), where('active', '==', true), orderBy('timestamp', 'desc'), limit(1));
+  }, [db]);
+
+  const { data: latestBroadcast } = useCollection<Broadcast>(broadcastQuery);
+  const activeBroadcast = latestBroadcast?.[0];
+
+  useEffect(() => {
+    if (activeBroadcast) setShowTicker(true);
+  }, [activeBroadcast]);
 
   return (
     <>
@@ -61,6 +80,21 @@ export function Navbar() {
           </Link>
         </div>
       </header>
+
+      {/* Real-time Global Broadcast Ticker */}
+      {activeBroadcast && showTicker && (
+        <div className="w-full bg-primary py-2.5 px-6 flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-500">
+           <div className="flex items-center gap-3 overflow-hidden">
+              <Megaphone className="h-4 w-4 text-white shrink-0 animate-bounce" />
+              <p className="text-[10px] font-black uppercase italic tracking-widest text-white truncate">
+                Official: {activeBroadcast.message}
+              </p>
+           </div>
+           <button onClick={() => setShowTicker(false)} className="ml-4 text-white/60 hover:text-white transition-colors">
+              <X className="h-4 w-4" />
+           </button>
+        </div>
+      )}
 
       {/* Desktop Navigation */}
       <nav className="hidden md:flex w-full border-b border-border bg-background/40 backdrop-blur-sm">

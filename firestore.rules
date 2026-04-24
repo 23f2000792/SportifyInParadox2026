@@ -32,10 +32,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     match /admins/{uid} {
-      // Allow the Super Admin to read/write all admin profiles
-      // Allow individual admins to read their own profile
       allow read: if request.auth != null && (request.auth.uid == uid || isSuperAdmin());
       allow write: if isSuperAdmin();
+    }
+    match /broadcasts/{broadcastId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

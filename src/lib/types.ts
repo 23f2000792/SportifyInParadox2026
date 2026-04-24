@@ -1,3 +1,4 @@
+
 export type SportType = 'kampus-run' | 'football' | 'volleyball' | 'badminton';
 export type MatchPhase = 'group' | 'semi-final' | 'third-place' | 'final' | 'race';
 
@@ -60,6 +61,13 @@ export interface RunResult {
   ageGroup: string;
   category: string;
   updatedAt?: any;
+}
+
+export interface Broadcast {
+  id: string;
+  message: string;
+  active: boolean;
+  timestamp: any;
 }
 
 export type UserRole = 'admin' | 'super-admin';

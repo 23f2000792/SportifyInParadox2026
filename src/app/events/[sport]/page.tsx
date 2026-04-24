@@ -13,7 +13,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Match, RunResult, Standing, GROUPS, HOUSES } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Sparkles, Activity, Star, Filter, Search } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Sparkles, Activity, Star, Filter, Search, CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
@@ -123,6 +123,16 @@ export default function EventPage() {
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     toast({ title: isLive ? "Sharing live update..." : "Sharing match result..." });
+  };
+
+  const handleAddToCalendar = (match: Match) => {
+    const title = `Paradox 2026: ${match.teamA} vs ${match.teamB} (${match.sport})`;
+    const details = `Match #${match.matchNumber} | Venue: ${match.venue} | Broadcast: ${APP_URL}`;
+    // Simple google calendar link generator (requires ISO date format usually, but we'll use a simplified version)
+    const dateStr = match.date.replace(/-/g, '');
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(match.venue)}`;
+    window.open(url, '_blank');
+    toast({ title: "Opening Calendar..." });
   };
 
   if (matchesLoading || stdLoading || runLoading) return <Loading />;
@@ -307,7 +317,17 @@ export default function EventPage() {
                             <span className={cn(match.teamB === myHouse && "text-primary")}>{match.teamB}</span>
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] font-black border-border px-5 py-1 uppercase whitespace-nowrap flex-shrink-0">{match.phase.replace('-', ' ')}</Badge>
+                        <div className="flex flex-col items-center md:items-end gap-3 flex-shrink-0">
+                            <Badge variant="outline" className="text-[9px] font-black border-border px-5 py-1 uppercase whitespace-nowrap">{match.phase.replace('-', ' ')}</Badge>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleAddToCalendar(match)}
+                              className="h-8 text-[9px] font-black uppercase text-primary hover:bg-primary/5 gap-1.5"
+                            >
+                              <CalendarPlus className="h-3.5 w-3.5" /> Remind Me
+                            </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   );

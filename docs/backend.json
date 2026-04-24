@@ -92,6 +92,18 @@
         "assignedSport": { "type": "string" }
       },
       "required": ["uid", "email", "role"]
+    },
+    "Broadcast": {
+      "title": "Broadcast",
+      "description": "A global real-time announcement message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "message": { "type": "string" },
+        "active": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["message", "active", "timestamp"]
     }
   },
   "auth": {
@@ -117,6 +129,10 @@
     "/admins/{uid}": {
       "schema": "AdminUser",
       "description": "System administrators mapping"
+    },
+    "/broadcasts/{broadcastId}": {
+      "schema": "Broadcast",
+      "description": "Collection of global announcements"
     }
   }
 }

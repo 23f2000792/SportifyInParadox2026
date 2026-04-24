@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,11 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EVENTS } from '@/lib/mock-data';
-import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles, Pencil, Check, X } from 'lucide-react';
+import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles, Pencil, Check, X, Megaphone, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
-import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase, SportType } from '@/lib/types';
+import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, updateDoc, arrayUnion, orderBy, limit } from 'firebase/firestore';
+import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase, SportType, Broadcast } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 
@@ -34,6 +35,9 @@ export default function AdminPage() {
   
   const [selectedSportSlug, setSelectedSportSlug] = useState<SportType | null>(null);
   const [activeTab, setActiveTab] = useState('control');
+
+  // --- Broadcast State ---
+  const [broadcastMessage, setBroadcastMessage] = useState('');
 
   // --- Score Control State ---
   const [selectedMatchId, setSelectedMatchId] = useState<string>('');
@@ -106,6 +110,12 @@ export default function AdminPage() {
     return [...(rawRunResults || [])].sort((a, b) => a.position - b.position);
   }, [rawRunResults]);
 
+  const broadcastQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'broadcasts'), orderBy('timestamp', 'desc'), limit(5));
+  }, [db]);
+  const { data: recentBroadcasts } = useCollection<Broadcast>(broadcastQuery);
+
   // --- Auth & Profile ---
   useEffect(() => {
     if (!userLoading && !user) router.push('/admin/login');
@@ -132,6 +142,18 @@ export default function AdminPage() {
   }, [activeMatch]);
 
   // --- Handlers ---
+  const handlePostBroadcast = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !broadcastMessage) return;
+    addDoc(collection(db, 'broadcasts'), {
+      message: broadcastMessage,
+      active: true,
+      timestamp: serverTimestamp(),
+    });
+    setBroadcastMessage('');
+    toast({ title: "Bulletin published to all users." });
+  };
+
   const handleUpdateMatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMatchId || !db) return;
@@ -249,6 +271,17 @@ export default function AdminPage() {
     toast({ title: "Admin assigned." });
   };
 
+  const handleShareResultBroadcast = (match: Match) => {
+    const winner = match.scoreA > match.scoreB ? match.teamA : match.scoreB > match.scoreA ? match.teamB : "DRAW";
+    const text = `📢 *OFFICIAL BROADCAST: MATCH COMPLETED* 📢\n\n` +
+      `🏅 *Sport:* ${match.sport.replace('-', ' ').toUpperCase()}\n` +
+      `⚔️ *Battle:* ${match.teamA} vs ${match.teamB}\n` +
+      `📈 *Result:* ${match.scoreA} - ${match.scoreB}\n` +
+      `🏆 *Winner:* ${winner.toUpperCase()}\n\n` +
+      `📲 *View Tournament Board:* https://sportify-in-paradox2026.vercel.app/`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin text-primary" /></div>;
   if (!user || !adminProfile) return null;
 
@@ -268,6 +301,38 @@ export default function AdminPage() {
             <LogOut className="h-3.5 w-3.5 mr-2" /> Logout
           </Button>
         </div>
+        
+        {/* Global Broadcast Control for Main Admin */}
+        {isSuperAdmin && (
+          <Card className="premium-card border-primary/20">
+            <CardHeader className="p-6 border-b border-border flex flex-row items-center justify-between">
+              <CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <Megaphone className="h-4 w-4" /> Global Announcement
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handlePostBroadcast} className="flex gap-4">
+                <Input 
+                  value={broadcastMessage} 
+                  onChange={e => setBroadcastMessage(e.target.value)} 
+                  placeholder="e.g. Volleyball semis delayed by 15 mins due to rain..." 
+                  className="bg-muted/20 h-12 text-sm font-black"
+                />
+                <Button type="submit" className="h-12 px-8 uppercase font-black text-[10px] tracking-widest">Broadcast</Button>
+              </form>
+              <div className="mt-4 space-y-2">
+                 <p className="text-[8px] font-black uppercase text-muted-foreground/40">Recent Bulletins</p>
+                 {recentBroadcasts?.map(b => (
+                   <div key={b.id} className="flex justify-between items-center p-2 bg-muted/10 rounded border border-border">
+                     <span className="text-[10px] font-bold text-foreground">{b.message}</span>
+                     <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive/40" onClick={() => deleteDoc(doc(db!, 'broadcasts', b.id))}><Trash2 className="h-3 w-3" /></Button>
+                   </div>
+                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {EVENTS.map((event) => {
             const IconComp = ICON_MAP[event.icon];
@@ -347,7 +412,6 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Badminton Specific Sub-Match Controls */}
                       {selectedSportSlug === 'badminton' && (
                         <div className="space-y-6 pt-6 border-t border-border">
                           <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Sub-Match Details (Badminton)</h3>
@@ -411,7 +475,6 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
 
-              {/* Highlight Management Console */}
               <div className="space-y-6">
                  <Card className="premium-card">
                    <CardHeader className="p-6 border-b border-border"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Sparkles className="h-4 w-4" /> Live Highlights</CardTitle></CardHeader>
@@ -549,12 +612,17 @@ export default function AdminPage() {
                  <Table><TableHeader className="bg-muted/20"><TableRow className="border-border"><TableHead className="w-16 text-center text-[9px] font-black px-2 md:px-4">Rank</TableHead><TableHead className="text-[9px] font-black px-2 md:px-6">Participant</TableHead><TableHead className="text-right text-[9px] font-black px-2 md:px-6">X</TableHead></TableRow></TableHeader>
                    <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-border h-14"><TableCell className="text-center font-black text-lg text-primary px-2 md:px-4">#{res.position}</TableCell><TableCell className="px-2 md:px-6"><p className="text-xs md:text-sm font-black uppercase italic text-foreground">{res.name}</p></TableCell><TableCell className="text-right px-2 md:px-6"><Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
                ) : (
-                 <Table><TableHeader className="bg-muted/20"><TableRow className="border-border"><TableHead className="text-[9px] font-black px-2 md:px-6 uppercase">Match</TableHead><TableHead className="text-[9px] font-black text-center px-2 md:px-6 uppercase">Score</TableHead><TableHead className="text-right text-[9px] font-black px-2 md:px-6 uppercase">X</TableHead></TableRow></TableHeader>
+                 <Table><TableHeader className="bg-muted/20"><TableRow className="border-border"><TableHead className="text-[9px] font-black px-2 md:px-6 uppercase">Match</TableHead><TableHead className="text-[9px] font-black text-center px-2 md:px-6 uppercase">Score</TableHead><TableHead className="text-right text-[9px] font-black px-2 md:px-6 uppercase">Actions</TableHead></TableRow></TableHeader>
                    <TableBody>{matches?.filter(m => m.status === 'Completed').map(match => (
                      <TableRow key={match.id} className="border-border h-16">
                        <TableCell className="px-2 md:px-6"><p className="text-xs md:text-sm font-black uppercase italic break-words max-w-[200px] text-foreground">{match.teamA} vs {match.teamB}</p></TableCell>
                        <TableCell className="text-center font-black text-lg md:text-xl text-primary px-2 md:px-6">{match.scoreA} - {match.scoreB}</TableCell>
-                       <TableCell className="text-right px-2 md:px-6"><Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', match.id))}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                       <TableCell className="text-right px-2 md:px-6">
+                         <div className="flex justify-end gap-2">
+                            <Button size="icon" variant="outline" className="h-8 w-8 text-primary" onClick={() => handleShareResultBroadcast(match)}><Share2 className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', match.id))}><Trash2 className="h-4 w-4" /></Button>
+                         </div>
+                       </TableCell>
                      </TableRow>
                    ))}</TableBody>
                  </Table>
