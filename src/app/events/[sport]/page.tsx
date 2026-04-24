@@ -13,7 +13,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Match, RunResult, Standing, GROUPS, HOUSES } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Sparkles, Activity, Star, Filter, Search, CalendarPlus } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
@@ -125,7 +125,10 @@ export default function EventPage() {
     const details = `Match #${match.matchNumber} | Venue: ${match.venue} | Broadcast: ${APP_URL}`;
     
     try {
-      const [year, month, day] = match.date.split('-');
+      const dateParts = match.date.split('-');
+      if (dateParts.length !== 3) throw new Error("Invalid date");
+      const [year, month, day] = dateParts;
+      
       let [timePart, modifier] = match.time.split(' ');
       let [hoursStr, minutesStr] = timePart.split(':');
       
@@ -153,8 +156,6 @@ export default function EventPage() {
   if (matchesLoading || stdLoading || runLoading) return <Loading />;
 
   const IconComp = ICON_MAP[event.icon];
-
-  // Logic to separate tagline and sub-tagline for Kampus Run
   const isKampusRun = event.slug === 'kampus-run';
   const descriptionParts = event.description.split('. ');
   const primaryTagline = isKampusRun ? descriptionParts[0] : event.description;
@@ -233,29 +234,47 @@ export default function EventPage() {
         <>
           <section className="space-y-6">
             <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary text-center">House Table</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {GROUPS.map(group => {
                 const groupStandings = standings?.filter(s => s.group === group).sort((a,b) => b.points - a.points);
                 if (!groupStandings?.length) return null;
                 return (
-                  <Card key={group} className="premium-card border-border">
+                  <Card key={group} className="premium-card border-border overflow-hidden">
                     <CardHeader className="p-4 border-b border-border text-center bg-muted/10"><CardTitle className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">Pool {group}</CardTitle></CardHeader>
                     <CardContent className="p-0">
-                      <Table><TableBody>{groupStandings.map((row) => (
-                        <TableRow key={row.team} className={cn(
-                          "h-14 border-none hover:bg-muted/5",
-                          row.team === myHouse && "bg-primary/5"
-                        )}>
-                          <TableCell className={cn(
-                            "text-xs font-black uppercase italic text-foreground pl-4 break-words leading-tight flex items-center gap-2",
-                            row.team === myHouse && "text-primary"
-                          )}>
-                            {row.team}
-                            {row.team === myHouse && <Star className="h-2.5 w-2.5 fill-primary" />}
-                          </TableCell>
-                          <TableCell className="text-right font-black text-lg pr-4">{row.points} <span className="text-[9px] text-muted-foreground ml-0.5">PTS</span></TableCell>
-                        </TableRow>
-                      ))}</TableBody></Table>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-border bg-muted/20">
+                            <TableHead className="text-[9px] font-black uppercase px-4">House</TableHead>
+                            <TableHead className="text-[9px] font-black uppercase text-center w-10 px-1">P</TableHead>
+                            <TableHead className="text-[9px] font-black uppercase text-center w-10 px-1">W</TableHead>
+                            <TableHead className="text-[9px] font-black uppercase text-center w-10 px-1">D</TableHead>
+                            <TableHead className="text-[9px] font-black uppercase text-center w-10 px-1">L</TableHead>
+                            <TableHead className="text-[9px] font-black uppercase text-right px-4">Pts</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {groupStandings.map((row) => (
+                            <TableRow key={row.id} className={cn(
+                              "h-14 border-border hover:bg-muted/5",
+                              row.team === myHouse && "bg-primary/5"
+                            )}>
+                              <TableCell className={cn(
+                                "text-[10px] md:text-xs font-black uppercase italic text-foreground px-4 break-words leading-tight flex items-center gap-2",
+                                row.team === myHouse && "text-primary"
+                              )}>
+                                {row.team}
+                                {row.team === myHouse && <Star className="h-2.5 w-2.5 fill-primary" />}
+                              </TableCell>
+                              <TableCell className="text-center text-[11px] font-bold tabular-nums px-1">{row.played}</TableCell>
+                              <TableCell className="text-center text-[11px] font-bold tabular-nums px-1">{row.won}</TableCell>
+                              <TableCell className="text-center text-[11px] font-bold tabular-nums px-1">{row.drawn}</TableCell>
+                              <TableCell className="text-center text-[11px] font-bold tabular-nums px-1">{row.lost}</TableCell>
+                              <TableCell className="text-right font-black text-sm md:text-lg pr-4 text-primary">{row.points}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </CardContent>
                   </Card>
                 );
@@ -330,6 +349,11 @@ export default function EventPage() {
                     </Card>
                   );
                 })}
+                {sportMatches?.filter(m => m.status === 'Live').length === 0 && (
+                  <div className="text-center py-20 bg-muted/10 rounded-3xl border border-border">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/30">No active matches at this moment</p>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="upcoming" className="space-y-4 mt-10">
