@@ -21,7 +21,7 @@ import {
   collection, doc, query, where, serverTimestamp, 
   addDoc, updateDoc, deleteDoc, orderBy, limit, setDoc
 } from 'firebase/firestore';
-import { Match, RunResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS, Broadcast, AdminUser, SportEvent } from '@/lib/types';
+import { Match, RunResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS, Broadcast, AdminUser, SportEvent, BadmintonMatchResult } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
@@ -33,6 +33,8 @@ const ICON_MAP: Record<string, any> = {
   CircleDot: CircleDot,
   Target: Target,
 };
+
+const OFFICIAL_URL = "https://sportify-in-paradox2026.vercel.app/";
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -55,6 +57,14 @@ export default function AdminPage() {
   const [matchWinner, setMatchWinner] = useState<string>('');
   const [status, setStatus] = useState<'Upcoming' | 'Live' | 'Completed'>('Live');
   
+  // --- Badminton Results State ---
+  const [badmintonResults, setBadmintonResults] = useState<BadmintonMatchResult[]>([
+    { type: 'MS', score: '0-0', winner: '' },
+    { type: 'WS', score: '0-0', winner: '' },
+    { type: 'MD', score: '0-0', winner: '' },
+    { type: 'XD', score: '0-0', winner: '' }
+  ]);
+
   // --- Kampus Run Results State ---
   const [runResult, setRunResult] = useState<Partial<RunResult>>({
     name: '', position: 1, time: '', gender: 'M', ageGroup: '18-25', category: '5km'
@@ -153,6 +163,16 @@ export default function AdminPage() {
       setScoreB(activeMatch.scoreB || 0);
       setStatus(activeMatch.status as any || 'Live');
       setMatchWinner(activeMatch.winner || '');
+      if (activeMatch.badmintonResults) {
+        setBadmintonResults(activeMatch.badmintonResults);
+      } else {
+        setBadmintonResults([
+          { type: 'MS', score: '0-0', winner: '' },
+          { type: 'WS', score: '0-0', winner: '' },
+          { type: 'MD', score: '0-0', winner: '' },
+          { type: 'XD', score: '0-0', winner: '' }
+        ]);
+      }
       lastMatchIdRef.current = selectedMatchId;
     }
   }, [activeMatch, selectedMatchId]);
@@ -228,14 +248,15 @@ export default function AdminPage() {
       scoreB: Number(scoreB), 
       status, 
       winner: matchWinner,
+      badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
     });
     
     if (status === 'Completed' || status === 'Live') {
       const activeMatch = matches.find(m => m.id === selectedMatchId);
       const msg = status === 'Completed' 
-        ? `🏆 FINAL RESULT: ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})` 
-        : `🏟️ LIVE UPDATE: ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})`;
+        ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n*${activeMatch?.teamA}* ${scoreA} - ${scoreB} *${activeMatch?.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nCatch all action at ${OFFICIAL_URL}` 
+        : `🏟️ *LIVE UPDATE:* ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow live: ${OFFICIAL_URL}`;
       handlePostBroadcast(undefined, msg);
     }
     
@@ -298,7 +319,7 @@ export default function AdminPage() {
   };
 
   const handleBroadcastTrial = (t: Trial) => {
-    const msg = `📢 TRIAL ALERT: ${t.house} ${t.sport.toUpperCase().replace('-', ' ')} selection is starting now at ${t.venue}! Reporting immediately.`;
+    const msg = `📢 *TRIAL ALERT:* ${t.house} ${t.sport.toUpperCase().replace('-', ' ')} selection is starting now at ${t.venue}!\n\nDetails: ${OFFICIAL_URL}`;
     handlePostBroadcast(undefined, msg);
   };
 
@@ -349,6 +370,12 @@ export default function AdminPage() {
     if (!db) return;
     deleteDoc(doc(db, 'standings', id));
     toast({ title: "House removed from league." });
+  };
+
+  const updateBadmintonResult = (index: number, field: keyof BadmintonMatchResult, value: string) => {
+    const updated = [...badmintonResults];
+    updated[index] = { ...updated[index], [field]: value };
+    setBadmintonResults(updated);
   };
 
   const formatTimestamp = (timestamp: any) => {
@@ -524,8 +551,8 @@ export default function AdminPage() {
              const activeMatch = matches.find(m => m.id === selectedMatchId);
              if (!activeMatch) return;
              const msg = activeMatch.status === 'Completed' 
-                ? `🏆 FINAL RESULT: ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})` 
-                : `🏟️ LIVE UPDATE: ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})`;
+                ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n*${activeMatch.teamA}* ${scoreA} - ${scoreB} *${activeMatch.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nView full breakdown: ${OFFICIAL_URL}` 
+                : `🏟️ *LIVE UPDATE:* ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB}\n\nTrack progress: ${OFFICIAL_URL}`;
              window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
           }} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
             <Share2 className="h-4 w-4" /> Blast Result
@@ -630,6 +657,42 @@ export default function AdminPage() {
                       </div>
                     </div>
 
+                    {selectedSportSlug === 'badminton' && (
+                      <div className="space-y-6 bg-muted/10 p-6 rounded-2xl border border-border">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                          <Target className="h-4 w-4" /> Sub-Match Results
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {badmintonResults.map((res, idx) => (
+                            <div key={res.type} className="space-y-3">
+                              <Label className="text-[10px] font-black uppercase opacity-60">
+                                {res.type === 'MS' ? "Men's Singles" : 
+                                 res.type === 'WS' ? "Women's Singles" : 
+                                 res.type === 'MD' ? "Men's Doubles" : "Mixed Doubles"}
+                              </Label>
+                              <div className="flex gap-2">
+                                <Input 
+                                  placeholder="Score (e.g. 21-18)" 
+                                  value={res.score} 
+                                  onChange={(e) => updateBadmintonResult(idx, 'score', e.target.value)}
+                                  className="h-10 bg-muted/20 text-[10px] font-black uppercase"
+                                />
+                                <Select value={res.winner} onValueChange={(v) => updateBadmintonResult(idx, 'winner', v)}>
+                                  <SelectTrigger className="h-10 bg-muted/20 text-[9px] font-black uppercase">
+                                    <SelectValue placeholder="Winner" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value={activeMatch?.teamA || 'Team A'}>{activeMatch?.teamA}</SelectItem>
+                                    <SelectItem value={activeMatch?.teamB || 'Team B'}>{activeMatch?.teamB}</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
                         <Label className="text-[10px] font-black uppercase opacity-60">Status</Label>
@@ -639,7 +702,7 @@ export default function AdminPage() {
                         </Select>
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase opacity-60">Match Result</Label>
+                        <Label className="text-[10px] font-black uppercase opacity-60">Overall Winner</Label>
                         <Select value={matchWinner} onValueChange={setMatchWinner}>
                           <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue placeholder="Select Outcome" /></SelectTrigger>
                           <SelectContent>

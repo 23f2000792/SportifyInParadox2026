@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, memo } from 'react';
@@ -8,6 +9,8 @@ import { Sparkles, Loader2, Share2, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+
+const OFFICIAL_URL = "https://sportify-in-paradox2026.vercel.app/";
 
 export const MatchRecapButton = memo(function MatchRecapButton({ match }: { match: Match }) {
   const [loading, setLoading] = useState(false);
@@ -38,7 +41,7 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
 
   const handleShareRecap = () => {
     if (!recap) return;
-    const text = `🎙️ *AI MATCH RECAP: ${match.teamA} vs ${match.teamB}* 🎙️\n\n"${recap}"\n\nCheck full stats and highlights on the Official Sportify Portal:\n🔗 https://sportify-in-paradox2026.vercel.app/`;
+    const text = `🎙️ *AI MATCH RECAP: ${match.teamA} vs ${match.teamB}* 🎙️\n\n"${recap}"\n\nCheck full stats and highlights on the Official Sportify Portal:\n🔗 ${OFFICIAL_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 

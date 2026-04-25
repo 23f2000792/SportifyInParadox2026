@@ -12,13 +12,14 @@ import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, Info } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, Info, ChevronDown } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -26,6 +27,8 @@ const ICON_MAP: Record<string, any> = {
   CircleDot: CircleDot,
   Target: Target,
 };
+
+const OFFICIAL_URL = "https://sportify-in-paradox2026.vercel.app/";
 
 export default function EventPage() {
   const params = useParams();
@@ -44,7 +47,6 @@ export default function EventPage() {
   const eventStatic = EVENTS.find(e => e.slug === sport);
   if (!eventStatic) notFound();
 
-  // Fetch dynamic event details (reporting time, etc.)
   const eventDocRef = useMemo(() => sport ? doc(db!, 'events', sport) : null, [db, sport]);
   const { data: eventDynamic } = useDoc<SportEvent>(eventDocRef);
 
@@ -100,7 +102,7 @@ export default function EventPage() {
 
   const handleAddToCalendar = (match: Match) => {
     const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
-    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Witness the glory on the Official Sportify Portal.`);
+    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch the pulse at ${OFFICIAL_URL}`);
     const location = encodeURIComponent(match.venue);
     
     const dateStr = match.date.replace(/-/g, '');
@@ -129,11 +131,11 @@ export default function EventPage() {
     let hypedText = '';
     
     if (match.status === 'Completed') {
-      hypedText = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}\n\nThe glory is sealed! Check more results here 👇\n🔗 ${window.location.origin}`;
+      hypedText = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}\n\nGlory is sealed! Check the full scorecard 👇\n🔗 ${OFFICIAL_URL}`;
     } else if (match.status === 'Live') {
-      hypedText = `🔥 *LIVE ACTION INTENSIFIES!* 🔥\n\n🏟️ *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}\n\nCatch the pulse live! 👇\n🔗 ${window.location.origin}`;
+      hypedText = `🔥 *LIVE ACTION INTENSIFIES!* 🔥\n\n🏟️ *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}\n\nCatch the pulse live! 👇\n🔗 ${OFFICIAL_URL}`;
     } else {
-      hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nWitness the rivalry! 👇\n🔗 ${window.location.origin}`;
+      hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nWitness the rivalry! 👇\n🔗 ${OFFICIAL_URL}`;
     }
     
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
@@ -215,6 +217,38 @@ export default function EventPage() {
           </div>
           <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase tracking-tight", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
         </div>
+
+        {sport === 'badminton' && match.badmintonResults && match.badmintonResults.length > 0 && (
+          <div className="px-6 pb-6">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="results" className="border-none bg-muted/10 rounded-xl px-4">
+                <AccordionTrigger className="hover:no-underline py-3">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Target className="h-3 w-3" /> Match Breakdown
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 space-y-3">
+                  {match.badmintonResults.map((res) => (
+                    <div key={res.type} className="flex items-center justify-between border-b border-border/40 pb-2 last:border-0 last:pb-0">
+                      <div className="space-y-0.5">
+                        <p className="text-[8px] font-black uppercase text-muted-foreground/60">
+                          {res.type === 'MS' ? "Men's Singles" : 
+                           res.type === 'WS' ? "Women's Singles" : 
+                           res.type === 'MD' ? "Men's Doubles" : "Mixed Doubles"}
+                        </p>
+                        <p className={cn("text-[10px] font-black uppercase", res.winner ? "text-foreground" : "text-muted-foreground/40")}>
+                          Winner: {res.winner || 'Pending'}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-[9px] font-black">{res.score}</Badge>
+                    </div>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        )}
+
         <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center">
           <div className="flex flex-col gap-0.5">
             <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1"><MapPin className="h-3 w-3" /> {match.venue}</span>
