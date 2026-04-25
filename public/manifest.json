@@ -1,7 +1,7 @@
 {
   "name": "Sportify Paradox 2026",
   "short_name": "Sportify",
-  "description": "Official Sportify Portal for Paradox 2026 - Real-time sports broadcast.",
+  "description": "Official Sportify Portal for Paradox 2026",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
@@ -19,5 +19,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "orientation": "portrait"
 }
