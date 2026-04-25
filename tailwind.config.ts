@@ -11,10 +11,10 @@ export default {
     extend: {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
-        headline: ['Fraunces', 'serif'],
+        headline: ['Inter', 'sans-serif'],
         display: ['Anton', 'sans-serif'],
-        accent: ['Cormorant Upright', 'serif'],
-        cta: ['Big Shoulders Display', 'sans-serif'],
+        accent: ['Inter', 'serif'],
+        cta: ['Inter', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',

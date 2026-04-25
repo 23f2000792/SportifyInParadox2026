@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -144,14 +143,17 @@ export default function AdminPage() {
 
   const activeMatch = useMemo(() => matches?.find(m => m.id === selectedMatchId), [matches, selectedMatchId]);
 
+  // Handle initial active match load
   useEffect(() => {
     if (activeMatch) {
       setScoreA(activeMatch.scoreA);
       setScoreB(activeMatch.scoreB);
       setStatus(activeMatch.status as any);
-      if (activeMatch.badmintonResults) {
+      
+      // Only set local results if they exist, otherwise default
+      if (activeMatch.badmintonResults && activeMatch.badmintonResults.length > 0) {
         setBadmintonResults(activeMatch.badmintonResults);
-      } else {
+      } else if (selectedSportSlug === 'badminton') {
         setBadmintonResults([
           { type: 'MS', score: '0-0', winner: '' },
           { type: 'WS', score: '0-0', winner: '' },
@@ -160,7 +162,7 @@ export default function AdminPage() {
         ]);
       }
     }
-  }, [activeMatch]);
+  }, [selectedMatchId, selectedSportSlug]); // Only trigger on match selection, not on every data update
 
   // --- Handlers ---
   const handlePostBroadcast = (e?: React.FormEvent, customMsg?: string) => {
@@ -513,7 +515,9 @@ export default function AdminPage() {
                                         <SelectValue placeholder="House" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        {HOUSES.map(h => <SelectItem key={h} value={h} className="text-[9px] font-black uppercase">{h}</SelectItem>)}
+                                        {[activeMatch?.teamA, activeMatch?.teamB].filter(Boolean).map(h => (
+                                          <SelectItem key={h} value={h!} className="text-[9px] font-black uppercase">{h}</SelectItem>
+                                        ))}
                                       </SelectContent>
                                     </Select>
                                   </div>
