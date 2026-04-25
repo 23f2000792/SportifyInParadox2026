@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getToken, Messaging } from 'firebase/messaging';
+import { useState, useEffect, useCallback } from 'react';
+import { getToken } from 'firebase/messaging';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '../provider';
 import { initializeFirebase, VAPID_KEY } from '../init';
@@ -14,13 +14,17 @@ export function useNotifications() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  useEffect(() => {
+  const checkSubscription = useCallback(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission);
       const savedToken = localStorage.getItem('fcm_token');
       setIsSubscribed(!!savedToken && Notification.permission === 'granted');
     }
   }, []);
+
+  useEffect(() => {
+    checkSubscription();
+  }, [checkSubscription]);
 
   const requestPermission = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -39,7 +43,7 @@ export function useNotifications() {
 
       if (status === 'granted') {
         const instances = initializeFirebase();
-        if (instances?.messaging && VAPID_KEY !== 'YOUR_VAPID_KEY') {
+        if (instances?.messaging) {
           const token = await getToken(instances.messaging, {
             vapidKey: VAPID_KEY,
           });
@@ -55,12 +59,8 @@ export function useNotifications() {
               title: "Alerts Enabled",
               description: "Official Sportify updates will now be pushed to this device.",
             });
+            return true;
           }
-        } else if (VAPID_KEY === 'YOUR_VAPID_KEY') {
-           toast({
-              title: "Configuration Required",
-              description: "Admin must set the VAPID key in src/firebase/init.ts for mobile alerts to work.",
-            });
         }
       } else {
         toast({
@@ -72,6 +72,11 @@ export function useNotifications() {
       return status === 'granted';
     } catch (error) {
       console.error('Error requesting notification permission:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to enable notifications.",
+      });
       return false;
     } finally {
       setLoading(false);
@@ -93,6 +98,11 @@ export function useNotifications() {
       });
     } catch (error) {
       console.error('Error unsubscribing:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not disable alerts. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
