@@ -39,6 +39,17 @@ export interface Match {
   updatedAt?: any;
 }
 
+export interface Trial {
+  id: string;
+  sport: SportType;
+  house: string;
+  date: string;
+  time: string;
+  venue: string;
+  notes?: string;
+  updatedAt?: any;
+}
+
 export interface Standing {
   id: string;
   team: string;

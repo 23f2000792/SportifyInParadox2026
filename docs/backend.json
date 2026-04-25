@@ -67,6 +67,21 @@
       },
       "required": ["team", "played", "won", "drawn", "lost", "points", "sport"]
     },
+    "Trial": {
+      "title": "Trial",
+      "description": "Information about a house team selection trial",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sport": { "type": "string" },
+        "house": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "venue": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "sport", "house", "date", "time", "venue"]
+    },
     "RunResult": {
       "title": "Run Result",
       "description": "Outcome for a participant in Kampus Run",
@@ -117,6 +132,10 @@
     "/matches/{matchId}": {
       "schema": "Match",
       "description": "Collection of all matches"
+    },
+    "/trials/{trialId}": {
+      "schema": "Trial",
+      "description": "Collection of house team trials"
     },
     "/standings/{standingId}": {
       "schema": "Standing",

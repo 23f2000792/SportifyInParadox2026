@@ -11,11 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EVENTS } from '@/lib/mock-data';
-import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles, Pencil, Check, X, Megaphone, Share2, Globe } from 'lucide-react';
+import { Save, Plus, ShieldCheck, LogOut, Trophy, Timer, ListOrdered, UserPlus, Trash2, ChevronLeft, Zap, CircleDot, Target, Minus, Sparkles, Pencil, Check, X, Megaphone, Share2, Globe, ClipboardList, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, deleteDoc, updateDoc, arrayUnion, orderBy, limit } from 'firebase/firestore';
-import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase, SportType, Broadcast } from '@/lib/types';
+import { Match, AdminUser, RunResult, BadmintonMatchResult, HOUSES, GROUPS, Standing, MatchPhase, SportType, Broadcast, Trial } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
@@ -75,6 +75,13 @@ export default function AdminPage() {
   const [schedPhase, setSchedPhase] = useState<MatchPhase>('group');
   const [schedGroup, setSchedGroup] = useState('A');
 
+  // --- Trial State ---
+  const [trialHouse, setTrialHouse] = useState('');
+  const [trialDate, setTrialDate] = useState('');
+  const [trialTime, setTrialTime] = useState('');
+  const [trialVenue, setTrialVenue] = useState('');
+  const [trialNotes, setTrialNotes] = useState('');
+
   // --- Run Result Entry State ---
   const [runnerName, setRunnerName] = useState('');
   const [runnerPos, setRunnerPos] = useState<number>(1);
@@ -97,6 +104,12 @@ export default function AdminPage() {
     return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug));
   }, [db, selectedSportSlug]);
   const { data: rawMatches } = useCollection<Match>(rawMatchesQuery);
+
+  const trialsQuery = useMemo(() => {
+    if (!db || !selectedSportSlug || selectedSportSlug === 'kampus-run') return null;
+    return query(collection(db, 'trials'), where('sport', '==', selectedSportSlug));
+  }, [db, selectedSportSlug]);
+  const { data: trials } = useCollection<Trial>(trialsQuery);
 
   const matches = useMemo(() => {
     return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
@@ -233,6 +246,22 @@ export default function AdminPage() {
     });
     setSchedMatchNumber(''); setSchedTeamA(''); setSchedTeamB('');
     toast({ title: "Match scheduled." });
+  };
+
+  const handleCreateTrial = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !selectedSportSlug || !trialHouse) return;
+    addDoc(collection(db, 'trials'), {
+      sport: selectedSportSlug,
+      house: trialHouse,
+      date: trialDate,
+      time: trialTime,
+      venue: trialVenue,
+      notes: trialNotes,
+      updatedAt: serverTimestamp(),
+    });
+    setTrialHouse(''); setTrialDate(''); setTrialTime(''); setTrialVenue(''); setTrialNotes('');
+    toast({ title: "House trials scheduled." });
   };
 
   const handleAddRunResult = (e: React.FormEvent) => {
@@ -397,7 +426,8 @@ export default function AdminPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="flex w-full overflow-x-auto no-scrollbar justify-start bg-muted/20 h-12 p-1 border border-border rounded-xl gap-1">
           <TabsTrigger value="control" className="flex-1 px-4 text-[9px] md:text-[10px] font-black uppercase rounded-lg">Scoring</TabsTrigger>
-          <TabsTrigger value="schedule" className="flex-1 px-4 text-[9px] md:text-[10px] font-black uppercase rounded-lg">Scheduling</TabsTrigger>
+          <TabsTrigger value="schedule" className="flex-1 px-4 text-[9px] md:text-[10px] font-black uppercase rounded-lg">Fixtures</TabsTrigger>
+          {!isKampusRun && <TabsTrigger value="trials" className="flex-1 px-4 text-[9px] md:text-[10px] font-black uppercase rounded-lg">Trials</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="standings" className="flex-1 px-4 text-[9px] md:text-[10px] font-black uppercase rounded-lg">House Table</TabsTrigger>}
           <TabsTrigger value="history" className="flex-1 px-4 text-[9px] md:text-[10px] font-black uppercase rounded-lg">Archives</TabsTrigger>
           {isSuperAdmin && <TabsTrigger value="access" className="flex-1 px-4 text-[9px] md:text-[10px] font-black uppercase rounded-lg">Access</TabsTrigger>}
@@ -604,10 +634,88 @@ export default function AdminPage() {
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60">Date</Label><Input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} className="bg-muted/20 h-12 md:h-14 font-black text-sm" required /></div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase opacity-60">Start Time</Label><Input placeholder="04:30 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="bg-muted/20 h-12 md:h-14 font-black text-sm" required /></div>
                   <div className="space-y-2 md:col-span-2"><Label className="text-[10px] font-black uppercase opacity-60">Venue</Label><Input value={schedVenue} onChange={e => setSchedVenue(e.target.value)} placeholder="Location" className="bg-muted/20 h-12 md:h-14 font-black text-sm" required /></div>
-                  <Button type="submit" className="md:col-span-2 h-12 md:h-14 uppercase font-black text-[10px] tracking-widest rounded-xl mt-4 shadow-xl shadow-primary/10"><Plus className="h-6 w-6 mr-2" /> Add Match</Button>
+                  <Button type="submit" className="md:col-span-2 h-12 md:h-14 uppercase font-black text-[10px] tracking-widest rounded-xl mt-4 shadow-xl shadow-primary/10"><Plus className="h-6 w-6 mr-2" /> Add Match Fixture</Button>
                 </form>
               </CardContent>
             </Card>
+        </TabsContent>
+
+        <TabsContent value="trials" className="space-y-6">
+            <Card className="premium-card">
+              <CardHeader className="bg-primary/5 border-b border-border py-4">
+                <CardTitle className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" /> Schedule House Trials
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-8">
+                <form onSubmit={handleCreateTrial} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60">House</Label>
+                    <Select value={trialHouse} onValueChange={setTrialHouse}>
+                      <SelectTrigger className="bg-muted/20 h-12 md:h-14 text-[10px] font-black uppercase">
+                        <SelectValue placeholder="Select House" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {HOUSES.map(h => <SelectItem key={h} value={h} className="text-[10px] font-black uppercase">{h}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60">Date</Label>
+                    <Input type="date" value={trialDate} onChange={e => setTrialDate(e.target.value)} className="bg-muted/20 h-12 md:h-14 font-black text-sm" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60">Time</Label>
+                    <Input placeholder="05:00 PM" value={trialTime} onChange={e => setTrialTime(e.target.value)} className="bg-muted/20 h-12 md:h-14 font-black text-sm" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60">Venue</Label>
+                    <Input placeholder="Ground No. 2" value={trialVenue} onChange={e => setTrialVenue(e.target.value)} className="bg-muted/20 h-12 md:h-14 font-black text-sm" required />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60">Additional Notes</Label>
+                    <Input placeholder="Bring your own kit" value={trialNotes} onChange={e => setTrialNotes(e.target.value)} className="bg-muted/20 h-12 md:h-14 font-black text-sm" />
+                  </div>
+                  <Button type="submit" className="md:col-span-2 h-12 md:h-14 uppercase font-black text-[10px] tracking-widest rounded-xl mt-4">
+                    <Plus className="h-5 w-5 mr-2" /> Schedule Trial
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Scheduled Selection Trials</h3>
+              <Card className="premium-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-[9px] font-black uppercase px-4">House</TableHead>
+                      <TableHead className="text-[9px] font-black uppercase px-4">Schedule</TableHead>
+                      <TableHead className="text-right text-[9px] font-black px-4 uppercase">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {trials?.map((trial) => (
+                      <TableRow key={trial.id} className="h-14">
+                        <TableCell className="px-4 text-[10px] font-black uppercase italic">{trial.house}</TableCell>
+                        <TableCell className="px-4">
+                          <p className="text-[10px] font-black">{trial.time} • {trial.date}</p>
+                          <p className="text-[8px] font-bold text-muted-foreground uppercase">{trial.venue}</p>
+                        </TableCell>
+                        <TableCell className="text-right px-4">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'trials', trial.id))}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!trials?.length && (
+                      <TableRow><TableCell colSpan={3} className="text-center py-10 text-[10px] italic opacity-30">No trials scheduled for this sport</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
         </TabsContent>
 
         <TabsContent value="standings" className="space-y-6">

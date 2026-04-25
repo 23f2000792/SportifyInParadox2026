@@ -11,9 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Match, RunResult, Standing, GROUPS, HOUSES } from '@/lib/types';
+import { Match, RunResult, Standing, GROUPS, HOUSES, Trial } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus, ClipboardList, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
@@ -53,6 +53,11 @@ export default function EventPage() {
     return query(collection(db, 'matches'), where('sport', '==', sport));
   }, [db, sport]);
 
+  const trialsQuery = useMemo(() => {
+    if (!db || sport === 'kampus-run') return null;
+    return query(collection(db, 'trials'), where('sport', '==', sport));
+  }, [db, sport]);
+
   const standingsQuery = useMemo(() => {
     if (!db || sport === 'kampus-run') return null;
     return query(collection(db, 'standings'), where('sport', '==', sport));
@@ -64,6 +69,7 @@ export default function EventPage() {
   }, [db, sport]);
 
   const { data: rawMatches, loading: matchesLoading } = useCollection<Match>(matchesQuery);
+  const { data: trials, loading: trialsLoading } = useCollection<Trial>(trialsQuery);
   const { data: standings, loading: stdLoading } = useCollection<Standing>(standingsQuery);
   const { data: rawRunResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
 
@@ -74,6 +80,14 @@ export default function EventPage() {
     }
     return filtered;
   }, [rawMatches, focusMode, myHouse]);
+
+  const sportTrials = useMemo(() => {
+    let filtered = [...(trials || [])].sort((a, b) => a.date.localeCompare(b.date));
+    if (focusMode && myHouse) {
+      filtered = filtered.filter(t => t.house === myHouse);
+    }
+    return filtered;
+  }, [trials, focusMode, myHouse]);
 
   const runResults = useMemo(() => {
     let filtered = [...(rawRunResults || [])].sort((a, b) => a.position - b.position);
@@ -157,7 +171,7 @@ export default function EventPage() {
     }
   };
 
-  if (matchesLoading || stdLoading || runLoading) return <Loading />;
+  if (matchesLoading || stdLoading || runLoading || trialsLoading) return <Loading />;
 
   const IconComp = ICON_MAP[event.icon];
   const isKampusRun = event.slug === 'kampus-run';
@@ -289,9 +303,10 @@ export default function EventPage() {
           <section className="space-y-8">
             <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary text-center">Match Center</h2>
             <Tabs defaultValue="live" className="w-full">
-              <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-2xl max-w-md mx-auto gap-1">
+              <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-2xl max-w-xl mx-auto gap-1">
                 <TabsTrigger value="live" className="flex-1 text-[9px] font-black uppercase rounded-xl">Live</TabsTrigger>
-                <TabsTrigger value="upcoming" className="flex-1 text-[9px] font-black uppercase rounded-xl">Schedule</TabsTrigger>
+                <TabsTrigger value="upcoming" className="flex-1 text-[9px] font-black uppercase rounded-xl">Fixtures</TabsTrigger>
+                <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase rounded-xl">Trials</TabsTrigger>
                 <TabsTrigger value="completed" className="flex-1 text-[9px] font-black uppercase rounded-xl">Archives</TabsTrigger>
               </TabsList>
 
@@ -392,6 +407,53 @@ export default function EventPage() {
                     </Card>
                   );
                 })}
+              </TabsContent>
+
+              <TabsContent value="trials" className="space-y-6 mt-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sportTrials?.map(trial => {
+                    const isMyTrial = trial.house === myHouse;
+                    return (
+                      <Card key={trial.id} className={cn(
+                        "premium-card border-border",
+                        isMyTrial && "border-primary/40 bg-primary/[0.02] shadow-lg shadow-primary/5"
+                      )}>
+                        <CardContent className="p-6 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <h3 className={cn("text-xl font-black uppercase italic", isMyTrial ? "text-primary" : "text-foreground")}>
+                                {trial.house}
+                                {isMyTrial && <Star className="h-3 w-3 inline-block ml-2 fill-primary text-primary" />}
+                              </h3>
+                              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Selection Trial</p>
+                            </div>
+                            <ClipboardList className={cn("h-5 w-5", isMyTrial ? "text-primary" : "text-muted-foreground/20")} />
+                          </div>
+                          <div className="space-y-2 pt-4 border-t border-border">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-3.5 w-3.5 text-primary/60" />
+                              <span className="text-xs font-black text-foreground">{trial.time} • {trial.date}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-3.5 w-3.5 text-primary/60" />
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase">{trial.venue}</span>
+                            </div>
+                          </div>
+                          {trial.notes && (
+                            <p className="text-[10px] font-bold text-muted-foreground italic leading-relaxed pt-2">
+                              Note: {trial.notes}
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+                {!sportTrials?.length && (
+                  <div className="text-center py-20 bg-muted/10 rounded-3xl border border-border">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/30">No selection trials scheduled at this moment</p>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="completed" className="space-y-6 mt-10">
