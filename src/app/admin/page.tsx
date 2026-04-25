@@ -10,11 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { EVENTS } from '@/lib/mock-data';
-import { Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, Sparkles, Megaphone, Star, ChevronLeft } from 'lucide-react';
+import { 
+  Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings 
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
-import { collection, doc, setDoc, query, where, serverTimestamp, addDoc, updateDoc, arrayUnion, deleteDoc, orderBy } from 'firebase/firestore';
-import { Match, RunResult, BadmintonMatchResult, SportType, Broadcast, Trial } from '@/lib/types';
+import { 
+  collection, doc, setDoc, query, where, serverTimestamp, 
+  addDoc, updateDoc, deleteDoc, orderBy 
+} from 'firebase/firestore';
+import { Match, RunResult, BadmintonMatchResult, SportType, Broadcast, Trial, Standing, HOUSES, MatchPhase } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
@@ -52,7 +58,17 @@ export default function AdminPage() {
   const [scoreB, setScoreB] = useState<number>(0);
   const [matchWinner, setMatchWinner] = useState<string>('');
   const [status, setStatus] = useState<'Upcoming' | 'Live' | 'Completed'>('Live');
-  const [newHighlight, setNewHighlight] = useState('');
+  
+  // --- New Item States ---
+  const [newMatch, setNewMatch] = useState<Partial<Match>>({
+    matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: ''
+  });
+  const [newTrial, setNewTrial] = useState<Partial<Trial>>({
+    house: '', date: '', time: '', venue: '', notes: ''
+  });
+  const [newStanding, setNewStanding] = useState<Partial<Standing>>({
+    team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A'
+  });
 
   // --- Kampus Run State ---
   const [runName, setRunName] = useState('');
@@ -75,6 +91,18 @@ export default function AdminPage() {
     return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug));
   }, [db, selectedSportSlug]);
   const { data: rawMatches } = useCollection<Match>(rawMatchesQuery);
+
+  const trialsQuery = useMemo(() => {
+    if (!db || !selectedSportSlug) return null;
+    return query(collection(db, 'trials'), where('sport', '==', selectedSportSlug));
+  }, [db, selectedSportSlug]);
+  const { data: trials } = useCollection<Trial>(trialsQuery);
+
+  const standingsQuery = useMemo(() => {
+    if (!db || !selectedSportSlug) return null;
+    return query(collection(db, 'standings'), where('sport', '==', selectedSportSlug), orderBy('points', 'desc'));
+  }, [db, selectedSportSlug]);
+  const { data: standings } = useCollection<Standing>(standingsQuery);
 
   const runResultsQuery = useMemo(() => {
     if (!db || selectedSportSlug !== 'kampus-run') return null;
@@ -123,6 +151,30 @@ export default function AdminPage() {
     toast({ title: "Match updated." });
   };
 
+  const handleAddMatch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !selectedSportSlug) return;
+    addDoc(collection(db, 'matches'), { ...newMatch, sport: selectedSportSlug, scoreA: 0, scoreB: 0, status: 'Upcoming', createdAt: serverTimestamp() });
+    setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '' });
+    toast({ title: "Fixture added." });
+  };
+
+  const handleAddTrial = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !selectedSportSlug) return;
+    addDoc(collection(db, 'trials'), { ...newTrial, sport: selectedSportSlug, createdAt: serverTimestamp() });
+    setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
+    toast({ title: "Trial scheduled." });
+  };
+
+  const handleAddStanding = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !selectedSportSlug) return;
+    addDoc(collection(db, 'standings'), { ...newStanding, sport: selectedSportSlug, createdAt: serverTimestamp() });
+    setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
+    toast({ title: "Team added to league." });
+  };
+
   const handleAddRunResult = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !runName || !runTime) return;
@@ -131,12 +183,6 @@ export default function AdminPage() {
     });
     setRunName(''); setRunTime('');
     toast({ title: "Result added." });
-  };
-
-  const handleDeleteRunResult = (id: string) => {
-    if (!db) return;
-    deleteDoc(doc(db, 'runResults', id));
-    toast({ title: "Result deleted." });
   };
 
   if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin text-primary" /></div>;
@@ -177,7 +223,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-black uppercase text-foreground">{ADMIN_SPORT_NAMES[event.slug] || event.name}</h2>
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Manage Controls</p>
+                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Broadcast Control</p>
                   </div>
                 </Card>
               </Button>
@@ -191,14 +237,16 @@ export default function AdminPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-32 px-4">
       <div className="border-b border-border pb-6 pt-4">
-        <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Sport</Button>
-        <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground">{ADMIN_SPORT_NAMES[currentEvent?.slug || ''] || currentEvent?.name} Center</h1>
+        <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Terminal</Button>
+        <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground">{ADMIN_SPORT_NAMES[currentEvent?.slug || ''] || currentEvent?.name}</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl">
-          <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase">{isKampusRun ? "Leaderboard Editor" : "Live Scoring"}</TabsTrigger>
-          {!isKampusRun && <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase">Fixtures</TabsTrigger>}
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl overflow-x-auto no-scrollbar">
+          <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">{isKampusRun ? "Race Manager" : "Live Feed"}</TabsTrigger>
+          {!isKampusRun && <TabsTrigger value="fixtures" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Fixtures</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Trials</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">League Table</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="control" className="space-y-6">
@@ -239,17 +287,14 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
               <Card className="premium-card">
-                <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary">Live Rankings</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary">Official Rankings</CardTitle></CardHeader>
                 <CardContent className="p-4 space-y-2 max-h-[500px] overflow-y-auto">
                   {runResults?.map(r => (
                     <div key={r.id} className="flex items-center justify-between p-3 bg-muted/20 rounded border-l-2 border-primary">
-                      <div>
-                        <p className="text-[10px] font-black uppercase">{r.name}</p>
-                        <p className="text-[8px] font-bold text-muted-foreground uppercase">{r.category} {r.gender} • {r.ageGroup}</p>
-                      </div>
+                      <div><p className="text-[10px] font-black uppercase">{r.name}</p></div>
                       <div className="flex items-center gap-3">
                         <span className="text-[10px] font-black text-primary">{r.time}</span>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDeleteRunResult(r.id)}><Trash2 className="h-3 w-3" /></Button>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', r.id))}><Trash2 className="h-3 w-3" /></Button>
                       </div>
                     </div>
                   ))}
@@ -257,11 +302,11 @@ export default function AdminPage() {
               </Card>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="premium-card lg:col-span-2">
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="premium-card">
                 <CardContent className="p-6 md:p-12 space-y-10">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase">Active Match</Label>
+                    <Label className="text-[10px] font-black uppercase">Select Active Match</Label>
                     <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
                       <SelectTrigger className="bg-muted/20 h-12 font-black uppercase"><SelectValue placeholder="Select Match" /></SelectTrigger>
                       <SelectContent>{matches?.filter(m => m.status !== 'Completed').map(m => (<SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">{m.teamA} vs {m.teamB}</SelectItem>))}</SelectContent>
@@ -327,11 +372,11 @@ export default function AdminPage() {
                           </Select>
                         </div>
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase opacity-60">Outcome</Label>
+                          <Label className="text-[10px] font-black uppercase opacity-60">Official Outcome</Label>
                           <Select value={matchWinner} onValueChange={setMatchWinner}>
-                            <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue placeholder="Winner" /></SelectTrigger>
+                            <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue placeholder="Select Winner" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Draw">Draw</SelectItem>
+                              <SelectItem value="Draw">Draw / No Result</SelectItem>
                               {activeMatch && (
                                 <>
                                   <SelectItem value={activeMatch.teamA}>{activeMatch.teamA}</SelectItem>
@@ -349,6 +394,76 @@ export default function AdminPage() {
               </Card>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="fixtures" className="space-y-6">
+          <Card className="premium-card">
+            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><MapPin className="h-4 w-4" /> Create Fixture</CardTitle></CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleAddMatch} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input placeholder="Match Number (e.g. 1)" value={newMatch.matchNumber} onChange={e => setNewMatch({...newMatch, matchNumber: e.target.value})} className="bg-muted/20 h-11" required />
+                <Select value={newMatch.phase} onValueChange={v => setNewMatch({...newMatch, phase: v as MatchPhase})}>
+                  <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="group">Group Stage</SelectItem>
+                    <SelectItem value="semi-final">Semi-Final</SelectItem>
+                    <SelectItem value="final">Final</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={newMatch.teamA} onValueChange={v => setNewMatch({...newMatch, teamA: v})}>
+                  <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Team A" /></SelectTrigger>
+                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value={newMatch.teamB} onValueChange={v => setNewMatch({...newMatch, teamB: v})}>
+                  <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Team B" /></SelectTrigger>
+                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                </Select>
+                <Input placeholder="Date (e.g. 25th May)" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Time (e.g. 09:00 AM)" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Venue" value={newMatch.venue} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Schedule Match</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="trials" className="space-y-6">
+          <Card className="premium-card">
+            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Schedule Trials</CardTitle></CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleAddTrial} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select value={newTrial.house} onValueChange={v => setNewTrial({...newTrial, house: v})}>
+                  <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Select House" /></SelectTrigger>
+                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                </Select>
+                <Input placeholder="Venue" value={newTrial.venue} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Date" value={newTrial.date} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Time" value={newTrial.time} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Notes (Optional)" value={newTrial.notes} onChange={e => setNewTrial({...newTrial, notes: e.target.value})} className="bg-muted/20 h-11 md:col-span-2" />
+                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Publish Trial Schedule</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="standings" className="space-y-6">
+          <Card className="premium-card">
+            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><ListOrdered className="h-4 w-4" /> League Management</CardTitle></CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleAddStanding} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select value={newStanding.team} onValueChange={v => setNewStanding({...newStanding, team: v})}>
+                  <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Team" /></SelectTrigger>
+                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                </Select>
+                <Input type="number" placeholder="P" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                <Input type="number" placeholder="W" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                <Input type="number" placeholder="D" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                <Input type="number" placeholder="L" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                <Input type="number" placeholder="PTS" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                <Button type="submit" className="md:col-span-3 h-12 uppercase font-black text-[10px] tracking-widest">Update Standing</Button>
+              </form>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

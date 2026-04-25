@@ -10,9 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { Match, RunResult, Trial } from '@/lib/types';
+import { Match, RunResult, Trial, Standing } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Activity, Search, Filter, Timer, Medal } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, ListOrdered, ClipboardList } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -49,8 +49,13 @@ export default function EventPage() {
   }, [db, sport]);
 
   const trialsQuery = useMemo(() => {
-    if (!db || sport === 'kampus-run') return null;
+    if (!db) return null;
     return query(collection(db, 'trials'), where('sport', '==', sport));
+  }, [db, sport]);
+
+  const standingsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'standings'), where('sport', '==', sport), orderBy('points', 'desc'));
   }, [db, sport]);
 
   const runResultsQuery = useMemo(() => {
@@ -60,6 +65,7 @@ export default function EventPage() {
 
   const { data: rawMatches, loading: matchesLoading } = useCollection<Match>(matchesQuery);
   const { data: trials, loading: trialsLoading } = useCollection<Trial>(trialsQuery);
+  const { data: standings, loading: standingsLoading } = useCollection<Standing>(standingsQuery);
   const { data: runResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
 
   const filteredMatches = useMemo(() => {
@@ -67,24 +73,21 @@ export default function EventPage() {
     if (focusMode && myHouse) filtered = filtered.filter(m => m.teamA === myHouse || m.teamB === myHouse);
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(m => m.teamA.toLowerCase().includes(q) || m.teamB.toLowerCase().includes(q) || m.matchNumber.toLowerCase().includes(q));
+      filtered = filtered.filter(m => m.teamA.toLowerCase().includes(q) || m.teamB.toLowerCase().includes(q));
     }
     return filtered;
   }, [rawMatches, focusMode, myHouse, searchQuery]);
 
-  if (matchesLoading || trialsLoading || runLoading) return <EventLoading />;
+  if (matchesLoading || trialsLoading || runLoading || standingsLoading) return <EventLoading />;
 
   const IconComp = ICON_MAP[event.icon];
   const isKampusRun = sport === 'kampus-run';
 
   const renderRunCategory = (title: string, category: string, gender: string, ageGroup: string = 'All') => {
     const results = runResults?.filter(r => r.category === category && r.gender === gender && r.ageGroup === ageGroup) || [];
-    
     return (
       <div key={title} className="space-y-4">
-        <div className="flex items-center gap-3 border-b border-border pb-2">
-          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-primary/20">{title}</Badge>
-        </div>
+        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-primary/20">{title}</Badge>
         <Card className="premium-card overflow-hidden">
           <Table>
             <TableHeader>
@@ -95,27 +98,13 @@ export default function EventPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.length > 0 ? (
-                results.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>
-                      {r.position <= 3 ? (
-                        <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10">
-                          <Medal className={cn("h-3.5 w-3.5", r.position === 1 ? "text-yellow-500" : r.position === 2 ? "text-slate-400" : "text-amber-700")} />
-                        </div>
-                      ) : (
-                        <span className="text-[11px] font-black text-muted-foreground/40 ml-2">#{r.position}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm font-black uppercase tracking-tight">{r.name}</TableCell>
-                    <TableCell className="text-right font-mono text-xs text-primary">{r.time}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center py-10 opacity-30 text-[9px] font-black uppercase">Awaiting Official Results</TableCell>
+              {results.length > 0 ? results.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell>{r.position <= 3 ? <Medal className={cn("h-4 w-4", r.position === 1 ? "text-yellow-500" : r.position === 2 ? "text-slate-400" : "text-amber-700")} /> : <span className="opacity-40 ml-1">#{r.position}</span>}</TableCell>
+                  <TableCell className="text-sm font-black uppercase">{r.name}</TableCell>
+                  <TableCell className="text-right font-mono text-xs text-primary">{r.time}</TableCell>
                 </TableRow>
-              )}
+              )) : <TableRow><TableCell colSpan={3} className="text-center py-6 opacity-30 text-[9px] uppercase font-black">Awaiting Official Feed</TableCell></TableRow>}
             </TableBody>
           </Table>
         </Card>
@@ -127,24 +116,22 @@ export default function EventPage() {
     const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
     return (
       <Card key={match.id} className={cn("premium-card", isMyMatch && "border-primary/40 bg-primary/[0.02]")}>
-        <CardContent className="p-0">
-          <div className="p-4 bg-muted/5 flex justify-between items-center border-b border-border">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Match #{match.matchNumber}</span>
-            <Badge variant="outline" className="h-4 text-[8px] px-1.5 uppercase font-black border-border">{match.phase}</Badge>
+        <div className="p-4 bg-muted/5 flex justify-between items-center border-b border-border">
+          <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Match #{match.matchNumber}</span>
+          <Badge variant="outline" className="text-[8px] uppercase font-black">{match.phase}</Badge>
+        </div>
+        <div className="p-6 md:p-8 flex items-center justify-between gap-4">
+          <div className={cn("flex-1 text-right text-base md:text-2xl font-black uppercase", match.teamA === myHouse && "text-primary")}>{match.teamA}</div>
+          <div className="px-4 py-2 bg-muted/20 border border-border rounded-xl flex flex-col items-center min-w-[80px]">
+            <span className="text-xl md:text-3xl font-black">{match.scoreA} - {match.scoreB}</span>
+            {match.status === 'Live' && <span className="text-[7px] font-black uppercase text-primary animate-pulse">Live</span>}
           </div>
-          <div className="p-6 md:p-8 flex items-center justify-between gap-4">
-            <div className={cn("flex-1 text-right text-base md:text-2xl font-black uppercase", match.teamA === myHouse && "text-primary")}>{match.teamA}</div>
-            <div className="px-4 py-2 bg-muted/20 border border-border rounded-xl flex flex-col items-center min-w-[80px]">
-              <span className="text-xl md:text-3xl font-black tracking-tighter">{match.scoreA} - {match.scoreB}</span>
-              {match.status === 'Live' && <span className="text-[7px] font-black uppercase text-primary animate-pulse">Live</span>}
-            </div>
-            <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
-          </div>
-          <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center">
-            <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1"><MapPin className="h-3 w-3" /> {match.venue}</span>
-            {match.status === 'Completed' && <MatchRecapButton match={match} />}
-          </div>
-        </CardContent>
+          <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
+        </div>
+        <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center">
+          <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1"><MapPin className="h-3 w-3" /> {match.venue}</span>
+          {match.status === 'Completed' && <MatchRecapButton match={match} />}
+        </div>
       </Card>
     );
   };
@@ -176,18 +163,19 @@ export default function EventPage() {
       )}
 
       <Tabs defaultValue={isKampusRun ? "results" : "live"} className="w-full">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl max-w-xl mx-auto mb-8">
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar">
           {isKampusRun ? (
             <>
-              <TabsTrigger value="results" className="flex-1 text-[9px] font-black uppercase">Race Leaderboard</TabsTrigger>
-              <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase">Race Details</TabsTrigger>
+              <TabsTrigger value="results" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Race Leaderboard</TabsTrigger>
+              <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Race Details</TabsTrigger>
             </>
           ) : (
             <>
-              <TabsTrigger value="live" className="flex-1 text-[9px] font-black uppercase">Live Updates</TabsTrigger>
-              <TabsTrigger value="upcoming" className="flex-1 text-[9px] font-black uppercase">Fixtures</TabsTrigger>
-              <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase">House Trials</TabsTrigger>
-              <TabsTrigger value="completed" className="flex-1 text-[9px] font-black uppercase">Archives</TabsTrigger>
+              <TabsTrigger value="live" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Live Feed</TabsTrigger>
+              <TabsTrigger value="upcoming" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Fixtures</TabsTrigger>
+              <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">House Trials</TabsTrigger>
+              <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Standings</TabsTrigger>
+              <TabsTrigger value="completed" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Archives</TabsTrigger>
             </>
           )}
         </TabsList>
@@ -207,7 +195,7 @@ export default function EventPage() {
             <TabsContent value="schedule" className="px-4">
                <Card className="premium-card p-10 text-center space-y-4">
                   <Timer className="h-10 w-10 text-primary mx-auto" />
-                  <h2 className="text-xl font-black uppercase italic tracking-tighter">Reporting Time: 05:00 AM</h2>
+                  <h2 className="text-xl font-black uppercase tracking-tighter">Reporting Time: 05:00 AM</h2>
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: 05:30 AM • SAC Grounds</p>
                </Card>
             </TabsContent>
@@ -225,7 +213,7 @@ export default function EventPage() {
                   <Card key={trial.id} className={cn("premium-card", trial.house === myHouse && "border-primary/40 bg-primary/[0.02]")}>
                     <CardContent className="p-6 space-y-4">
                       <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{trial.house}</Badge>
-                      <h3 className="text-xl font-black uppercase italic tracking-tighter">Selection Trials</h3>
+                      <h3 className="text-xl font-black uppercase tracking-tighter">Selection Trials</h3>
                       <div className="space-y-1 border-t border-border pt-4">
                         <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><MapPin className="h-3 w-3" /> {trial.venue}</p>
                         <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><Timer className="h-3 w-3" /> {trial.time} • {trial.date}</p>
@@ -234,6 +222,34 @@ export default function EventPage() {
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+            <TabsContent value="standings" className="px-4">
+              <Card className="premium-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pos</TableHead>
+                      <TableHead>House</TableHead>
+                      <TableHead className="text-center">P</TableHead>
+                      <TableHead className="text-center">W</TableHead>
+                      <TableHead className="text-center">D</TableHead>
+                      <TableHead className="text-center">PTS</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {standings?.length ? standings.map((s, idx) => (
+                      <TableRow key={s.id} className={cn(s.team === myHouse && "bg-primary/[0.05]")}>
+                        <TableCell className="text-xs font-black">{idx + 1}</TableCell>
+                        <TableCell className="text-xs font-black uppercase">{s.team}</TableCell>
+                        <TableCell className="text-center text-xs">{s.played}</TableCell>
+                        <TableCell className="text-center text-xs">{s.won}</TableCell>
+                        <TableCell className="text-center text-xs">{s.drawn}</TableCell>
+                        <TableCell className="text-center text-xs font-black text-primary">{s.points}</TableCell>
+                      </TableRow>
+                    )) : <TableRow><TableCell colSpan={6} className="text-center py-10 opacity-30 text-[9px] font-black uppercase">League data pending</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </Card>
             </TabsContent>
           </>
         )}
