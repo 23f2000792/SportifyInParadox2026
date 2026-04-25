@@ -171,6 +171,39 @@ export default function EventPage() {
     }
   };
 
+  const handleAddToCalendarTrial = (trial: Trial) => {
+    const title = `Paradox 2026: ${trial.house} Selection Trial (${trial.sport.toUpperCase()})`;
+    const details = `House ${trial.house} Selection Trial | Venue: ${trial.venue} | Notes: ${trial.notes || 'None'} | Official Sportify Portal: ${APP_URL}`;
+    
+    try {
+      const dateParts = trial.date.split('-');
+      if (dateParts.length !== 3) throw new Error("Invalid date");
+      const [year, month, day] = dateParts;
+      
+      let [timePart, modifier] = trial.time.split(' ');
+      let [hoursStr, minutesStr] = timePart.split(':');
+      
+      let hours = parseInt(hoursStr, 10);
+      if (hours === 12) {
+        hours = (modifier === 'AM') ? 0 : 12;
+      } else if (modifier === 'PM') {
+        hours += 12;
+      }
+      
+      const formattedDate = `${year}${month}${day}`;
+      const startStr = `${formattedDate}T${hours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
+      
+      const endHours = (hours + 1) % 24;
+      const endStr = `${formattedDate}T${endHours.toString().padStart(2, '0')}${minutesStr.padStart(2, '0')}00`;
+
+      const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(trial.venue)}`;
+      window.open(url, '_blank');
+      toast({ title: "Opening Google Calendar..." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Could not parse schedule. Please try again." });
+    }
+  };
+
   if (matchesLoading || stdLoading || runLoading || trialsLoading) return <Loading />;
 
   const IconComp = ICON_MAP[event.icon];
@@ -444,6 +477,16 @@ export default function EventPage() {
                               Note: {trial.notes}
                             </p>
                           )}
+                          <div className="pt-2 border-t border-border/50">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleAddToCalendarTrial(trial)}
+                              className="w-full h-9 text-[9px] font-black uppercase text-primary hover:bg-primary/10 gap-1.5"
+                            >
+                              <CalendarPlus className="h-3.5 w-3.5" /> Remind Me
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     );
