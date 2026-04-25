@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
@@ -60,7 +60,6 @@ export default function AdminPage() {
   const [newTrial, setNewTrial] = useState<Partial<Trial>>({
     house: '', date: '', time: '', venue: '', notes: ''
   });
-  const [shouldBroadcastTrial, setShouldBroadcastTrial] = useState(false);
   const [editingTrialId, setEditingTrialId] = useState<string | null>(null);
 
   const [newStanding, setNewStanding] = useState<Partial<Standing>>({
@@ -140,15 +139,16 @@ export default function AdminPage() {
     }
   }, [activeMatch, selectedMatchId]);
 
-  const handlePostBroadcast = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!db || !broadcastMessage) return;
+  const handlePostBroadcast = (e?: React.FormEvent, customMsg?: string) => {
+    if (e) e.preventDefault();
+    const messageToPost = customMsg || broadcastMessage;
+    if (!db || !messageToPost) return;
     addDoc(collection(db, 'broadcasts'), { 
-      message: broadcastMessage, 
+      message: messageToPost, 
       active: true, 
       timestamp: serverTimestamp() 
     });
-    setBroadcastMessage('');
+    if (!customMsg) setBroadcastMessage('');
     toast({ title: "Broadcast published." });
   };
 
@@ -205,20 +205,15 @@ export default function AdminPage() {
         sport: selectedSportSlug, 
         createdAt: serverTimestamp() 
       });
-      
-      if (shouldBroadcastTrial) {
-        addDoc(collection(db, 'broadcasts'), {
-          message: `📢 TRIAL ALERT: ${newTrial.house} ${selectedSportSlug.toUpperCase().replace('-', ' ')} selection scheduled for ${newTrial.date} at ${newTrial.time} (${newTrial.venue}).`,
-          active: true,
-          timestamp: serverTimestamp()
-        });
-      }
-      
-      toast({ title: "Trial scheduled and broadcasted." });
+      toast({ title: "Trial scheduled successfully." });
     }
     
     setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
-    setShouldBroadcastTrial(false);
+  };
+
+  const handleBroadcastTrial = (t: Trial) => {
+    const msg = `📢 TRIAL ALERT: ${t.house} ${t.sport.toUpperCase().replace('-', ' ')} selection is starting now at ${t.venue}! Reporting immediately.`;
+    handlePostBroadcast(undefined, msg);
   };
 
   const handleEditTrial = (t: Trial) => {
@@ -593,16 +588,6 @@ export default function AdminPage() {
                   <Label className="text-[9px] font-black uppercase opacity-50">Notes (Optional)</Label>
                   <Input placeholder="Any specific requirements..." value={newTrial.notes} onChange={e => setNewTrial({...newTrial, notes: e.target.value})} className="bg-muted/20 h-11" />
                 </div>
-                
-                {!editingTrialId && (
-                  <div className="md:col-span-2 flex items-center space-x-2 bg-muted/10 p-4 rounded-xl border border-border/40">
-                    <Checkbox id="broadcast-trial" checked={shouldBroadcastTrial} onCheckedChange={(v: any) => setShouldBroadcastTrial(v)} />
-                    <Label htmlFor="broadcast-trial" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">
-                      Push as Global Broadcast Notification
-                    </Label>
-                  </div>
-                )}
-
                 <div className="md:col-span-2 flex gap-2">
                   <Button type="submit" className="flex-1 h-12 uppercase font-black text-[10px] tracking-widest">
                     {editingTrialId ? 'Update Schedule' : 'Publish Selection Schedule'}
@@ -627,6 +612,7 @@ export default function AdminPage() {
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{t.house}</Badge>
                       <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" title="Broadcast Live" onClick={() => handleBroadcastTrial(t)}><Radio className="h-3.5 w-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditTrial(t)}><Edit2 className="h-3 w-3" /></Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTrial(t.id)}><Trash2 className="h-3 w-3" /></Button>
                       </div>
@@ -637,7 +623,6 @@ export default function AdminPage() {
                         <MapPin className="h-3 w-3" /> {t.venue}
                       </p>
                     </div>
-                    {t.notes && <p className="text-[8px] font-bold opacity-40 uppercase line-clamp-1 italic">"{t.notes}"</p>}
                   </CardContent>
                 </Card>
               )) : (

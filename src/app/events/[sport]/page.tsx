@@ -112,7 +112,7 @@ export default function EventPage() {
       minStr = minutes;
     }
     
-    // Use the actual match date and time for the reminder
+    // The match datetime in UTC (approximate, since we don't have timezone)
     const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
     const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00Z`;
 
