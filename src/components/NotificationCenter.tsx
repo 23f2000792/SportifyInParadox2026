@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -16,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 export function NotificationCenter() {
   const db = useFirestore();
-  const { permission, requestPermission, loading: permissionLoading } = useNotifications();
+  const { isSubscribed, requestPermission, unsubscribe, loading: permissionLoading } = useNotifications();
 
   const broadcastQuery = useMemo(() => {
     if (!db) return null;
@@ -42,8 +41,6 @@ export function NotificationCenter() {
       return '';
     }
   };
-
-  const isEnabled = permission === 'granted';
 
   return (
     <Popover>
@@ -80,9 +77,13 @@ export function NotificationCenter() {
             ) : (
               <Switch 
                 id="notif-toggle" 
-                checked={isEnabled} 
+                checked={isSubscribed} 
                 onCheckedChange={(checked) => {
-                  if (checked && permission !== 'granted') requestPermission();
+                  if (checked) {
+                    requestPermission();
+                  } else {
+                    unsubscribe();
+                  }
                 }} 
               />
             )}
