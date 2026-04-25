@@ -32,13 +32,6 @@ const ICON_MAP: Record<string, any> = {
   Target: Target,
 };
 
-const ADMIN_SPORT_NAMES: Record<string, string> = {
-  'kampus-run': 'Kampus Run',
-  'football': 'Football',
-  'volleyball': 'Volleyball',
-  'badminton': 'Badminton',
-};
-
 export default function AdminPage() {
   const { toast } = useToast();
   const db = useFirestore();
@@ -137,7 +130,7 @@ export default function AdminPage() {
       setScoreB(activeMatch.scoreB || 0);
       setStatus(activeMatch.status as any || 'Live');
       setMatchWinner(activeMatch.winner || '');
-      if (activeMatch.badmintonResults) {
+      if (activeMatch.badmintonResults && activeMatch.badmintonResults.length > 0) {
         setBadmintonResults([...activeMatch.badmintonResults]);
       } else {
         setBadmintonResults([
@@ -154,7 +147,11 @@ export default function AdminPage() {
   const handlePostBroadcast = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !broadcastMessage) return;
-    addDoc(collection(db, 'broadcasts'), { message: broadcastMessage, active: true, timestamp: serverTimestamp() });
+    addDoc(collection(db, 'broadcasts'), { 
+      message: broadcastMessage, 
+      active: true, 
+      timestamp: serverTimestamp() 
+    });
     setBroadcastMessage('');
     toast({ title: "Broadcast published." });
   };
@@ -163,7 +160,10 @@ export default function AdminPage() {
     e.preventDefault();
     if (!selectedMatchId || !db) return;
     updateDoc(doc(db, 'matches', selectedMatchId), {
-      scoreA: Number(scoreA), scoreB: Number(scoreB), status, winner: matchWinner,
+      scoreA: Number(scoreA), 
+      scoreB: Number(scoreB), 
+      status, 
+      winner: matchWinner,
       badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
     });
@@ -179,7 +179,14 @@ export default function AdminPage() {
   const handleAddMatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug) return;
-    addDoc(collection(db, 'matches'), { ...newMatch, sport: selectedSportSlug, scoreA: 0, scoreB: 0, status: 'Upcoming', createdAt: serverTimestamp() });
+    addDoc(collection(db, 'matches'), { 
+      ...newMatch, 
+      sport: selectedSportSlug, 
+      scoreA: 0, 
+      scoreB: 0, 
+      status: 'Upcoming', 
+      createdAt: serverTimestamp() 
+    });
     setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '' });
     toast({ title: "Fixture added." });
   };
@@ -187,7 +194,11 @@ export default function AdminPage() {
   const handleAddTrial = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug) return;
-    addDoc(collection(db, 'trials'), { ...newTrial, sport: selectedSportSlug, createdAt: serverTimestamp() });
+    addDoc(collection(db, 'trials'), { 
+      ...newTrial, 
+      sport: selectedSportSlug, 
+      createdAt: serverTimestamp() 
+    });
     setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
     toast({ title: "Trial scheduled." });
   };
@@ -195,7 +206,11 @@ export default function AdminPage() {
   const handleAddStanding = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug) return;
-    addDoc(collection(db, 'standings'), { ...newStanding, sport: selectedSportSlug, createdAt: serverTimestamp() });
+    addDoc(collection(db, 'standings'), { 
+      ...newStanding, 
+      sport: selectedSportSlug, 
+      createdAt: serverTimestamp() 
+    });
     setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
     toast({ title: "Team added to league." });
   };
@@ -216,7 +231,13 @@ export default function AdminPage() {
     e.preventDefault();
     if (!db || !runName || !runTime) return;
     addDoc(collection(db, 'runResults'), {
-      name: runName, time: runTime, position: Number(runPos), category: runCat, gender: runGen, ageGroup: runAge, updatedAt: serverTimestamp()
+      name: runName, 
+      time: runTime, 
+      position: Number(runPos), 
+      category: runCat, 
+      gender: runGen, 
+      ageGroup: runAge, 
+      updatedAt: serverTimestamp()
     });
     setRunName(''); setRunTime('');
     toast({ title: "Result added." });
@@ -241,7 +262,11 @@ export default function AdminPage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="premium-card">
-            <CardHeader className="border-b border-border"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Megaphone className="h-4 w-4" /> Broadcast Console</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border">
+              <CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <Megaphone className="h-4 w-4" /> Broadcast Console
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handlePostBroadcast} className="flex flex-col gap-3">
                 <Input value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} placeholder="Type announcement..." className="bg-muted/20 h-12 text-xs font-black uppercase" />
@@ -251,7 +276,11 @@ export default function AdminPage() {
           </Card>
 
           <Card className="premium-card">
-            <CardHeader className="border-b border-border"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Trophy className="h-4 w-4" /> Championship Board</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border">
+              <CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <Trophy className="h-4 w-4" /> Championship Board
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleUpdateChampionship} className="grid grid-cols-2 gap-3">
                 <Select value={newChampionship.house} onValueChange={v => setNewChampionship({...newChampionship, house: v})}>
@@ -278,7 +307,7 @@ export default function AdminPage() {
                     {IconComp && <IconComp className="h-6 w-6 text-primary" />}
                   </div>
                   <div>
-                    <h2 className="text-lg font-black uppercase text-foreground">{ADMIN_SPORT_NAMES[event.slug] || event.name}</h2>
+                    <h2 className="text-lg font-black uppercase text-foreground">{event.name}</h2>
                     <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Broadcast Control</p>
                   </div>
                 </Card>
@@ -295,7 +324,7 @@ export default function AdminPage() {
       <div className="border-b border-border pb-6 pt-4 flex items-center justify-between">
         <div>
           <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Terminal</Button>
-          <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground">{ADMIN_SPORT_NAMES[currentEvent?.slug || ''] || currentEvent?.name}</h1>
+          <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground">{currentEvent?.name}</h1>
         </div>
         {selectedMatchId && (
           <Button onClick={handleShareResult} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
@@ -373,7 +402,13 @@ export default function AdminPage() {
                     <Label className="text-[10px] font-black uppercase">Select Active Match</Label>
                     <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
                       <SelectTrigger className="bg-muted/20 h-12 font-black uppercase"><SelectValue placeholder="Select Match" /></SelectTrigger>
-                      <SelectContent>{matches?.filter(m => m.status !== 'Completed').map(m => (<SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">{m.teamA} vs {m.teamB} (#{m.matchNumber})</SelectItem>))}</SelectContent>
+                      <SelectContent>
+                        {matches?.filter(m => m.status !== 'Completed').map(m => (
+                          <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">
+                            {m.teamA} vs {m.teamB} (#{m.matchNumber})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                   {selectedMatchId && (
@@ -405,19 +440,28 @@ export default function AdminPage() {
                               <Card key={res.type} className="bg-muted/10 border-border p-4 space-y-3">
                                 <Badge variant="outline" className="text-[9px] font-black">{res.type}</Badge>
                                 <div className="grid grid-cols-2 gap-2">
-                                  <Input value={res.score} onChange={e => {
-                                    const newRes = [...badmintonResults];
-                                    newRes[idx].score = e.target.value;
-                                    setBadmintonResults(newRes);
-                                  }} className="h-8 text-[10px]" />
-                                  <Select value={res.winner} onValueChange={v => {
-                                    const newRes = [...badmintonResults];
-                                    newRes[idx].winner = v;
-                                    setBadmintonResults(newRes);
-                                  }}>
+                                  <Input 
+                                    value={res.score} 
+                                    onChange={e => {
+                                      const newRes = [...badmintonResults];
+                                      newRes[idx].score = e.target.value;
+                                      setBadmintonResults(newRes);
+                                    }} 
+                                    className="h-8 text-[10px]" 
+                                  />
+                                  <Select 
+                                    value={res.winner} 
+                                    onValueChange={v => {
+                                      const newRes = [...badmintonResults];
+                                      newRes[idx].winner = v;
+                                      setBadmintonResults(newRes);
+                                    }}
+                                  >
                                     <SelectTrigger className="h-8 text-[9px]"><SelectValue placeholder="Winner" /></SelectTrigger>
                                     <SelectContent>
-                                      {[activeMatch?.teamA, activeMatch?.teamB].map(h => h && (<SelectItem key={h} value={h} className="text-[9px] font-black uppercase">{h}</SelectItem>))}
+                                      {[activeMatch?.teamA, activeMatch?.teamB].map(h => h && (
+                                        <SelectItem key={h} value={h} className="text-[9px] font-black uppercase">{h}</SelectItem>
+                                      ))}
                                     </SelectContent>
                                   </Select>
                                 </div>
@@ -488,7 +532,7 @@ export default function AdminPage() {
                   <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                 </Select>
                 </div>
-                <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Date</Label><Input placeholder="e.g. 25th May" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Date (YYYY-MM-DD)</Label><Input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Time</Label><Input placeholder="e.g. 09:00 AM" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <div className="space-y-1.5 md:col-span-2"><Label className="text-[9px] font-black uppercase opacity-50">Venue</Label><Input placeholder="Venue" value={newMatch.venue} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Schedule Match</Button>

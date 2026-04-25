@@ -96,8 +96,26 @@ export default function EventPage() {
     const title = encodeURIComponent(`Sportify: ${match.teamA} vs ${match.teamB}`);
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Follow on Sportify.`);
     const location = encodeURIComponent(match.venue);
-    // Construct Google Calendar URL with the correct date and time string from the match
-    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${encodeURIComponent(match.date + ' ' + match.time)}`;
+    
+    // Construct Date for Google Calendar (YYYYMMDDTHHMMSSZ)
+    const dateStr = match.date.replace(/-/g, '');
+    const timeParts = match.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    let hourStr = '00';
+    let minStr = '00';
+    if (timeParts) {
+      let hours = parseInt(timeParts[1]);
+      const minutes = timeParts[2];
+      const ampm = timeParts[3].toUpperCase();
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      hourStr = hours.toString().padStart(2, '0');
+      minStr = minutes;
+    }
+    
+    const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
+    const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00Z`;
+
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
     window.open(url, '_blank');
   };
 

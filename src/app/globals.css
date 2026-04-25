@@ -59,7 +59,7 @@
     user-select: none;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-black tracking-tight uppercase;
+    @apply font-body font-black tracking-tight uppercase;
   }
   
   input, textarea, p, span, table {

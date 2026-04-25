@@ -131,18 +131,9 @@ export default function Home() {
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
               <CalendarClock className="h-4 w-4" /> Your House Schedule
             </h2>
-            <div className="hidden md:flex gap-2">
-               <p className="text-[8px] font-black uppercase text-muted-foreground/40 mr-2 self-center">Swipe to explore</p>
-            </div>
           </div>
           <div className="relative px-4 md:px-0">
-            <Carousel
-              opts={{
-                align: "start",
-                dragFree: true,
-              }}
-              className="w-full"
-            >
+            <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
               <CarouselContent className="-ml-4">
                 {myHouseTimeline.map((item: any) => (
                   <CarouselItem key={item.id} className="pl-4 basis-[85%] sm:basis-[45%] md:basis-[30%] lg:basis-[25%]">
@@ -155,16 +146,10 @@ export default function Home() {
                           <div className="space-y-1">
                             <div className="flex items-center justify-between">
                               <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
-                              {item.type === 'trial' ? (
-                                <ClipboardList className="h-3 w-3 text-amber-500" />
-                              ) : (
-                                <Activity className="h-3 w-3 text-primary" />
-                              )}
+                              {item.type === 'trial' ? <ClipboardList className="h-3 w-3 text-amber-500" /> : <Activity className="h-3 w-3 text-primary" />}
                             </div>
                             <p className="text-base font-black italic uppercase text-foreground leading-tight line-clamp-2">
-                              {item.type === 'match' 
-                                ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}`
-                                : `SELECTION TRIAL`}
+                              {item.type === 'match' ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}` : `SELECTION TRIAL`}
                             </p>
                           </div>
                           <div className="space-y-1 border-t border-border/10 pt-3 mt-auto">
@@ -217,23 +202,11 @@ export default function Home() {
                           </span>
                         </div>
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 overflow-hidden">
-                          <p className={cn(
-                            "text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1",
-                            match.teamA === myHouse && "text-primary"
-                          )}>
-                            {match.teamA}
-                          </p>
+                          <p className={cn("text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight flex-1", match.teamA === myHouse && "text-primary")}>{match.teamA}</p>
                           <div className="flex flex-col items-center">
-                            <span className="text-3xl md:text-5xl font-black text-primary whitespace-nowrap bg-muted/20 px-4 py-1 rounded-xl border border-border">
-                              {match.scoreA} : {match.scoreB}
-                            </span>
+                            <span className="text-3xl md:text-5xl font-black text-primary bg-muted/20 px-4 py-1 rounded-xl border border-border">{match.scoreA} : {match.scoreB}</span>
                           </div>
-                          <p className={cn(
-                            "text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight break-words flex-1 md:text-left",
-                            match.teamB === myHouse && "text-primary"
-                          )}>
-                            {match.teamB}
-                          </p>
+                          <p className={cn("text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight flex-1 md:text-left", match.teamB === myHouse && "text-primary")}>{match.teamB}</p>
                         </div>
                       </div>
                       <ChevronRight className="h-8 w-8 text-muted-foreground/20 group-hover:text-primary transition-all shrink-0" />
@@ -276,9 +249,7 @@ export default function Home() {
                   </TableRow>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 opacity-30 text-[9px] font-black uppercase">Championship data syncing...</TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-10 opacity-30 text-[9px] font-black uppercase">Championship data syncing...</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -287,9 +258,7 @@ export default function Home() {
 
       {/* Sport Grid */}
       <section className="space-y-6">
-        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/40 px-2">
-          Explore Tournament
-        </h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/40 px-2">Explore Tournament</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {EVENTS.map((event) => {
             const IconComp = ICON_MAP[event.icon];
@@ -303,9 +272,7 @@ export default function Home() {
                       </div>
                       <div className="w-3/4 p-6 flex flex-col justify-center space-y-1">
                         <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground group-hover:text-primary transition-colors">{event.name}</h2>
-                        <p className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-widest leading-relaxed">
-                          {event.slug === 'kampus-run' ? event.description.split('. ')[0] : event.description}
-                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-widest leading-relaxed">{event.description}</p>
                       </div>
                     </div>
                   </CardContent>
