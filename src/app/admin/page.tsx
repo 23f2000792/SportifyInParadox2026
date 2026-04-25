@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings 
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
@@ -20,7 +20,7 @@ import {
   collection, doc, setDoc, query, where, serverTimestamp, 
   addDoc, updateDoc, deleteDoc, orderBy 
 } from 'firebase/firestore';
-import { Match, RunResult, BadmintonMatchResult, SportType, Broadcast, Trial, Standing, HOUSES, MatchPhase } from '@/lib/types';
+import { Match, RunResult, BadmintonMatchResult, SportType, Broadcast, Trial, Standing, ChampionshipStanding, HOUSES, MatchPhase } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
@@ -69,6 +69,9 @@ export default function AdminPage() {
   const [newStanding, setNewStanding] = useState<Partial<Standing>>({
     team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A'
   });
+  const [newChampionship, setNewChampionship] = useState<Partial<ChampionshipStanding>>({
+    house: '', points: 0, gold: 0, silver: 0, bronze: 0
+  });
 
   // --- Kampus Run State ---
   const [runName, setRunName] = useState('');
@@ -110,6 +113,12 @@ export default function AdminPage() {
   }, [db, selectedSportSlug]);
   const { data: runResults } = useCollection<RunResult>(runResultsQuery);
 
+  const champQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'championship'), orderBy('points', 'desc'));
+  }, [db]);
+  const { data: championshipData } = useCollection<ChampionshipStanding>(champQuery);
+
   const matches = useMemo(() => {
     return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
   }, [rawMatches]);
@@ -119,16 +128,27 @@ export default function AdminPage() {
   }, [user, userLoading, router]);
 
   const activeMatch = useMemo(() => matches?.find(m => m.id === selectedMatchId), [matches, selectedMatchId]);
-  const initializedIdRef = useRef<string | null>(null);
+  
+  // Use a ref to track what was already loaded into the form
+  const lastMatchIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (activeMatch && selectedMatchId !== initializedIdRef.current) {
+    if (activeMatch && selectedMatchId !== lastMatchIdRef.current) {
       setScoreA(activeMatch.scoreA || 0);
       setScoreB(activeMatch.scoreB || 0);
       setStatus(activeMatch.status as any || 'Live');
       setMatchWinner(activeMatch.winner || '');
-      if (activeMatch.badmintonResults) setBadmintonResults([...activeMatch.badmintonResults]);
-      initializedIdRef.current = selectedMatchId;
+      if (activeMatch.badmintonResults) {
+        setBadmintonResults([...activeMatch.badmintonResults]);
+      } else {
+        setBadmintonResults([
+          { type: 'MS', score: '0-0', winner: '' },
+          { type: 'WS', score: '0-0', winner: '' },
+          { type: 'MD', score: '0-0', winner: '' },
+          { type: 'XD', score: '0-0', winner: '' },
+        ]);
+      }
+      lastMatchIdRef.current = selectedMatchId;
     }
   }, [activeMatch, selectedMatchId]);
 
@@ -175,6 +195,18 @@ export default function AdminPage() {
     toast({ title: "Team added to league." });
   };
 
+  const handleUpdateChampionship = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !newChampionship.house) return;
+    const existing = championshipData?.find(c => c.house === newChampionship.house);
+    if (existing) {
+      updateDoc(doc(db, 'championship', existing.id), { ...newChampionship, updatedAt: serverTimestamp() });
+    } else {
+      addDoc(collection(db, 'championship'), { ...newChampionship, createdAt: serverTimestamp() });
+    }
+    toast({ title: "House points updated." });
+  };
+
   const handleAddRunResult = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !runName || !runTime) return;
@@ -202,15 +234,34 @@ export default function AdminPage() {
           <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="bg-destructive/10 text-destructive text-[9px] font-black uppercase rounded-full px-6">Logout</Button>
         </div>
         
-        <Card className="premium-card">
-          <CardHeader className="border-b border-border"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Megaphone className="h-4 w-4" /> Global Announcement</CardTitle></CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handlePostBroadcast} className="flex flex-col sm:flex-row gap-3">
-              <Input value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} placeholder="Type announcement..." className="bg-muted/20 h-12 text-xs font-black uppercase" />
-              <Button type="submit" className="h-12 px-8 uppercase font-black text-[10px] tracking-widest">Broadcast</Button>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="premium-card">
+            <CardHeader className="border-b border-border"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Megaphone className="h-4 w-4" /> Broadcast Console</CardTitle></CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handlePostBroadcast} className="flex flex-col gap-3">
+                <Input value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} placeholder="Type announcement..." className="bg-muted/20 h-12 text-xs font-black uppercase" />
+                <Button type="submit" className="h-12 w-full uppercase font-black text-[10px] tracking-widest">Global Broadcast</Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="premium-card">
+            <CardHeader className="border-b border-border"><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Trophy className="h-4 w-4" /> Championship Board</CardTitle></CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleUpdateChampionship} className="grid grid-cols-2 gap-3">
+                <Select value={newChampionship.house} onValueChange={v => setNewChampionship({...newChampionship, house: v})}>
+                  <SelectTrigger className="bg-muted/20 h-10 text-[9px] font-black uppercase"><SelectValue placeholder="House" /></SelectTrigger>
+                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                </Select>
+                <Input type="number" placeholder="PTS" value={newChampionship.points} onChange={e => setNewChampionship({...newChampionship, points: Number(e.target.value)})} className="h-10 text-[9px]" />
+                <Input type="number" placeholder="Gold" value={newChampionship.gold} onChange={e => setNewChampionship({...newChampionship, gold: Number(e.target.value)})} className="h-10 text-[9px]" />
+                <Input type="number" placeholder="Silver" value={newChampionship.silver} onChange={e => setNewChampionship({...newChampionship, silver: Number(e.target.value)})} className="h-10 text-[9px]" />
+                <Input type="number" placeholder="Bronze" value={newChampionship.bronze} onChange={e => setNewChampionship({...newChampionship, bronze: Number(e.target.value)})} className="h-10 text-[9px]" />
+                <Button type="submit" className="h-10 uppercase font-black text-[9px]">Sync</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {EVENTS.map((event) => {
@@ -309,7 +360,7 @@ export default function AdminPage() {
                     <Label className="text-[10px] font-black uppercase">Select Active Match</Label>
                     <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
                       <SelectTrigger className="bg-muted/20 h-12 font-black uppercase"><SelectValue placeholder="Select Match" /></SelectTrigger>
-                      <SelectContent>{matches?.filter(m => m.status !== 'Completed').map(m => (<SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">{m.teamA} vs {m.teamB}</SelectItem>))}</SelectContent>
+                      <SelectContent>{matches?.map(m => (<SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">{m.teamA} vs {m.teamB} (#{m.matchNumber})</SelectItem>))}</SelectContent>
                     </Select>
                   </div>
                   {selectedMatchId && (
@@ -372,22 +423,22 @@ export default function AdminPage() {
                           </Select>
                         </div>
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase opacity-60">Official Outcome</Label>
+                          <Label className="text-[10px] font-black uppercase opacity-60">Match Result</Label>
                           <Select value={matchWinner} onValueChange={setMatchWinner}>
-                            <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue placeholder="Select Winner" /></SelectTrigger>
+                            <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue placeholder="Select Outcome" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Draw">Draw / No Result</SelectItem>
+                              <SelectItem value="Draw">Draw / Tie</SelectItem>
                               {activeMatch && (
                                 <>
-                                  <SelectItem value={activeMatch.teamA}>{activeMatch.teamA}</SelectItem>
-                                  <SelectItem value={activeMatch.teamB}>{activeMatch.teamB}</SelectItem>
+                                  <SelectItem value={activeMatch.teamA}>{activeMatch.teamA} Wins</SelectItem>
+                                  <SelectItem value={activeMatch.teamB}>{activeMatch.teamB} Wins</SelectItem>
                                 </>
                               )}
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
-                      <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl">Update Official Feed</Button>
+                      <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl">Push Broadcast Update</Button>
                     </form>
                   )}
                 </CardContent>

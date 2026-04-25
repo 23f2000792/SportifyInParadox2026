@@ -4,11 +4,11 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity, ClipboardList } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity, ClipboardList, Medal } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
-import { Match, HOUSES, Trial } from '@/lib/types';
+import { Match, HOUSES, Trial, ChampionshipStanding } from '@/lib/types';
 import Loading from '@/app/loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -48,18 +49,24 @@ export default function Home() {
   }, [db]);
 
   const upcomingMatchesQuery = useMemo(() => {
-    if (!db || !myHouse) return null;
+    if (!db) return null;
     return query(collection(db, 'matches'), where('status', '==', 'Upcoming'));
-  }, [db, myHouse]);
+  }, [db]);
 
   const houseTrialsQuery = useMemo(() => {
     if (!db || !myHouse) return null;
     return query(collection(db, 'trials'), where('house', '==', myHouse));
   }, [db, myHouse]);
 
+  const championshipQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'championship'), orderBy('points', 'desc'));
+  }, [db]);
+
   const { data: liveMatches, loading: matchesLoading } = useCollection<Match>(liveMatchesQuery);
   const { data: allUpcoming } = useCollection<Match>(upcomingMatchesQuery);
   const { data: allTrials } = useCollection<Trial>(houseTrialsQuery);
+  const { data: championshipData } = useCollection<ChampionshipStanding>(championshipQuery);
 
   // Unified Timeline for Followed House
   const myHouseTimeline = useMemo(() => {
@@ -238,6 +245,45 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Championship Glory Board */}
+      <section className="space-y-6">
+        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2 px-2">
+          <Trophy className="h-4 w-4" /> Championship Glory Board
+        </h2>
+        <Card className="premium-card overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">Pos</TableHead>
+                <TableHead>House</TableHead>
+                <TableHead className="text-center"><div className="flex justify-center"><Medal className="h-4 w-4 text-yellow-500" /></div></TableHead>
+                <TableHead className="text-center"><div className="flex justify-center"><Medal className="h-4 w-4 text-slate-400" /></div></TableHead>
+                <TableHead className="text-center"><div className="flex justify-center"><Medal className="h-4 w-4 text-amber-700" /></div></TableHead>
+                <TableHead className="text-right">PTS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {championshipData && championshipData.length > 0 ? (
+                championshipData.map((s, idx) => (
+                  <TableRow key={s.id} className={cn(s.house === myHouse && "bg-primary/[0.05]")}>
+                    <TableCell className="text-xs font-black">{idx + 1}</TableCell>
+                    <TableCell className="text-xs font-black uppercase">{s.house}</TableCell>
+                    <TableCell className="text-center text-xs font-bold">{s.gold}</TableCell>
+                    <TableCell className="text-center text-xs font-bold">{s.silver}</TableCell>
+                    <TableCell className="text-center text-xs font-bold">{s.bronze}</TableCell>
+                    <TableCell className="text-right text-sm font-black text-primary">{s.points}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10 opacity-30 text-[9px] font-black uppercase">Championship data syncing...</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      </section>
 
       {/* Sport Grid */}
       <section className="space-y-6">
