@@ -63,6 +63,16 @@ export interface Standing {
   updatedAt?: any;
 }
 
+export interface ChampionshipStanding {
+  id: string;
+  house: string;
+  points: number;
+  gold: number;
+  silver: number;
+  bronze: number;
+  updatedAt?: any;
+}
+
 export interface RunResult {
   id: string;
   position: number;

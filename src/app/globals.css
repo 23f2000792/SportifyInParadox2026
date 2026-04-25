@@ -56,7 +56,6 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    /* Native feel: prevent pull-to-refresh and horizontal bounce */
     overscroll-behavior-y: none;
     -webkit-touch-callout: none;
   }
@@ -100,6 +99,19 @@
   @apply opacity-100;
 }
 
+/* Perfect mobile native feel */
+button:active, a:active {
+  transform: scale(0.96) !important;
+  opacity: 0.8;
+}
+button, a {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease;
+}
+
+.glass-morphism {
+  @apply bg-background/80 backdrop-blur-2xl backdrop-saturate-150;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -107,12 +119,4 @@ input::-webkit-inner-spin-button {
 }
 input[type=number] {
   -moz-appearance: textfield;
-}
-
-/* Perfect mobile buttons */
-button:active {
-  transform: scale(0.96);
-}
-button {
-  transition: transform 0.1s ease-in-out;
 }

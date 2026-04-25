@@ -1,8 +1,10 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {Navbar} from '@/components/Navbar';
 import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
+import {LiveScoreWatcher} from '@/components/LiveScoreWatcher';
 
 export const metadata: Metadata = {
   title: 'Sportify in Paradox 2026',
@@ -56,6 +58,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background text-foreground selection:bg-primary/30 overscroll-none">
         <FirebaseClientProvider>
+          <LiveScoreWatcher />
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow container mx-auto px-4 py-8 md:py-12 max-w-5xl pb-safe">

@@ -2,13 +2,13 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity, ClipboardList } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity, ClipboardList, Medal } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
-import { Match, HOUSES, Trial } from '@/lib/types';
+import { Match, HOUSES, Trial, ChampionshipStanding } from '@/lib/types';
 import Loading from '@/app/loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -57,9 +57,15 @@ export default function Home() {
     return query(collection(db, 'trials'), where('house', '==', myHouse));
   }, [db, myHouse]);
 
+  const championshipQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'championship'), orderBy('points', 'desc'));
+  }, [db]);
+
   const { data: liveMatches, loading: matchesLoading } = useCollection<Match>(liveMatchesQuery);
   const { data: allUpcoming } = useCollection<Match>(upcomingMatchesQuery);
   const { data: allTrials } = useCollection<Trial>(houseTrialsQuery);
+  const { data: championship } = useCollection<ChampionshipStanding>(championshipQuery);
 
   // Unified Timeline for Followed House
   const myHouseTimeline = useMemo(() => {
@@ -116,6 +122,38 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Championship Glory Board */}
+      <section className="space-y-6">
+        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2 px-2">
+          <Medal className="h-4 w-4" /> Championship Leaderboard
+        </h2>
+        <Card className="premium-card overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
+            {championship?.slice(0, 3).map((item, idx) => (
+              <div key={item.id} className="p-6 flex items-center gap-5 bg-muted/5">
+                <div className={cn(
+                  "h-12 w-12 rounded-full flex items-center justify-center font-black text-xl italic border",
+                  idx === 0 ? "bg-amber-500/10 border-amber-500/30 text-amber-500" :
+                  idx === 1 ? "bg-slate-400/10 border-slate-400/30 text-slate-400" :
+                  "bg-orange-700/10 border-orange-700/30 text-orange-700"
+                )}>
+                  {idx + 1}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground/60">{item.points} Points</p>
+                  <p className="text-xl font-black uppercase italic text-foreground">{item.house}</p>
+                </div>
+              </div>
+            ))}
+            {!championship?.length && (
+              <div className="col-span-3 p-10 text-center text-[10px] font-black uppercase opacity-20 tracking-widest italic">
+                Leaderboard will update after the first event
+              </div>
+            )}
+          </div>
+        </Card>
+      </section>
 
       {/* Unified House Timeline - CAROUSEL */}
       {myHouse && myHouseTimeline.length > 0 && (

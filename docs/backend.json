@@ -67,6 +67,19 @@
       },
       "required": ["team", "played", "won", "drawn", "lost", "points", "sport"]
     },
+    "ChampionshipStanding": {
+      "title": "Championship Standing",
+      "description": "Overall championship tally for a house",
+      "type": "object",
+      "properties": {
+        "house": { "type": "string" },
+        "points": { "type": "number" },
+        "gold": { "type": "number" },
+        "silver": { "type": "number" },
+        "bronze": { "type": "number" }
+      },
+      "required": ["house", "points", "gold", "silver", "bronze"]
+    },
     "Trial": {
       "title": "Trial",
       "description": "Information about a house team selection trial",
@@ -140,6 +153,10 @@
     "/standings/{standingId}": {
       "schema": "Standing",
       "description": "Collection of team standings across sports"
+    },
+    "/championship/{standingId}": {
+      "schema": "ChampionshipStanding",
+      "description": "Overall leaderboard tally"
     },
     "/runResults/{resultId}": {
       "schema": "RunResult",

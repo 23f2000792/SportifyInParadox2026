@@ -31,6 +31,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+    match /championship/{standingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /runResults/{resultId} {
       allow read: if true;
       allow write: if isAdmin();
