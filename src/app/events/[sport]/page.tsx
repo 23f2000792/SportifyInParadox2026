@@ -96,7 +96,8 @@ export default function EventPage() {
     const title = encodeURIComponent(`Sportify: ${match.teamA} vs ${match.teamB}`);
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Follow on Sportify.`);
     const location = encodeURIComponent(match.venue);
-    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
+    // Construct Google Calendar URL with the correct date and time string from the match
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${encodeURIComponent(match.date + ' ' + match.time)}`;
     window.open(url, '_blank');
   };
 
