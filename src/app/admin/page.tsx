@@ -9,10 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
@@ -59,6 +60,9 @@ export default function AdminPage() {
   const [newTrial, setNewTrial] = useState<Partial<Trial>>({
     house: '', date: '', time: '', venue: '', notes: ''
   });
+  const [shouldBroadcastTrial, setShouldBroadcastTrial] = useState(false);
+  const [editingTrialId, setEditingTrialId] = useState<string | null>(null);
+
   const [newStanding, setNewStanding] = useState<Partial<Standing>>({
     team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A'
   });
@@ -88,7 +92,7 @@ export default function AdminPage() {
 
   const trialsQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
-    return query(collection(db, 'trials'), where('sport', '==', selectedSportSlug));
+    return query(collection(db, 'trials'), where('sport', '==', selectedSportSlug), orderBy('date', 'asc'));
   }, [db, selectedSportSlug]);
   const { data: trials } = useCollection<Trial>(trialsQuery);
 
@@ -184,16 +188,50 @@ export default function AdminPage() {
     toast({ title: "Fixture added." });
   };
 
-  const handleAddTrial = (e: React.FormEvent) => {
+  const handleAddOrUpdateTrial = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !selectedSportSlug) return;
-    addDoc(collection(db, 'trials'), { 
-      ...newTrial, 
-      sport: selectedSportSlug, 
-      createdAt: serverTimestamp() 
-    });
+    if (!db || !selectedSportSlug || !newTrial.house) return;
+    
+    if (editingTrialId) {
+      updateDoc(doc(db, 'trials', editingTrialId), { 
+        ...newTrial, 
+        updatedAt: serverTimestamp() 
+      });
+      setEditingTrialId(null);
+      toast({ title: "Trial schedule updated." });
+    } else {
+      addDoc(collection(db, 'trials'), { 
+        ...newTrial, 
+        sport: selectedSportSlug, 
+        createdAt: serverTimestamp() 
+      });
+      
+      if (shouldBroadcastTrial) {
+        addDoc(collection(db, 'broadcasts'), {
+          message: `📢 TRIAL ALERT: ${newTrial.house} ${selectedSportSlug.toUpperCase().replace('-', ' ')} selection scheduled for ${newTrial.date} at ${newTrial.time} (${newTrial.venue}).`,
+          active: true,
+          timestamp: serverTimestamp()
+        });
+      }
+      
+      toast({ title: "Trial scheduled and broadcasted." });
+    }
+    
     setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
-    toast({ title: "Trial scheduled." });
+    setShouldBroadcastTrial(false);
+  };
+
+  const handleEditTrial = (t: Trial) => {
+    setNewTrial(t);
+    setEditingTrialId(t.id);
+    setActiveTab('trials');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteTrial = (id: string) => {
+    if (!db) return;
+    deleteDoc(doc(db, 'trials', id));
+    toast({ title: "Trial removed." });
   };
 
   const handleAddOrUpdateStanding = (e: React.FormEvent) => {
@@ -523,23 +561,92 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="trials" className="space-y-6">
+        <TabsContent value="trials" className="space-y-10">
           <Card className="premium-card">
-            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><ClipboardList className="h-4 w-4" /> House Selection Trials</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <ClipboardList className="h-4 w-4" /> {editingTrialId ? 'Edit Trial Schedule' : 'Schedule Selection Trials'}
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleAddTrial} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select value={newTrial.house} onValueChange={v => setNewTrial({...newTrial, house: v})}>
-                  <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Select House" /></SelectTrigger>
-                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input placeholder="Venue" value={newTrial.venue} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Date" value={newTrial.date} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Time" value={newTrial.time} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Notes (Optional)" value={newTrial.notes} onChange={e => setNewTrial({...newTrial, notes: e.target.value})} className="bg-muted/20 h-11 md:col-span-2" />
-                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Publish Selection Schedule</Button>
+              <form onSubmit={handleAddOrUpdateTrial} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">House</Label>
+                  <Select value={newTrial.house} onValueChange={v => setNewTrial({...newTrial, house: v})}>
+                    <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Select House" /></SelectTrigger>
+                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Venue</Label>
+                  <Input placeholder="e.g. SAC Grounds" value={newTrial.venue} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Date (YYYY-MM-DD)</Label>
+                  <Input type="date" value={newTrial.date} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Time</Label>
+                  <Input placeholder="e.g. 04:30 PM" value={newTrial.time} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="md:col-span-2 space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Notes (Optional)</Label>
+                  <Input placeholder="Any specific requirements..." value={newTrial.notes} onChange={e => setNewTrial({...newTrial, notes: e.target.value})} className="bg-muted/20 h-11" />
+                </div>
+                
+                {!editingTrialId && (
+                  <div className="md:col-span-2 flex items-center space-x-2 bg-muted/10 p-4 rounded-xl border border-border/40">
+                    <Checkbox id="broadcast-trial" checked={shouldBroadcastTrial} onCheckedChange={(v: any) => setShouldBroadcastTrial(v)} />
+                    <Label htmlFor="broadcast-trial" className="text-[9px] font-black uppercase tracking-widest cursor-pointer">
+                      Push as Global Broadcast Notification
+                    </Label>
+                  </div>
+                )}
+
+                <div className="md:col-span-2 flex gap-2">
+                  <Button type="submit" className="flex-1 h-12 uppercase font-black text-[10px] tracking-widest">
+                    {editingTrialId ? 'Update Schedule' : 'Publish Selection Schedule'}
+                  </Button>
+                  {editingTrialId && (
+                    <Button type="button" variant="outline" onClick={() => {
+                      setEditingTrialId(null);
+                      setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
+                    }} className="h-12 w-12 px-0"><X className="h-4 w-4" /></Button>
+                  )}
+                </div>
               </form>
             </CardContent>
           </Card>
+
+          <div className="space-y-6">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary px-2">Active Trials</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {trials && trials.length > 0 ? trials.map((t) => (
+                <Card key={t.id} className="premium-card bg-muted/5 border-border/40">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{t.house}</Badge>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditTrial(t)}><Edit2 className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTrial(t.id)}><Trash2 className="h-3 w-3" /></Button>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-black uppercase tracking-tight">{t.date} • {t.time}</p>
+                      <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3" /> {t.venue}
+                      </p>
+                    </div>
+                    {t.notes && <p className="text-[8px] font-bold opacity-40 uppercase line-clamp-1 italic">"{t.notes}"</p>}
+                  </CardContent>
+                </Card>
+              )) : (
+                <div className="md:col-span-3 py-16 text-center opacity-20 text-[10px] font-black uppercase tracking-[0.2em]">
+                  No trials scheduled for {selectedSportSlug?.replace('-', ' ')}
+                </div>
+              )}
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="standings" className="space-y-8">
@@ -601,7 +708,7 @@ export default function AdminPage() {
           </Card>
 
           <div className="space-y-6">
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Active League Table</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary px-2">Active League Table</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {GROUPS.map(g => {
                 const groupTeams = standings?.filter(s => s.group === g) || [];
