@@ -1,4 +1,3 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {Navbar} from '@/components/Navbar';
@@ -22,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#7c3aed',
+  themeColor: '#e11d48',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -40,7 +39,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Anton&family=Big+Shoulders+Display:wght@900&family=Cormorant+Upright:wght@600;700&family=Fraunces:ital,opsz,wght@1,9..144,900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
         <script
           dangerouslySetInnerHTML={{
@@ -48,7 +47,7 @@ export default function RootLayout({
               (function() {
                 try {
                   var theme = localStorage.getItem('paradox-theme');
-                  if (!theme) theme = 'dark';
+                  if (!theme) theme = 'light';
                   document.documentElement.classList.toggle('dark', theme === 'dark');
                 } catch (e) {}
               })();
@@ -65,8 +64,8 @@ export default function RootLayout({
               {children}
             </main>
             <footer className="py-10 border-t border-border bg-black/5 dark:bg-black/40 text-center space-y-2 mb-20 md:mb-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
-                Sportify in Paradox 2026 • Real-Time Broadcast Control
+              <p className="font-display text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+                Sportify in Paradox 2026 • Official Sports Direction
               </p>
             </footer>
           </div>
