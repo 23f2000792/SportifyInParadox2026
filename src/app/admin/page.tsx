@@ -12,18 +12,19 @@ import { Badge } from '@/components/ui/badge';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { 
   collection, doc, query, where, serverTimestamp, 
-  addDoc, updateDoc, deleteDoc, orderBy 
+  addDoc, updateDoc, deleteDoc, orderBy, limit 
 } from 'firebase/firestore';
-import { Match, RunResult, BadmintonMatchResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS } from '@/lib/types';
+import { Match, RunResult, BadmintonMatchResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS, Broadcast } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -44,6 +45,7 @@ export default function AdminPage() {
 
   // --- Broadcast State ---
   const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [editingBroadcastId, setEditingBroadcastId] = useState<string | null>(null);
 
   // --- Score Control State ---
   const [selectedMatchId, setSelectedMatchId] = useState<string>('');
@@ -66,22 +68,13 @@ export default function AdminPage() {
   });
   const [editingStandingId, setEditingStandingId] = useState<string | null>(null);
 
-  // --- Kampus Run State ---
-  const [runName, setRunName] = useState('');
-  const [runTime, setRunTime] = useState('');
-  const [runPos, setRunPos] = useState<number>(1);
-  const [runCat, setRunCat] = useState('3km');
-  const [runGen, setRunGen] = useState<'M' | 'F'>('M');
-  const [runAge, setRunAge] = useState('All');
-
-  const [badmintonResults, setBadmintonResults] = useState<BadmintonMatchResult[]>([
-    { type: 'MS', score: '0-0', winner: '' },
-    { type: 'WS', score: '0-0', winner: '' },
-    { type: 'MD', score: '0-0', winner: '' },
-    { type: 'XD', score: '0-0', winner: '' },
-  ]);
-
   // --- Data Fetching ---
+  const broadcastsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'broadcasts'), orderBy('timestamp', 'desc'), limit(15));
+  }, [db]);
+  const { data: broadcasts } = useCollection<Broadcast>(broadcastsQuery);
+
   const rawMatchesQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
     return query(collection(db, 'matches'), where('sport', '==', selectedSportSlug));
@@ -99,12 +92,6 @@ export default function AdminPage() {
     return query(collection(db, 'standings'), where('sport', '==', selectedSportSlug), orderBy('points', 'desc'));
   }, [db, selectedSportSlug]);
   const { data: standings } = useCollection<Standing>(standingsQuery);
-
-  const runResultsQuery = useMemo(() => {
-    if (!db || selectedSportSlug !== 'kampus-run') return null;
-    return query(collection(db, 'runResults'), orderBy('position', 'asc'));
-  }, [db, selectedSportSlug]);
-  const { data: runResults } = useCollection<RunResult>(runResultsQuery);
 
   const matches = useMemo(() => {
     return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
@@ -128,16 +115,6 @@ export default function AdminPage() {
       setScoreB(activeMatch.scoreB || 0);
       setStatus(activeMatch.status as any || 'Live');
       setMatchWinner(activeMatch.winner || '');
-      if (activeMatch.badmintonResults && activeMatch.badmintonResults.length > 0) {
-        setBadmintonResults([...activeMatch.badmintonResults]);
-      } else {
-        setBadmintonResults([
-          { type: 'MS', score: '0-0', winner: '' },
-          { type: 'WS', score: '0-0', winner: '' },
-          { type: 'MD', score: '0-0', winner: '' },
-          { type: 'XD', score: '0-0', winner: '' },
-        ]);
-      }
       lastMatchIdRef.current = selectedMatchId;
     }
   }, [activeMatch, selectedMatchId]);
@@ -146,13 +123,36 @@ export default function AdminPage() {
     if (e) e.preventDefault();
     const messageToPost = customMsg || broadcastMessage;
     if (!db || !messageToPost) return;
-    addDoc(collection(db, 'broadcasts'), { 
-      message: messageToPost, 
-      active: true, 
-      timestamp: serverTimestamp() 
-    });
+
+    if (editingBroadcastId && !customMsg) {
+      updateDoc(doc(db, 'broadcasts', editingBroadcastId), {
+        message: messageToPost,
+        updatedAt: serverTimestamp(),
+      });
+      setEditingBroadcastId(null);
+      toast({ title: "Broadcast updated." });
+    } else {
+      addDoc(collection(db, 'broadcasts'), { 
+        message: messageToPost, 
+        active: true, 
+        timestamp: serverTimestamp() 
+      });
+      toast({ title: "Broadcast published." });
+    }
+    
     if (!customMsg) setBroadcastMessage('');
-    toast({ title: "Broadcast published." });
+  };
+
+  const handleEditBroadcast = (b: Broadcast) => {
+    setBroadcastMessage(b.message);
+    setEditingBroadcastId(b.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteBroadcast = (id: string) => {
+    if (!db) return;
+    deleteDoc(doc(db, 'broadcasts', id));
+    toast({ title: "Broadcast removed." });
   };
 
   const handleUpdateMatch = (e: React.FormEvent) => {
@@ -163,7 +163,6 @@ export default function AdminPage() {
       scoreB: Number(scoreB), 
       status, 
       winner: matchWinner,
-      badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
       updatedAt: serverTimestamp(),
     });
     toast({ title: "Match updated." });
@@ -268,27 +267,20 @@ export default function AdminPage() {
     toast({ title: "House removed from league." });
   };
 
-  const handleAddRunResult = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!db || !runName || !runTime) return;
-    addDoc(collection(db, 'runResults'), {
-      name: runName, 
-      time: runTime, 
-      position: Number(runPos), 
-      category: runCat, 
-      gender: runGen, 
-      ageGroup: runAge, 
-      updatedAt: serverTimestamp()
-    });
-    setRunName(''); setRunTime('');
-    toast({ title: "Result added." });
+  const formatTimestamp = (timestamp: any) => {
+    if (!timestamp) return '';
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (e) {
+      return '';
+    }
   };
 
   if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin text-primary" /></div>;
   if (!user || !adminProfile) return null;
 
   const currentEvent = EVENTS.find(e => e.slug === selectedSportSlug);
-  const isKampusRun = selectedSportSlug === 'kampus-run';
 
   if (!selectedSportSlug) {
     return (
@@ -309,11 +301,64 @@ export default function AdminPage() {
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handlePostBroadcast} className="flex flex-col gap-3">
-              <Input value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} placeholder="Type announcement for all students..." className="bg-muted/20 h-12 text-xs font-black uppercase" />
-              <Button type="submit" className="h-12 w-full uppercase font-black text-[10px] tracking-widest">Transmit Broadcast</Button>
+              <div className="relative">
+                <Input 
+                  value={broadcastMessage} 
+                  onChange={e => setBroadcastMessage(e.target.value)} 
+                  placeholder="Type announcement for all students..." 
+                  className="bg-muted/20 h-12 text-xs font-black uppercase pr-10" 
+                />
+                {editingBroadcastId && (
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6" 
+                    onClick={() => {
+                      setEditingBroadcastId(null);
+                      setBroadcastMessage('');
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              <Button type="submit" className="h-12 w-full uppercase font-black text-[10px] tracking-widest gap-2">
+                {editingBroadcastId ? <Edit2 className="h-4 w-4" /> : <Radio className="h-4 w-4" />}
+                {editingBroadcastId ? 'Update Broadcast' : 'Transmit Broadcast'}
+              </Button>
             </form>
           </CardContent>
         </Card>
+
+        <section className="space-y-4">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Broadcast Archive</h2>
+          <div className="grid grid-cols-1 gap-3">
+            {broadcasts && broadcasts.length > 0 ? broadcasts.map((b) => (
+              <Card key={b.id} className="premium-card bg-muted/5 border-border/40">
+                <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <div className="space-y-1 min-w-0">
+                    <p className="text-[11px] font-bold text-foreground leading-relaxed italic line-clamp-2">"{b.message}"</p>
+                    <div className="flex items-center gap-2 opacity-40">
+                      <Clock className="h-3 w-3" />
+                      <span className="text-[8px] font-black uppercase tracking-widest">{formatTimestamp(b.timestamp)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleEditBroadcast(b)}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBroadcast(b.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )) : (
+              <div className="py-10 text-center opacity-20 text-[9px] font-black uppercase tracking-widest">No previous broadcasts</div>
+            )}
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {EVENTS.map((event) => {
@@ -353,173 +398,79 @@ export default function AdminPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl overflow-x-auto no-scrollbar">
-          <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">{isKampusRun ? "Race Control" : "Live Feed"}</TabsTrigger>
-          {!isKampusRun && <TabsTrigger value="fixtures" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Fixtures</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Trials</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">League Management</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="archives" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Archives</TabsTrigger>}
+          <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Live Feed</TabsTrigger>
+          <TabsTrigger value="fixtures" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Fixtures</TabsTrigger>
+          <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Trials</TabsTrigger>
+          <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">League Management</TabsTrigger>
+          <TabsTrigger value="archives" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Archives</TabsTrigger>
         </TabsList>
 
         <TabsContent value="control" className="space-y-6">
-          {isKampusRun ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="premium-card lg:col-span-2">
-                <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary">Enter Runner Result</CardTitle></CardHeader>
-                <CardContent className="p-6">
-                  <form onSubmit={handleAddRunResult} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Runner Name</Label><Input value={runName} onChange={e => setRunName(e.target.value)} className="bg-muted/20" required /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Time (MM:SS.ms)</Label><Input value={runTime} onChange={e => setRunTime(e.target.value)} className="bg-muted/20" placeholder="e.g. 14:32.4" required /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Rank</Label><Input type="number" value={runPos} onChange={e => setRunPos(Number(e.target.value))} className="bg-muted/20" required /></div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Category</Label>
-                        <Select value={runCat} onValueChange={setRunCat}>
-                          <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
-                          <SelectContent><SelectItem value="3km">3KM</SelectItem><SelectItem value="5km">5KM</SelectItem></SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Gender</Label>
-                        <Select value={runGen} onValueChange={(v: any) => setRunGen(v)}>
-                          <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
-                          <SelectContent><SelectItem value="M">Male</SelectItem><SelectItem value="F">Female</SelectItem></SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Age Group</Label>
-                        <Select value={runAge} onValueChange={setRunAge}>
-                          <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
-                          <SelectContent><SelectItem value="All">All Ages</SelectItem><SelectItem value="18-25">18-25</SelectItem><SelectItem value="26+">26+</SelectItem></SelectContent>
-                        </Select>
+          <Card className="premium-card">
+            <CardContent className="p-6 md:p-12 space-y-10">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase">Select Active Match</Label>
+                <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+                  <SelectTrigger className="bg-muted/20 h-12 font-black uppercase"><SelectValue placeholder="Select Match" /></SelectTrigger>
+                  <SelectContent>
+                    {matches?.filter(m => m.status !== 'Completed').map(m => (
+                      <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">
+                        {m.teamA} vs {m.teamB} (#{m.matchNumber})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedMatchId && (
+                <form onSubmit={handleUpdateMatch} className="space-y-10">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+                    <div className="w-full md:flex-1 space-y-4">
+                      <Label className="text-[10px] font-black uppercase block text-center opacity-60 tracking-widest">{activeMatch?.teamA}</Label>
+                      <div className="flex items-center justify-center gap-3">
+                         <Button type="button" variant="outline" size="icon" onClick={() => setScoreA(Math.max(0, scoreA - 1))}><Minus className="h-4 w-4" /></Button>
+                         <Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
+                         <Button type="button" variant="outline" size="icon" onClick={() => setScoreA(scoreA + 1)}><Plus className="h-4 w-4" /></Button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full h-12 uppercase font-black text-[10px] tracking-widest">Publish Rank</Button>
-                  </form>
-                </CardContent>
-              </Card>
-              <Card className="premium-card">
-                <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary">Live Leaderboard</CardTitle></CardHeader>
-                <CardContent className="p-4 space-y-2 max-h-[500px] overflow-y-auto">
-                  {runResults?.map(r => (
-                    <div key={r.id} className="flex items-center justify-between p-3 bg-muted/20 rounded border-l-2 border-primary">
-                      <div><p className="text-[10px] font-black uppercase">{r.name}</p></div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-primary">{r.time}</span>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', r.id))}><Trash2 className="h-3 w-3" /></Button>
+                    <div className="w-full md:flex-1 space-y-4">
+                      <Label className="text-[10px] font-black uppercase block text-center opacity-60 tracking-widest">{activeMatch?.teamB}</Label>
+                      <div className="flex items-center justify-center gap-3">
+                         <Button type="button" variant="outline" size="icon" onClick={() => setScoreB(Math.max(0, scoreB - 1))}><Minus className="h-4 w-4" /></Button>
+                         <Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
+                         <Button type="button" variant="outline" size="icon" onClick={() => setScoreB(scoreB + 1)}><Plus className="h-4 w-4" /></Button>
                       </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6">
-              <Card className="premium-card">
-                <CardContent className="p-6 md:p-12 space-y-10">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase">Select Active Match</Label>
-                    <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
-                      <SelectTrigger className="bg-muted/20 h-12 font-black uppercase"><SelectValue placeholder="Select Match" /></SelectTrigger>
-                      <SelectContent>
-                        {matches?.filter(m => m.status !== 'Completed').map(m => (
-                          <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">
-                            {m.teamA} vs {m.teamB} (#{m.matchNumber})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
-                  {selectedMatchId && (
-                    <form onSubmit={handleUpdateMatch} className="space-y-10">
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-                        <div className="w-full md:flex-1 space-y-4">
-                          <Label className="text-[10px] font-black uppercase block text-center opacity-60 tracking-widest">{activeMatch?.teamA}</Label>
-                          <div className="flex items-center justify-center gap-3">
-                             <Button type="button" variant="outline" size="icon" onClick={() => setScoreA(Math.max(0, scoreA - 1))}><Minus className="h-4 w-4" /></Button>
-                             <Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
-                             <Button type="button" variant="outline" size="icon" onClick={() => setScoreA(scoreA + 1)}><Plus className="h-4 w-4" /></Button>
-                          </div>
-                        </div>
-                        <div className="w-full md:flex-1 space-y-4">
-                          <Label className="text-[10px] font-black uppercase block text-center opacity-60 tracking-widest">{activeMatch?.teamB}</Label>
-                          <div className="flex items-center justify-center gap-3">
-                             <Button type="button" variant="outline" size="icon" onClick={() => setScoreB(Math.max(0, scoreB - 1))}><Minus className="h-4 w-4" /></Button>
-                             <Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
-                             <Button type="button" variant="outline" size="icon" onClick={() => setScoreB(scoreB + 1)}><Plus className="h-4 w-4" /></Button>
-                          </div>
-                        </div>
-                      </div>
 
-                      {selectedSportSlug === 'badminton' && (
-                        <div className="space-y-6 pt-6 border-t border-border">
-                          <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Badminton Sub-Match Results</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {badmintonResults.map((res, idx) => (
-                              <Card key={res.type} className="bg-muted/10 border-border p-4 space-y-3">
-                                <Badge variant="outline" className="text-[9px] font-black">{res.type}</Badge>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <Input 
-                                    value={res.score} 
-                                    onChange={e => {
-                                      const newRes = [...badmintonResults];
-                                      newRes[idx].score = e.target.value;
-                                      setBadmintonResults(newRes);
-                                    }} 
-                                    className="h-8 text-[10px]" 
-                                  />
-                                  <Select 
-                                    value={res.winner} 
-                                    onValueChange={v => {
-                                      const newRes = [...badmintonResults];
-                                      newRes[idx].winner = v;
-                                      setBadmintonResults(newRes);
-                                    }}
-                                  >
-                                    <SelectTrigger className="h-8 text-[9px]"><SelectValue placeholder="Winner" /></SelectTrigger>
-                                    <SelectContent>
-                                      {[activeMatch?.teamA, activeMatch?.teamB].map(h => h && (
-                                        <SelectItem key={h} value={h} className="text-[9px] font-black uppercase">{h}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </Card>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase opacity-60">Status</Label>
-                          <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-                            <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="Upcoming">Upcoming</SelectItem><SelectItem value="Live">Live</SelectItem><SelectItem value="Completed">Completed</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-3">
-                          <Label className="text-[10px] font-black uppercase opacity-60">Match Result</Label>
-                          <Select value={matchWinner} onValueChange={setMatchWinner}>
-                            <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue placeholder="Select Outcome" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Draw">Draw / Tie</SelectItem>
-                              {activeMatch && (
-                                <>
-                                  <SelectItem value={activeMatch.teamA}>{activeMatch.teamA} Wins</SelectItem>
-                                  <SelectItem value={activeMatch.teamB}>{activeMatch.teamB} Wins</SelectItem>
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Push Broadcast Update</Button>
-                    </form>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Status</Label>
+                      <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+                        <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="Upcoming">Upcoming</SelectItem><SelectItem value="Live">Live</SelectItem><SelectItem value="Completed">Completed</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Match Result</Label>
+                      <Select value={matchWinner} onValueChange={setMatchWinner}>
+                        <SelectTrigger className="bg-muted/20 h-12 text-[10px] font-black uppercase"><SelectValue placeholder="Select Outcome" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Draw">Draw / Tie</SelectItem>
+                          {activeMatch && (
+                            <>
+                              <SelectItem value={activeMatch.teamA}>{activeMatch.teamA} Wins</SelectItem>
+                              <SelectItem value={activeMatch.teamB}>{activeMatch.teamB} Wins</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Push Broadcast Update</Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="fixtures" className="space-y-6">
