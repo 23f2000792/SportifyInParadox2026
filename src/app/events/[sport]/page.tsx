@@ -12,7 +12,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2 } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -112,7 +112,6 @@ export default function EventPage() {
       minStr = minutes;
     }
     
-    // The match datetime in UTC (approximate, since we don't have timezone)
     const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
     const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00Z`;
 
@@ -126,11 +125,13 @@ export default function EventPage() {
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
 
-  const renderRunCategory = (title: string, category: string, gender: string, ageGroup: string = 'All') => {
+  const renderRunCategory = (title: string, category: string, gender: 'M' | 'F', ageGroup: string = 'All') => {
     const results = runResults?.filter(r => r.category === category && r.gender === gender && r.ageGroup === ageGroup) || [];
     return (
       <div key={title} className="space-y-4">
-        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-primary/20">{title}</Badge>
+        <div className="flex items-center gap-2 px-1">
+          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-primary/20">{title}</Badge>
+        </div>
         <Card className="premium-card overflow-hidden">
           <Table>
             <TableHeader>
@@ -143,11 +144,31 @@ export default function EventPage() {
             <TableBody>
               {results.length > 0 ? results.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell>{r.position <= 3 ? <Medal className={cn("h-4 w-4", r.position === 1 ? "text-yellow-500" : r.position === 2 ? "text-slate-400" : "text-amber-700")} /> : <span className="opacity-40 ml-1">#{r.position}</span>}</TableCell>
+                  <TableCell>
+                    {r.position <= 3 ? (
+                      <div className="flex items-center gap-2">
+                        <Medal className={cn(
+                          "h-4 w-4", 
+                          r.position === 1 ? "text-yellow-500" : 
+                          r.position === 2 ? "text-slate-400" : 
+                          "text-amber-700"
+                        )} />
+                        <span className="text-[10px] font-black">{r.position}</span>
+                      </div>
+                    ) : (
+                      <span className="opacity-40 ml-1 text-[10px] font-bold">#{r.position}</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm font-black uppercase">{r.name}</TableCell>
                   <TableCell className="text-right font-mono text-xs text-primary">{r.time}</TableCell>
                 </TableRow>
-              )) : <TableRow><TableCell colSpan={3} className="text-center py-6 opacity-30 text-[9px] uppercase font-black">Waiting for Official Finish Line Data</TableCell></TableRow>}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-8 opacity-30">
+                    <p className="text-[9px] uppercase font-black tracking-widest">Waiting for Official Finish Line Data</p>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </Card>
@@ -241,7 +262,7 @@ export default function EventPage() {
 
         {isKampusRun ? (
           <>
-            <TabsContent value="results" className="space-y-10 px-4">
+            <TabsContent value="results" className="space-y-12 px-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {renderRunCategory("3KM Male", "3km", "M")}
                 {renderRunCategory("3KM Female", "3km", "F")}
@@ -252,11 +273,21 @@ export default function EventPage() {
               </div>
             </TabsContent>
             <TabsContent value="schedule" className="px-4">
-               <Card className="premium-card p-10 text-center space-y-4">
-                  <Timer className="h-10 w-10 text-primary mx-auto" />
-                  <h2 className="text-xl font-black uppercase tracking-tighter">Reporting Time: 05:00 AM</h2>
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: 05:30 AM • SAC Grounds</p>
-               </Card>
+               <div className="max-w-xl mx-auto space-y-4">
+                  <Card className="premium-card p-10 text-center space-y-6">
+                    <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20">
+                      <Clock className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-black uppercase tracking-tighter">Reporting Time: 05:00 AM</h2>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: 05:30 AM • SAC Grounds</p>
+                    </div>
+                    <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed">
+                      All participants must carry their Paradox 2026 ID cards. 
+                      Water stations will be available every 1KM.
+                    </div>
+                  </Card>
+               </div>
             </TabsContent>
           </>
         ) : (
@@ -271,15 +302,20 @@ export default function EventPage() {
                 {trials?.filter(t => !focusMode || t.house === myHouse).map((trial) => (
                   <Card key={trial.id} className={cn("premium-card", trial.house === myHouse && "border-primary/40 bg-primary/[0.02]")}>
                     <CardContent className="p-6 space-y-4">
-                      <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{trial.house}</Badge>
+                      <div className="flex justify-between items-start">
+                        <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{trial.house}</Badge>
+                        <Trophy className="h-4 w-4 text-primary opacity-20" />
+                      </div>
                       <h3 className="text-xl font-black uppercase tracking-tighter">Selection Trials</h3>
-                      <div className="space-y-1 border-t border-border pt-4">
+                      <div className="space-y-1.5 border-t border-border pt-4">
                         <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><MapPin className="h-3 w-3" /> {trial.venue}</p>
                         <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><Timer className="h-3 w-3" /> {trial.time} • {trial.date}</p>
+                        {trial.notes && <p className="text-[9px] opacity-40 italic mt-2">Note: {trial.notes}</p>}
                       </div>
                     </CardContent>
                   </Card>
                 ))}
+                {(!trials || trials.length === 0) && <div className="md:col-span-2 py-20 text-center opacity-40 uppercase font-black text-[10px] tracking-widest">No Trials Scheduled</div>}
               </div>
             </TabsContent>
             <TabsContent value="standings" className="px-4 space-y-8">
@@ -319,3 +355,4 @@ export default function EventPage() {
     </div>
   );
 }
+
