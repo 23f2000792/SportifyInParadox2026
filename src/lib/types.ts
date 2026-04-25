@@ -36,6 +36,7 @@ export interface Match {
   group?: string;
   keyEvents?: string[];
   badmintonResults?: BadmintonMatchResult[];
+  winner?: string; // Explicit winner field for overall match
   updatedAt?: any;
 }
 
