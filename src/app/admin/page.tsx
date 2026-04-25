@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
@@ -18,7 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { 
-  collection, doc, setDoc, query, where, serverTimestamp, 
+  collection, doc, query, where, serverTimestamp, 
   addDoc, updateDoc, deleteDoc, orderBy 
 } from 'firebase/firestore';
 import { Match, RunResult, BadmintonMatchResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS } from '@/lib/types';
@@ -91,9 +90,9 @@ export default function AdminPage() {
 
   const trialsQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
-    return query(collection(db, 'trials'), where('sport', '==', selectedSportSlug), orderBy('date', 'asc'));
+    return query(collection(db, 'trials'), where('sport', '==', selectedSportSlug));
   }, [db, selectedSportSlug]);
-  const { data: trials } = useCollection<Trial>(trialsQuery);
+  const { data: rawTrials } = useCollection<Trial>(trialsQuery);
 
   const standingsQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
@@ -110,6 +109,10 @@ export default function AdminPage() {
   const matches = useMemo(() => {
     return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
   }, [rawMatches]);
+
+  const trials = useMemo(() => {
+    return [...(rawTrials || [])].sort((a, b) => a.date.localeCompare(b.date));
+  }, [rawTrials]);
 
   useEffect(() => {
     if (!userLoading && !user) router.push('/admin/login');
