@@ -10,14 +10,15 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { Match, RunResult, Trial, Standing } from '@/lib/types';
+import { Match, RunResult, Trial, Standing, GROUPS } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, ListOrdered, ClipboardList } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2 } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -78,10 +79,31 @@ export default function EventPage() {
     return filtered;
   }, [rawMatches, focusMode, myHouse, searchQuery]);
 
+  const groupedStandings = useMemo(() => {
+    if (!standings) return {};
+    return GROUPS.reduce((acc, g) => {
+      acc[g] = standings.filter(s => s.group === g);
+      return acc;
+    }, {} as Record<string, Standing[]>);
+  }, [standings]);
+
   if (matchesLoading || trialsLoading || runLoading || standingsLoading) return <EventLoading />;
 
   const IconComp = ICON_MAP[event.icon];
   const isKampusRun = sport === 'kampus-run';
+
+  const handleAddToCalendar = (match: Match) => {
+    const title = encodeURIComponent(`Sportify: ${match.teamA} vs ${match.teamB}`);
+    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Follow on Sportify.`);
+    const location = encodeURIComponent(match.venue);
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
+    window.open(url, '_blank');
+  };
+
+  const handleShareMatch = (match: Match) => {
+    const text = `🏆 *SPORTIFY: ${match.teamA} vs ${match.teamB}* 🏆\n\nPhase: ${match.phase}\nTime: ${match.time} • ${match.date}\nVenue: ${match.venue}\n\nLive scores: ${window.location.origin}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   const renderRunCategory = (title: string, category: string, gender: string, ageGroup: string = 'All') => {
     const results = runResults?.filter(r => r.category === category && r.gender === gender && r.ageGroup === ageGroup) || [];
@@ -117,20 +139,36 @@ export default function EventPage() {
     return (
       <Card key={match.id} className={cn("premium-card", isMyMatch && "border-primary/40 bg-primary/[0.02]")}>
         <div className="p-4 bg-muted/5 flex justify-between items-center border-b border-border">
-          <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Match #{match.matchNumber}</span>
-          <Badge variant="outline" className="text-[8px] uppercase font-black">{match.phase}</Badge>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Match #{match.matchNumber}</span>
+            <Badge variant="outline" className="text-[8px] uppercase font-black">{match.phase}</Badge>
+          </div>
+          {match.status === 'Upcoming' && (
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => handleAddToCalendar(match)}>
+              <Calendar className="h-3 w-3" />
+            </Button>
+          )}
         </div>
         <div className="p-6 md:p-8 flex items-center justify-between gap-4">
           <div className={cn("flex-1 text-right text-base md:text-2xl font-black uppercase", match.teamA === myHouse && "text-primary")}>{match.teamA}</div>
           <div className="px-4 py-2 bg-muted/20 border border-border rounded-xl flex flex-col items-center min-w-[80px]">
             <span className="text-xl md:text-3xl font-black">{match.scoreA} - {match.scoreB}</span>
             {match.status === 'Live' && <span className="text-[7px] font-black uppercase text-primary animate-pulse">Live</span>}
+            {match.status === 'Upcoming' && <span className="text-[7px] font-black uppercase opacity-40">{match.time}</span>}
           </div>
           <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
         </div>
         <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center">
-          <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1"><MapPin className="h-3 w-3" /> {match.venue}</span>
-          {match.status === 'Completed' && <MatchRecapButton match={match} />}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1"><MapPin className="h-3 w-3" /> {match.venue}</span>
+            <span className="text-[8px] font-bold text-muted-foreground/40 uppercase">{match.date}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-30 hover:opacity-100" onClick={() => handleShareMatch(match)}>
+              <Share2 className="h-3.5 w-3.5" />
+            </Button>
+            {match.status === 'Completed' && <MatchRecapButton match={match} />}
+          </div>
         </div>
       </Card>
     );
@@ -223,33 +261,36 @@ export default function EventPage() {
                 ))}
               </div>
             </TabsContent>
-            <TabsContent value="standings" className="px-4">
-              <Card className="premium-card">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Pos</TableHead>
-                      <TableHead>House</TableHead>
-                      <TableHead className="text-center">P</TableHead>
-                      <TableHead className="text-center">W</TableHead>
-                      <TableHead className="text-center">D</TableHead>
-                      <TableHead className="text-center">PTS</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {standings?.length ? standings.map((s, idx) => (
-                      <TableRow key={s.id} className={cn(s.team === myHouse && "bg-primary/[0.05]")}>
-                        <TableCell className="text-xs font-black">{idx + 1}</TableCell>
-                        <TableCell className="text-xs font-black uppercase">{s.team}</TableCell>
-                        <TableCell className="text-center text-xs">{s.played}</TableCell>
-                        <TableCell className="text-center text-xs">{s.won}</TableCell>
-                        <TableCell className="text-center text-xs">{s.drawn}</TableCell>
-                        <TableCell className="text-center text-xs font-black text-primary">{s.points}</TableCell>
-                      </TableRow>
-                    )) : <TableRow><TableCell colSpan={6} className="text-center py-10 opacity-30 text-[9px] font-black uppercase">League data pending</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
-              </Card>
+            <TabsContent value="standings" className="px-4 space-y-8">
+              {GROUPS.map(g => (
+                <div key={g} className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary px-2">Group {g}</h3>
+                  <Card className="premium-card">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">Pos</TableHead>
+                          <TableHead>House</TableHead>
+                          <TableHead className="text-center">P</TableHead>
+                          <TableHead className="text-center">W</TableHead>
+                          <TableHead className="text-center">PTS</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {groupedStandings[g]?.length ? groupedStandings[g].map((s, idx) => (
+                          <TableRow key={s.id} className={cn(s.team === myHouse && "bg-primary/[0.05]")}>
+                            <TableCell className="text-xs font-black">{idx + 1}</TableCell>
+                            <TableCell className="text-xs font-black uppercase">{s.team}</TableCell>
+                            <TableCell className="text-center text-xs">{s.played}</TableCell>
+                            <TableCell className="text-center text-xs">{s.won}</TableCell>
+                            <TableCell className="text-center text-xs font-black text-primary">{s.points}</TableCell>
+                          </TableRow>
+                        )) : <TableRow><TableCell colSpan={5} className="text-center py-6 opacity-30 text-[9px] font-black uppercase">Pending Group Data</TableCell></TableRow>}
+                      </TableBody>
+                    </Table>
+                  </Card>
+                </div>
+              ))}
             </TabsContent>
           </>
         )}
