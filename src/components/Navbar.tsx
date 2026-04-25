@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -34,9 +33,9 @@ export function Navbar() {
   return (
     <>
       {/* Universal Top Bar - Native iOS style blur */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.05] bg-background/80 backdrop-blur-2xl h-16 flex items-center justify-between px-6 pt-safe">
+      <header className="sticky top-0 z-50 w-full border-b border-white/[0.05] bg-background/80 backdrop-blur-3xl backdrop-saturate-150 h-16 flex items-center justify-between px-6 pt-safe">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative h-8 w-8 overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.05] p-1.5">
+          <div className="relative h-8 w-8 overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.05] p-1.5 shadow-sm">
             <Image 
               src={LOGO_URL}
               alt="Sportify Logo"
@@ -130,7 +129,7 @@ export function Navbar() {
       </nav>
 
       {/* Mobile Bottom Navigation - Native App feel */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-2xl border-t border-border h-20 flex items-start justify-around px-4 pt-3 pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-3xl border-t border-border h-20 flex items-start justify-around px-4 pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <Link href="/" className={cn("flex flex-col items-center gap-1 transition-all", pathname === "/" ? "text-primary" : "text-muted-foreground/30")}>
           <Home className="h-5 w-5" />
           <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
