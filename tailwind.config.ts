@@ -12,7 +12,7 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
-        display: ['Anton', 'sans-serif'],
+        display: ['Inter', 'sans-serif'],
         accent: ['Inter', 'serif'],
         cta: ['Inter', 'sans-serif'],
       },

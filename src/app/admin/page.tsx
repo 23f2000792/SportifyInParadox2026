@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -63,7 +62,7 @@ export default function AdminPage() {
     { type: 'XD', score: '0-0', winner: '' },
   ]);
 
-  // --- Schedule Schedule State ---
+  // --- Fixture State ---
   const [schedMatchNumber, setSchedMatchNumber] = useState('');
   const [schedTeamA, setSchedTeamA] = useState('');
   const [schedTeamB, setSchedTeamB] = useState('');
@@ -145,16 +144,17 @@ export default function AdminPage() {
   const activeMatch = useMemo(() => matches?.find(m => m.id === selectedMatchId), [matches, selectedMatchId]);
 
   // Handle initialization of form data when a match is selected
-  const lastInitializedId = useRef<string | null>(null);
+  // We track the last ID to ensure we only reset state when switching matches, not on every re-render of the same match data.
+  const initializedIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (activeMatch && selectedMatchId !== lastInitializedId.current) {
+    if (activeMatch && selectedMatchId !== initializedIdRef.current) {
       setScoreA(activeMatch.scoreA);
       setScoreB(activeMatch.scoreB);
       setStatus(activeMatch.status as any);
       
       if (activeMatch.badmintonResults && activeMatch.badmintonResults.length > 0) {
-        setBadmintonResults(activeMatch.badmintonResults);
+        setBadmintonResults([...activeMatch.badmintonResults]);
       } else if (selectedSportSlug === 'badminton') {
         setBadmintonResults([
           { type: 'MS', score: '0-0', winner: '' },
@@ -163,14 +163,14 @@ export default function AdminPage() {
           { type: 'XD', score: '0-0', winner: '' },
         ]);
       }
-      lastInitializedId.current = selectedMatchId;
+      initializedIdRef.current = selectedMatchId;
     }
   }, [activeMatch, selectedMatchId, selectedSportSlug]);
 
-  // Reset initialization tracker when switching matches
+  // Clear init ref when selection is cleared
   useEffect(() => {
     if (!selectedMatchId) {
-      lastInitializedId.current = null;
+      initializedIdRef.current = null;
     }
   }, [selectedMatchId]);
 
@@ -364,7 +364,7 @@ export default function AdminPage() {
       <div className="space-y-6 md:space-y-10 max-w-5xl mx-auto py-6 md:py-10 px-4">
         <div className="flex justify-between items-center border-b border-border pb-4 md:pb-8">
           <div className="space-y-1">
-            <h1 className="text-xl md:text-3xl font-black italic uppercase text-foreground">Control Terminal</h1>
+            <h1 className="text-xl md:text-3xl font-black uppercase text-foreground">Control Terminal</h1>
             <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary">Domain Select</p>
           </div>
           <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="bg-destructive/10 text-destructive hover:bg-destructive/20 text-[9px] md:text-[10px] font-black uppercase h-8 md:h-9 rounded-full px-4 md:px-6">
@@ -421,7 +421,7 @@ export default function AdminPage() {
                       {IconComp && <IconComp className="h-6 w-6 md:h-8 md:w-8 text-primary" />}
                     </div>
                     <div className="w-3/4 p-4 md:p-6 flex flex-col justify-center overflow-hidden">
-                      <h2 className="text-lg md:text-xl font-black italic uppercase text-foreground group-hover:text-primary transition-colors truncate">{shortName}</h2>
+                      <h2 className="text-lg md:text-xl font-black uppercase text-foreground group-hover:text-primary transition-colors truncate">{shortName}</h2>
                       <p className="text-[9px] md:text-[10px] text-muted-foreground/60 uppercase font-bold tracking-widest">Open Broadcast Controls</p>
                     </div>
                   </CardContent>
@@ -438,7 +438,7 @@ export default function AdminPage() {
     <div className="max-w-6xl mx-auto space-y-8 pb-32 px-4">
       <div className="border-b border-border pb-6">
         <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary hover:text-primary/70 gap-1.5 mb-2"><ChevronLeft className="h-3.5 w-3.5" /> Switch Sport</Button>
-        <h1 className="text-xl md:text-4xl font-black italic uppercase text-foreground">{ADMIN_SPORT_NAMES[currentEvent?.slug || ''] || currentEvent?.name} Control</h1>
+        <h1 className="text-xl md:text-4xl font-black uppercase text-foreground">{ADMIN_SPORT_NAMES[currentEvent?.slug || ''] || currentEvent?.name} Control</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -838,12 +838,12 @@ export default function AdminPage() {
              <CardContent className="p-0 overflow-x-auto no-scrollbar">
                {isKampusRun ? (
                  <Table><TableHeader className="bg-muted/20"><TableRow className="border-border"><TableHead className="w-16 text-center text-[9px] font-black px-2 md:px-4">Rank</TableHead><TableHead className="text-[9px] font-black px-2 md:px-6">Runner</TableHead><TableHead className="text-right text-[9px] font-black px-2 md:px-6">X</TableHead></TableRow></TableHeader>
-                   <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-border h-12 md:h-14"><TableCell className="text-center font-black text-base md:text-lg text-primary px-2 md:px-4">#{res.position}</TableCell><TableCell className="px-2 md:px-6"><p className="text-[10px] md:text-sm font-black uppercase italic text-foreground truncate max-w-[120px] md:max-w-none">{res.name}</p></TableCell><TableCell className="text-right px-2 md:px-6"><Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-3 w-3 md:h-4 md:w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
+                   <TableBody>{runResults?.map(res => (<TableRow key={res.id} className="border-border h-12 md:h-14"><TableCell className="text-center font-black text-base md:text-lg text-primary px-2 md:px-4">#{res.position}</TableCell><TableCell className="px-2 md:px-6"><p className="text-[10px] md:text-sm font-black uppercase text-foreground truncate max-w-[120px] md:max-w-none">{res.name}</p></TableCell><TableCell className="text-right px-2 md:px-6"><Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', res.id))}><Trash2 className="h-3 w-3 md:h-4 md:w-4" /></Button></TableCell></TableRow>))}</TableBody></Table>
                ) : (
                  <Table><TableHeader className="bg-muted/20"><TableRow className="border-border"><TableHead className="text-[9px] font-black px-4 uppercase">Match</TableHead><TableHead className="text-[9px] font-black text-center px-2 uppercase">Score</TableHead><TableHead className="text-right text-[9px] font-black px-4 uppercase">Actions</TableHead></TableRow></TableHeader>
                    <TableBody>{matches?.filter(m => m.status === 'Completed').map(match => (
                      <TableRow key={match.id} className="border-border h-14 md:h-16">
-                       <TableCell className="px-4"><p className="text-[10px] md:text-sm font-black uppercase italic break-words max-w-[120px] md:max-w-[200px] text-foreground leading-tight">{match.teamA} vs {match.teamB}</p></TableCell>
+                       <TableCell className="px-4"><p className="text-[10px] md:text-sm font-black uppercase break-words max-w-[120px] md:max-w-[200px] text-foreground leading-tight">{match.teamA} vs {match.teamB}</p></TableCell>
                        <TableCell className="text-center font-black text-base md:text-xl text-primary px-2">{match.scoreA} - {match.scoreB}</TableCell>
                        <TableCell className="text-right px-4">
                          <div className="flex justify-end gap-1 md:gap-2">
