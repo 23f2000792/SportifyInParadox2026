@@ -334,6 +334,12 @@ export default function AdminPage() {
     handlePostBroadcast(undefined, msg);
   };
 
+  const handlePushTrialToPortal = (trial: Trial) => {
+    const sportName = (ADMIN_SPORT_NAMES[trial.sport] || trial.sport).toUpperCase();
+    const msg = `📢 CALLING ALL ATHLETES! [${trial.house.toUpperCase()}] is holding trials for ${sportName}! Venue: ${trial.venue} at ${trial.time}. Gear up and prove your worth!`;
+    handlePostBroadcast(undefined, msg);
+  };
+
   if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin text-primary" /></div>;
   if (!user || !adminProfile) return null;
 
@@ -703,9 +709,14 @@ export default function AdminPage() {
                           <p className="text-[8px] font-bold text-muted-foreground uppercase">{trial.venue}</p>
                         </TableCell>
                         <TableCell className="text-right px-4">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'trials', trial.id))}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-primary/60 hover:text-primary" onClick={() => handlePushTrialToPortal(trial)} title="Broadcast Trial">
+                              <Megaphone className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive/40 hover:text-destructive" onClick={() => deleteDoc(doc(db!, 'trials', trial.id))}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

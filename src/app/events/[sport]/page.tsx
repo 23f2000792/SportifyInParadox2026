@@ -13,7 +13,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Match, RunResult, Standing, GROUPS, HOUSES, Trial } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus, ClipboardList, Clock } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus, ClipboardList, Clock, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
@@ -39,10 +39,14 @@ export default function EventPage() {
   const [myHouse, setMyHouse] = useState<string>('');
   const [focusMode, setFocusMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [todayStr, setTodayStr] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('followedHouse');
     if (saved) setMyHouse(saved);
+    
+    const now = new Date();
+    setTodayStr(now.toISOString().split('T')[0]);
   }, []);
 
   const event = EVENTS.find(e => e.slug === sport);
@@ -349,7 +353,7 @@ export default function EventPage() {
                   return (
                     <Card key={match.id} className={cn(
                       "premium-card border-primary/20 bg-primary/[0.02]",
-                      isMyMatch && "border-primary shadow-xl shadow-primary/10"
+                      isMyMatch && "border-primary shadow-xl shadow-primary/10 bg-primary/[0.02]"
                     )}>
                       <CardContent className="p-0">
                         <div className="p-4 sm:p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 overflow-hidden">
@@ -446,18 +450,24 @@ export default function EventPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {sportTrials?.map(trial => {
                     const isMyTrial = trial.house === myHouse;
+                    const isToday = todayStr === trial.date;
                     return (
                       <Card key={trial.id} className={cn(
                         "premium-card border-border",
-                        isMyTrial && "border-primary/40 bg-primary/[0.02] shadow-lg shadow-primary/5"
+                        isMyTrial && "border-primary/40 bg-primary/[0.02] shadow-lg shadow-primary/5",
+                        isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                       )}>
                         <CardContent className="p-6 space-y-4">
                           <div className="flex justify-between items-start">
                             <div className="space-y-1">
-                              <h3 className={cn("text-xl font-black uppercase italic", isMyTrial ? "text-primary" : "text-foreground")}>
-                                {trial.house}
-                                {isMyTrial && <Star className="h-3 w-3 inline-block ml-2 fill-primary text-primary" />}
-                              </h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className={cn("text-xl font-black uppercase italic", isMyTrial ? "text-primary" : "text-foreground")}>
+                                  {trial.house}
+                                </h3>
+                                {isToday && (
+                                  <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0">Today</Badge>
+                                )}
+                              </div>
                               <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Selection Trial</p>
                             </div>
                             <ClipboardList className={cn("h-5 w-5", isMyTrial ? "text-primary" : "text-muted-foreground/20")} />
@@ -473,9 +483,12 @@ export default function EventPage() {
                             </div>
                           </div>
                           {trial.notes && (
-                            <p className="text-[10px] font-bold text-muted-foreground italic leading-relaxed pt-2">
-                              Note: {trial.notes}
-                            </p>
+                            <div className="flex items-start gap-2 pt-2">
+                              <Info className="h-3.5 w-3.5 text-primary/40 mt-0.5" />
+                              <p className="text-[10px] font-bold text-muted-foreground italic leading-relaxed">
+                                {trial.notes}
+                              </p>
+                            </div>
                           )}
                           <div className="pt-2 border-t border-border/50">
                             <Button 
