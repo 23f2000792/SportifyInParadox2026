@@ -12,6 +12,13 @@ import { Match, HOUSES, Trial } from '@/lib/types';
 import Loading from '@/app/loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -66,8 +73,7 @@ export default function Home() {
       .map(t => ({ ...t, type: 'trial' as const }));
 
     return [...houseMatches, ...houseTrials]
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 4);
+      .sort((a, b) => a.date.localeCompare(b.date));
   }, [allUpcoming, allTrials, myHouse]);
 
   if (matchesLoading) return <Loading />;
@@ -111,47 +117,66 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Unified House Timeline */}
+      {/* Unified House Timeline - CAROUSEL */}
       {myHouse && myHouseTimeline.length > 0 && (
         <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
               <CalendarClock className="h-4 w-4" /> Your House Schedule
             </h2>
+            <div className="hidden md:flex gap-2">
+               <p className="text-[8px] font-black uppercase text-muted-foreground/40 mr-2 self-center">Swipe to explore</p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {myHouseTimeline.map((item: any) => (
-              <Link key={item.id} href={`/events/${item.sport}`}>
-                <Card className={cn(
-                  "premium-card h-full group",
-                  item.type === 'trial' ? "border-amber-500/20 bg-amber-500/[0.02]" : "border-primary/20 bg-primary/[0.02]"
-                )}>
-                  <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
-                        {item.type === 'trial' ? (
-                          <ClipboardList className="h-3 w-3 text-amber-500" />
-                        ) : (
-                          <Activity className="h-3 w-3 text-primary" />
-                        )}
-                      </div>
-                      <p className="text-base font-black italic uppercase text-foreground leading-tight">
-                        {item.type === 'match' 
-                          ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}`
-                          : `SELECTION TRIAL`}
-                      </p>
-                    </div>
-                    <div className="space-y-1 border-t border-border/10 pt-3">
-                      <p className="text-[10px] font-black text-foreground">{item.time} • {item.date}</p>
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {item.venue}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+          <div className="relative px-4 md:px-0">
+            <Carousel
+              opts={{
+                align: "start",
+                dragFree: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {myHouseTimeline.map((item: any) => (
+                  <CarouselItem key={item.id} className="pl-4 basis-[85%] sm:basis-[45%] md:basis-[30%] lg:basis-[25%]">
+                    <Link href={`/events/${item.sport}`} className="block h-full">
+                      <Card className={cn(
+                        "premium-card h-full group transition-transform active:scale-95",
+                        item.type === 'trial' ? "border-amber-500/20 bg-amber-500/[0.02]" : "border-primary/20 bg-primary/[0.02]"
+                      )}>
+                        <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
+                              {item.type === 'trial' ? (
+                                <ClipboardList className="h-3 w-3 text-amber-500" />
+                              ) : (
+                                <Activity className="h-3 w-3 text-primary" />
+                              )}
+                            </div>
+                            <p className="text-base font-black italic uppercase text-foreground leading-tight line-clamp-2">
+                              {item.type === 'match' 
+                                ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}`
+                                : `SELECTION TRIAL`}
+                            </p>
+                          </div>
+                          <div className="space-y-1 border-t border-border/10 pt-3 mt-auto">
+                            <p className="text-[10px] font-black text-foreground">{item.time} • {item.date}</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 truncate">
+                              <MapPin className="h-3 w-3 shrink-0" /> {item.venue}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="hidden md:block">
+                <CarouselPrevious className="-left-12 h-8 w-8" />
+                <CarouselNext className="-right-12 h-8 w-8" />
+              </div>
+            </Carousel>
           </div>
         </section>
       )}
