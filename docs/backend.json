@@ -119,6 +119,16 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["message", "active", "timestamp"]
+    },
+    "FCMToken": {
+      "title": "FCM Token",
+      "description": "Stored push notification registration token",
+      "type": "object",
+      "properties": {
+        "token": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["token", "createdAt"]
     }
   },
   "auth": {
@@ -152,6 +162,10 @@
     "/broadcasts/{broadcastId}": {
       "schema": "Broadcast",
       "description": "Collection of global announcements"
+    },
+    "/fcmTokens/{tokenId}": {
+      "schema": "FCMToken",
+      "description": "Collection of push notification tokens"
     }
   }
 }
