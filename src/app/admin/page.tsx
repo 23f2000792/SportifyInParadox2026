@@ -9,18 +9,19 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock, UserPlus, ShieldCheck, Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
+import { useFirestore, useCollection, useUser, useAuth, useDoc } from '@/firebase';
 import { 
   collection, doc, query, where, serverTimestamp, 
-  addDoc, updateDoc, deleteDoc, orderBy, limit 
+  addDoc, updateDoc, deleteDoc, orderBy, limit, setDoc
 } from 'firebase/firestore';
-import { Match, RunResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS, Broadcast } from '@/lib/types';
+import { Match, RunResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS, Broadcast, AdminUser, SportEvent } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,14 @@ export default function AdminPage() {
   const [runResult, setRunResult] = useState<Partial<RunResult>>({
     name: '', position: 1, time: '', gender: 'M', ageGroup: '18-25', category: '5km'
   });
+
+  // --- Kampus Run Schedule State ---
+  const [raceSchedule, setRaceSchedule] = useState({
+    reportingTime: '', flagOffTime: '', notes: ''
+  });
+
+  // --- System Admin Management State ---
+  const [newAdmin, setNewAdmin] = useState<Partial<AdminUser>>({ uid: '', email: '', role: 'admin' });
 
   // --- New Item States ---
   const [newMatch, setNewMatch] = useState<Partial<Match>>({
@@ -104,6 +113,25 @@ export default function AdminPage() {
   }, [db, selectedSportSlug]);
   const { data: runResults } = useCollection<RunResult>(runResultsQuery);
 
+  const adminsQuery = useMemo(() => {
+    if (!db || adminProfile?.role !== 'super-admin') return null;
+    return query(collection(db, 'admins'));
+  }, [db, adminProfile]);
+  const { data: allAdmins } = useCollection<AdminUser>(adminsQuery);
+
+  const eventDocRef = useMemo(() => selectedSportSlug ? doc(db!, 'events', selectedSportSlug) : null, [db, selectedSportSlug]);
+  const { data: currentEventData } = useDoc<SportEvent>(eventDocRef);
+
+  useEffect(() => {
+    if (currentEventData && selectedSportSlug === 'kampus-run') {
+      setRaceSchedule({
+        reportingTime: currentEventData.reportingTime || '',
+        flagOffTime: currentEventData.flagOffTime || '',
+        notes: currentEventData.notes || ''
+      });
+    }
+  }, [currentEventData, selectedSportSlug]);
+
   const matches = useMemo(() => {
     return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
   }, [rawMatches]);
@@ -117,7 +145,6 @@ export default function AdminPage() {
   }, [user, userLoading, router]);
 
   const activeMatch = useMemo(() => matches?.find(m => m.id === selectedMatchId), [matches, selectedMatchId]);
-  
   const lastMatchIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -154,6 +181,33 @@ export default function AdminPage() {
     if (!customMsg) setBroadcastMessage('');
   };
 
+  const handleUpdateRaceSchedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || selectedSportSlug !== 'kampus-run') return;
+    setDoc(doc(db, 'events', 'kampus-run'), {
+      ...raceSchedule,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    toast({ title: "Race schedule updated." });
+  };
+
+  const handleAddAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !newAdmin.uid || !newAdmin.email) return;
+    setDoc(doc(db, 'admins', newAdmin.uid), {
+      ...newAdmin,
+      createdAt: serverTimestamp()
+    });
+    setNewAdmin({ uid: '', email: '', role: 'admin' });
+    toast({ title: "New admin added." });
+  };
+
+  const handleDeleteAdmin = (uid: string) => {
+    if (!db) return;
+    deleteDoc(doc(db, 'admins', uid));
+    toast({ title: "Admin removed." });
+  };
+
   const handleEditBroadcast = (b: Broadcast) => {
     setBroadcastMessage(b.message);
     setEditingBroadcastId(b.id);
@@ -176,6 +230,15 @@ export default function AdminPage() {
       winner: matchWinner,
       updatedAt: serverTimestamp(),
     });
+    
+    if (status === 'Completed' || status === 'Live') {
+      const activeMatch = matches.find(m => m.id === selectedMatchId);
+      const msg = status === 'Completed' 
+        ? `🏆 FINAL RESULT: ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})` 
+        : `🏟️ LIVE UPDATE: ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})`;
+      handlePostBroadcast(undefined, msg);
+    }
+    
     toast({ title: "Match updated." });
   };
 
@@ -303,6 +366,7 @@ export default function AdminPage() {
 
   const currentEvent = EVENTS.find(e => e.slug === selectedSportSlug);
   const isKampusRun = selectedSportSlug === 'kampus-run';
+  const isSuperAdmin = adminProfile.role === 'super-admin';
 
   if (!selectedSportSlug) {
     return (
@@ -312,94 +376,138 @@ export default function AdminPage() {
             <h1 className="text-3xl font-black uppercase text-foreground tracking-tighter">Admin Terminal</h1>
             <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paradox 2026 Core</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="bg-destructive/10 text-destructive text-[9px] font-black uppercase rounded-full px-6">Logout</Button>
+          <div className="flex gap-2">
+            {isSuperAdmin && (
+              <Button variant="outline" size="sm" onClick={() => setActiveTab('system')} className="text-[9px] font-black uppercase rounded-full px-6">System Mgmt</Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="bg-destructive/10 text-destructive text-[9px] font-black uppercase rounded-full px-6">Logout</Button>
+          </div>
         </div>
         
-        <Card className="premium-card">
-          <CardHeader className="border-b border-border">
-            <CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-              <Megaphone className="h-4 w-4" /> Global Broadcast Push
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handlePostBroadcast} className="flex flex-col gap-3">
-              <div className="relative">
-                <Input 
-                  value={broadcastMessage} 
-                  onChange={e => setBroadcastMessage(e.target.value)} 
-                  placeholder="Type announcement for all students..." 
-                  className="bg-muted/20 h-12 text-xs font-black uppercase pr-10" 
-                />
-                {editingBroadcastId && (
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6" 
-                    onClick={() => {
-                      setEditingBroadcastId(null);
-                      setBroadcastMessage('');
-                    }}
-                  >
-                    <X className="h-3 w-3" />
+        {isSuperAdmin && activeTab === 'system' && (
+          <div className="space-y-10">
+            <Button variant="link" onClick={() => setActiveTab('control')} className="p-0 h-auto text-[10px] font-black uppercase">Back to Broadcasts</Button>
+            <Card className="premium-card">
+              <CardHeader><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><UserPlus className="h-4 w-4" /> Manage Admins</CardTitle></CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleAddAdmin} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">UID</Label><Input value={newAdmin.uid} onChange={e => setNewAdmin({...newAdmin, uid: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Email</Label><Input type="email" value={newAdmin.email} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Role</Label>
+                    <Select value={newAdmin.role} onValueChange={v => setNewAdmin({...newAdmin, role: v as any})}>
+                      <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="super-admin">Super Admin</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="md:col-span-3 h-11 uppercase font-black text-[10px]">Add Access</Button>
+                </form>
+                
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase opacity-40 px-2">Access List</h3>
+                  {allAdmins?.map(a => (
+                    <div key={a.uid} className="flex items-center justify-between p-4 bg-muted/10 rounded-xl border border-border/40">
+                      <div>
+                        <p className="text-[11px] font-black uppercase">{a.email}</p>
+                        <p className="text-[8px] opacity-40 font-bold uppercase">{a.role} • UID: {a.uid}</p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAdmin(a.uid)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab !== 'system' && (
+          <>
+            <Card className="premium-card">
+              <CardHeader className="border-b border-border">
+                <CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                  <Megaphone className="h-4 w-4" /> Global Broadcast Push
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handlePostBroadcast} className="flex flex-col gap-3">
+                  <div className="relative">
+                    <Input 
+                      value={broadcastMessage} 
+                      onChange={e => setBroadcastMessage(e.target.value)} 
+                      placeholder="Type announcement for all students..." 
+                      className="bg-muted/20 h-12 text-xs font-black uppercase pr-10" 
+                    />
+                    {editingBroadcastId && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6" 
+                        onClick={() => {
+                          setEditingBroadcastId(null);
+                          setBroadcastMessage('');
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button type="submit" className="h-12 w-full uppercase font-black text-[10px] tracking-widest gap-2">
+                    {editingBroadcastId ? <Edit2 className="h-4 w-4" /> : <Radio className="h-4 w-4" />}
+                    {editingBroadcastId ? 'Update Broadcast' : 'Transmit Broadcast'}
                   </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <section className="space-y-4">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Broadcast Archive</h2>
+              <div className="grid grid-cols-1 gap-3">
+                {broadcasts && broadcasts.length > 0 ? broadcasts.map((b) => (
+                  <Card key={b.id} className="premium-card bg-muted/5 border-border/40">
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-[11px] font-bold text-foreground leading-relaxed italic line-clamp-2">"{b.message}"</p>
+                        <div className="flex items-center gap-2 opacity-40">
+                          <Clock className="h-3 w-3" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">{formatTimestamp(b.timestamp)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleEditBroadcast(b)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBroadcast(b.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )) : (
+                  <div className="py-10 text-center opacity-20 text-[9px] font-black uppercase tracking-widest">No previous broadcasts</div>
                 )}
               </div>
-              <Button type="submit" className="h-12 w-full uppercase font-black text-[10px] tracking-widest gap-2">
-                {editingBroadcastId ? <Edit2 className="h-4 w-4" /> : <Radio className="h-4 w-4" />}
-                {editingBroadcastId ? 'Update Broadcast' : 'Transmit Broadcast'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            </section>
 
-        <section className="space-y-4">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Broadcast Archive</h2>
-          <div className="grid grid-cols-1 gap-3">
-            {broadcasts && broadcasts.length > 0 ? broadcasts.map((b) => (
-              <Card key={b.id} className="premium-card bg-muted/5 border-border/40">
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                  <div className="space-y-1 min-w-0">
-                    <p className="text-[11px] font-bold text-foreground leading-relaxed italic line-clamp-2">"{b.message}"</p>
-                    <div className="flex items-center gap-2 opacity-40">
-                      <Clock className="h-3 w-3" />
-                      <span className="text-[8px] font-black uppercase tracking-widest">{formatTimestamp(b.timestamp)}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleEditBroadcast(b)}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBroadcast(b.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )) : (
-              <div className="py-10 text-center opacity-20 text-[9px] font-black uppercase tracking-widest">No previous broadcasts</div>
-            )}
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {EVENTS.map((event) => {
-            const IconComp = ICON_MAP[event.icon];
-            return (
-              <Button key={event.id} variant="ghost" className="p-0 h-auto text-left" onClick={() => setSelectedSportSlug(event.slug)}>
-                <Card className="premium-card w-full h-28 flex items-center px-6 gap-6 hover:bg-muted/10">
-                  <div className="h-12 w-12 bg-muted/20 rounded-xl flex items-center justify-center border border-border">
-                    {IconComp && <IconComp className="h-6 w-6 text-primary" />}
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-black uppercase text-foreground tracking-tight">{event.name}</h2>
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Broadcast Control</p>
-                  </div>
-                </Card>
-              </Button>
-            );
-          })}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {EVENTS.map((event) => {
+                const IconComp = ICON_MAP[event.icon];
+                return (
+                  <Button key={event.id} variant="ghost" className="p-0 h-auto text-left" onClick={() => setSelectedSportSlug(event.slug)}>
+                    <Card className="premium-card w-full h-28 flex items-center px-6 gap-6 hover:bg-muted/10">
+                      <div className="h-12 w-12 bg-muted/20 rounded-xl flex items-center justify-center border border-border">
+                        {IconComp && <IconComp className="h-6 w-6 text-primary" />}
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-black uppercase text-foreground tracking-tight">{event.name}</h2>
+                        <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Broadcast Control</p>
+                      </div>
+                    </Card>
+                  </Button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -415,7 +523,9 @@ export default function AdminPage() {
           <Button onClick={() => {
              const activeMatch = matches.find(m => m.id === selectedMatchId);
              if (!activeMatch) return;
-             const msg = `🏟️ LIVE UPDATE: ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})`;
+             const msg = activeMatch.status === 'Completed' 
+                ? `🏆 FINAL RESULT: ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})` 
+                : `🏟️ LIVE UPDATE: ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})`;
              window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
           }} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
             <Share2 className="h-4 w-4" /> Blast Result
@@ -425,10 +535,11 @@ export default function AdminPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl overflow-x-auto no-scrollbar">
-          <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">{isKampusRun ? 'Race Control' : 'Live Feed'}</TabsTrigger>
+          <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">{isKampusRun ? 'Race Results' : 'Live Feed'}</TabsTrigger>
+          {isKampusRun && <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Race Schedule</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="fixtures" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Fixtures</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Trials</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">League Management</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Standings</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="archives" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Archives</TabsTrigger>}
         </TabsList>
 
@@ -543,13 +654,29 @@ export default function AdminPage() {
                         </Select>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Push Broadcast Update</Button>
+                    <Button type="submit" className="w-full h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Push Update</Button>
                   </form>
                 )}
               </CardContent>
             </Card>
           )}
         </TabsContent>
+
+        {isKampusRun && (
+          <TabsContent value="schedule" className="space-y-6">
+            <Card className="premium-card">
+              <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Clock className="h-4 w-4" /> Edit Race Schedule</CardTitle></CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleUpdateRaceSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Reporting Time</Label><Input placeholder="e.g. 05:00 AM" value={raceSchedule.reportingTime} onChange={e => setRaceSchedule({...raceSchedule, reportingTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Flag Off Time</Label><Input placeholder="e.g. 05:30 AM" value={raceSchedule.flagOffTime} onChange={e => setRaceSchedule({...raceSchedule, flagOffTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes (Visible to all participants)</Label><Textarea placeholder="Instructions, water stations, route info..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
+                  <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Update Race Details</Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="fixtures" className="space-y-6">
           <Card className="premium-card">
@@ -659,7 +786,7 @@ export default function AdminPage() {
                 </Card>
               )) : (
                 <div className="md:col-span-3 py-16 text-center opacity-20 text-[10px] font-black uppercase tracking-[0.2em]">
-                  No trials scheduled for {selectedSportSlug?.replace('-', ' ')}
+                  No trials scheduled
                 </div>
               )}
             </div>
@@ -786,4 +913,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

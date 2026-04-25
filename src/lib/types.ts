@@ -8,6 +8,9 @@ export interface SportEvent {
   slug: SportType;
   icon: string;
   description: string;
+  reportingTime?: string;
+  flagOffTime?: string;
+  notes?: string;
 }
 
 export interface BadmintonMatchResult {
@@ -36,7 +39,7 @@ export interface Match {
   group?: string;
   keyEvents?: string[];
   badmintonResults?: BadmintonMatchResult[];
-  winner?: string; // Explicit winner field for overall match
+  winner?: string;
   updatedAt?: any;
 }
 
@@ -95,6 +98,7 @@ export interface Broadcast {
 export type UserRole = 'admin' | 'super-admin';
 
 export interface AdminUser {
+  id?: string;
   uid: string;
   email: string;
   role: UserRole;

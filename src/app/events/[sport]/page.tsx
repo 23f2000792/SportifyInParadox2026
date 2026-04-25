@@ -8,11 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { Match, RunResult, Trial, Standing, GROUPS } from '@/lib/types';
+import { useFirestore, useCollection, useDoc } from '@/firebase';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
+import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, Info } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -41,8 +41,14 @@ export default function EventPage() {
     if (saved) setMyHouse(saved);
   }, []);
 
-  const event = EVENTS.find(e => e.slug === sport);
-  if (!event) notFound();
+  const eventStatic = EVENTS.find(e => e.slug === sport);
+  if (!eventStatic) notFound();
+
+  // Fetch dynamic event details (reporting time, etc.)
+  const eventDocRef = useMemo(() => sport ? doc(db!, 'events', sport) : null, [db, sport]);
+  const { data: eventDynamic } = useDoc<SportEvent>(eventDocRef);
+
+  const event = { ...eventStatic, ...eventDynamic };
 
   const matchesQuery = useMemo(() => {
     if (!db) return null;
@@ -97,7 +103,6 @@ export default function EventPage() {
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Witness the glory on the Official Sportify Portal.`);
     const location = encodeURIComponent(match.venue);
     
-    // Construct Date for Google Calendar (YYYYMMDDTHHMMSSZ)
     const dateStr = match.date.replace(/-/g, '');
     const timeParts = match.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     let hourStr = '00';
@@ -121,7 +126,16 @@ export default function EventPage() {
 
   const handleShareMatch = (match: Match) => {
     const currentSport = event.name.toUpperCase();
-    const hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nCatch the live hype here! 👇\n🔗 ${window.location.origin}`;
+    let hypedText = '';
+    
+    if (match.status === 'Completed') {
+      hypedText = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}\n\nThe glory is sealed! Check more results here 👇\n🔗 ${window.location.origin}`;
+    } else if (match.status === 'Live') {
+      hypedText = `🔥 *LIVE ACTION INTENSIFIES!* 🔥\n\n🏟️ *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}\n\nCatch the pulse live! 👇\n🔗 ${window.location.origin}`;
+    } else {
+      hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nWitness the rivalry! 👇\n🔗 ${window.location.origin}`;
+    }
+    
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
 
@@ -197,6 +211,7 @@ export default function EventPage() {
             <span className="text-xl md:text-3xl font-black tracking-tighter">{match.scoreA} - {match.scoreB}</span>
             {match.status === 'Live' && <span className="text-[7px] font-black uppercase text-primary animate-pulse tracking-[0.2em]">Live</span>}
             {match.status === 'Upcoming' && <span className="text-[7px] font-black uppercase opacity-40">{match.time}</span>}
+            {match.status === 'Completed' && <span className="text-[7px] font-black uppercase text-green-500 tracking-[0.2em]">Final</span>}
           </div>
           <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase tracking-tight", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
         </div>
@@ -279,13 +294,20 @@ export default function EventPage() {
                       <Clock className="h-8 w-8 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-2xl font-black uppercase tracking-tighter">Reporting Time: 05:00 AM</h2>
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: 05:30 AM • SAC Grounds</p>
+                      <h2 className="text-2xl font-black uppercase tracking-tighter">Reporting Time: {event.reportingTime || '05:00 AM'}</h2>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: {event.flagOffTime || '05:30 AM'} • SAC Grounds</p>
                     </div>
-                    <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed">
-                      All participants must carry their Paradox 2026 ID cards. 
-                      Water stations will be available every 1KM.
-                    </div>
+                    {event.notes && (
+                      <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed">
+                        {event.notes}
+                      </div>
+                    )}
+                    {!event.notes && (
+                      <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed">
+                        All participants must carry their Paradox 2026 ID cards. 
+                        Water stations will be available every 1KM.
+                      </div>
+                    )}
                   </Card>
                </div>
             </TabsContent>
@@ -355,4 +377,3 @@ export default function EventPage() {
     </div>
   );
 }
-
