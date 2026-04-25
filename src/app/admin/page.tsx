@@ -164,7 +164,8 @@ export default function AdminPage() {
 
   const handleShareResult = () => {
     if (!activeMatch) return;
-    const hypedText = `🏟️ *BOOM! LIVE SCORE UPDATE* 🏟️\n\n🏆 *${activeMatch.sport.toUpperCase()}* 🏆\n🔥 *${activeMatch.teamA}* vs *${activeMatch.teamB}*\n\n📈 *SCORE: ${scoreA} - ${scoreB}*\n📍 Status: ${status}\n\nWitness the glory at Paradox 2026! 👇\n🔗 ${window.location.origin}`;
+    const currentSport = activeMatch.sport.toUpperCase().replace('-', ' ');
+    const hypedText = `🏟️ *BOOM! LIVE SCORE UPDATE* 🏟️\n\n🏆 *${currentSport}* 🏆\n🔥 *${activeMatch.teamA}* vs *${activeMatch.teamB}*\n\n📈 *SCORE: ${scoreA} - ${scoreB}*\n📍 Status: ${status}\n\nWitness the glory at Paradox 2026! 👇\n🔗 ${window.location.origin}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
 
@@ -221,6 +222,8 @@ export default function AdminPage() {
   const handleEditStanding = (s: Standing) => {
     setNewStanding(s);
     setEditingStandingId(s.id);
+    setActiveTab('standings');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteStanding = (id: string) => {
@@ -317,7 +320,7 @@ export default function AdminPage() {
           <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">{isKampusRun ? "Race Control" : "Live Feed"}</TabsTrigger>
           {!isKampusRun && <TabsTrigger value="fixtures" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Fixtures</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Trials</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">League Table</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">League Management</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="archives" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Archives</TabsTrigger>}
         </TabsList>
 
@@ -539,15 +542,19 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="standings" className="space-y-6">
+        <TabsContent value="standings" className="space-y-8">
           <Card className="premium-card">
-            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><ListOrdered className="h-4 w-4" /> League Management</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <ListOrdered className="h-4 w-4" /> {editingStandingId ? 'Update Standing' : 'Assign House to Group'}
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleAddOrUpdateStanding} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <form onSubmit={handleAddOrUpdateStanding} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-50">Team</Label>
                   <Select value={newStanding.team} onValueChange={v => setNewStanding({...newStanding, team: v})}>
-                    <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Team" /></SelectTrigger>
+                    <SelectTrigger className="bg-muted/20 h-11 uppercase font-black text-[10px]"><SelectValue placeholder="Select House" /></SelectTrigger>
                     <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
@@ -563,48 +570,71 @@ export default function AdminPage() {
                   <Input type="number" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Won</Label>
+                  <Label className="text-[9px] font-black uppercase opacity-50">Wins</Label>
                   <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Drawn</Label>
+                  <Label className="text-[9px] font-black uppercase opacity-50">Draws</Label>
                   <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Losses</Label>
+                  <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-50">Points</Label>
                   <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
-                <div className="md:col-span-3 flex gap-2 mt-4">
-                   <Button type="submit" className="flex-1 h-12 uppercase font-black text-[10px] tracking-widest">
-                     {editingStandingId ? 'Save Changes' : 'Assign House to Group'}
-                   </Button>
-                   {editingStandingId && (
-                     <Button type="button" variant="outline" onClick={() => {
-                       setEditingStandingId(null);
-                       setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
-                     }} className="h-12 uppercase font-black text-[10px]">Cancel</Button>
-                   )}
+                <div className="flex items-end gap-2">
+                  <Button type="submit" className="flex-1 h-11 uppercase font-black text-[10px] tracking-widest">
+                    {editingStandingId ? 'Save' : 'Add'}
+                  </Button>
+                  {editingStandingId && (
+                    <Button type="button" variant="outline" onClick={() => {
+                      setEditingStandingId(null);
+                      setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
+                    }} className="h-11 uppercase font-black text-[10px]">X</Button>
+                  )}
                 </div>
               </form>
             </CardContent>
           </Card>
 
-          <div className="space-y-4">
-             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Active League Table</h3>
-             <div className="grid grid-cols-1 gap-3">
-               {standings?.map(s => (
-                 <div key={s.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
-                   <div>
-                     <p className="text-[10px] font-black uppercase">{s.team} (Group {s.group})</p>
-                     <p className="text-[8px] opacity-40 uppercase font-bold">PTS: {s.points} • P: {s.played} • W: {s.won} • D: {s.drawn}</p>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <Button variant="ghost" size="icon" onClick={() => handleEditStanding(s)}><Edit2 className="h-4 w-4" /></Button>
-                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteStanding(s.id)}><Trash2 className="h-4 w-4" /></Button>
-                   </div>
-                 </div>
-               ))}
-             </div>
+          <div className="space-y-6">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Active League Table</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {GROUPS.map(g => {
+                const groupTeams = standings?.filter(s => s.group === g) || [];
+                return (
+                  <Card key={g} className="premium-card bg-muted/5 border-border/50">
+                    <CardHeader className="py-4 border-b border-border/30 bg-muted/10">
+                      <CardTitle className="text-[10px] font-black uppercase tracking-widest text-foreground">Group {g}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="divide-y divide-border/20">
+                        {groupTeams.length > 0 ? groupTeams.map((s, idx) => (
+                          <div key={s.id} className="flex items-center justify-between p-4 hover:bg-muted/5 transition-colors">
+                            <div className="flex items-center gap-4">
+                              <span className="text-[9px] font-black opacity-30">#{idx + 1}</span>
+                              <div>
+                                <p className="text-[10px] font-black uppercase">{s.team}</p>
+                                <p className="text-[8px] opacity-40 uppercase font-bold">P: {s.played} • W: {s.won} • D: {s.drawn} • PTS: {s.points}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditStanding(s)}><Edit2 className="h-3 w-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStanding(s.id)}><Trash2 className="h-3 w-3" /></Button>
+                            </div>
+                          </div>
+                        )) : (
+                          <div className="p-6 text-center opacity-20 text-[9px] font-black uppercase">No teams assigned</div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         </TabsContent>
 
@@ -618,7 +648,10 @@ export default function AdminPage() {
                   <p className="text-[8px] opacity-40 uppercase font-bold">Match #{m.matchNumber} • {m.date}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => setSelectedMatchId(m.id)}><Settings className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    setSelectedMatchId(m.id);
+                    setActiveTab('control');
+                  }}><Settings className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', m.id))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>

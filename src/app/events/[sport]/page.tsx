@@ -112,6 +112,7 @@ export default function EventPage() {
       minStr = minutes;
     }
     
+    // Use the actual match date and time for the reminder
     const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
     const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00Z`;
 
@@ -120,7 +121,8 @@ export default function EventPage() {
   };
 
   const handleShareMatch = (match: Match) => {
-    const hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${event.name}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nCatch the live hype here! 👇\n🔗 ${window.location.origin}`;
+    const currentSport = event.name.toUpperCase();
+    const hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nCatch the live hype here! 👇\n🔗 ${window.location.origin}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
 
