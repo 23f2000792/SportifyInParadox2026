@@ -45,8 +45,8 @@ service cloud.firestore {
     }
     match /fcmTokens/{tokenId} {
       allow read: if false;
-      allow create: if true; // Allow anyone to subscribe
-      allow update, delete: if false;
+      allow create, delete: if true; // Allow anyone to subscribe or unsubscribe
+      allow update: if false;
     }
   }
 }

@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getToken } from 'firebase/messaging';
+import { getToken, onMessage } from 'firebase/messaging';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '../provider';
 import { initializeFirebase, VAPID_KEY } from '../init';
@@ -25,6 +26,23 @@ export function useNotifications() {
   useEffect(() => {
     checkSubscription();
   }, [checkSubscription]);
+
+  // Handle foreground messages
+  useEffect(() => {
+    const instances = initializeFirebase();
+    if (instances?.messaging) {
+      const unsubscribe = onMessage(instances.messaging, (payload) => {
+        console.log('Message received in foreground: ', payload);
+        if (payload.notification) {
+          new Notification(payload.notification.title || 'Sportify Update', {
+            body: payload.notification.body,
+            icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
+          });
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
 
   const requestPermission = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -52,6 +70,8 @@ export function useNotifications() {
             await setDoc(doc(db, 'fcmTokens', token), {
               token,
               createdAt: serverTimestamp(),
+              platform: navigator.platform,
+              userAgent: navigator.userAgent
             });
             localStorage.setItem('fcm_token', token);
             setIsSubscribed(true);
@@ -88,6 +108,7 @@ export function useNotifications() {
     try {
       const token = localStorage.getItem('fcm_token');
       if (token) {
+        // Try to delete from firestore first
         await deleteDoc(doc(db, 'fcmTokens', token));
         localStorage.removeItem('fcm_token');
       }
@@ -96,12 +117,12 @@ export function useNotifications() {
         title: "Alerts Disabled",
         description: "You will no longer receive push notifications on this device.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error unsubscribing:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not disable alerts. Please try again.",
+        description: "Could not disable alerts. " + (error.message || "Please try again."),
       });
     } finally {
       setLoading(false);
