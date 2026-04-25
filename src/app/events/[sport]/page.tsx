@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { EVENTS } from '@/lib/mock-data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
