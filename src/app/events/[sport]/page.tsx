@@ -4,7 +4,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { EVENTS } from '@/lib/mock-data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Match, RunResult, Standing, GROUPS, HOUSES, Trial } from '@/lib/types';
 import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus, ClipboardList, Clock, Info } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus, ClipboardList, Clock, Info, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
@@ -371,6 +371,21 @@ export default function EventPage() {
                           )}>{match.teamB}</p>
                         </div>
                         
+                        {/* Live Badminton Sub-Match Progress */}
+                        {match.badmintonResults && match.sport === 'badminton' && (
+                          <div className="px-4 sm:px-10 py-4 border-t border-border bg-primary/[0.03]">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                              {match.badmintonResults.map(res => (
+                                <div key={res.type} className="bg-background/40 p-3 rounded-xl border border-primary/10 flex flex-col items-center gap-1">
+                                  <span className="text-[8px] font-black uppercase text-primary/60">{res.type}</span>
+                                  <span className="text-[10px] font-black text-foreground">{res.score || '0-0'}</span>
+                                  <span className="text-[7px] font-bold text-muted-foreground uppercase truncate w-full text-center">{res.winner || 'IN PROGRESS'}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="border-t border-border bg-muted/10 p-4 sm:p-6 md:p-10">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">

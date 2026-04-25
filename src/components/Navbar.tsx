@@ -1,9 +1,10 @@
+
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle } from 'lucide-react';
+import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -52,8 +53,8 @@ export function Navbar() {
         
         <div className="flex items-center gap-2 md:gap-3">
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-border rounded-full mr-2">
-            <Radio className="h-3 w-3 text-primary" />
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Live Broadcast</span>
+            <Radio className="h-3 w-3 text-primary animate-pulse" />
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Live Sync</span>
           </div>
           
           <TooltipProvider>
