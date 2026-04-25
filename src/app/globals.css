@@ -6,7 +6,7 @@
   :root {
     --background: 0 0% 99%;
     --foreground: 0 0% 10%;
-    --primary: 347 77% 50%; /* Red from kit */
+    --primary: 262 83% 58%; /* Reverted to Violet */
     --primary-foreground: 0 0% 100%;
     --accent: 48 96% 53%; /* Yellow from kit */
     --accent-foreground: 0 0% 10%;
@@ -22,14 +22,14 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 347 77% 50%;
+    --ring: 262 83% 58%;
     --radius: 0.5rem;
   }
 
   .dark {
     --background: 0 0% 4%;
     --foreground: 0 0% 98%;
-    --primary: 347 77% 50%;
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
     --accent: 48 96% 53%;
     --accent-foreground: 0 0% 10%;
@@ -43,7 +43,7 @@
     --muted-foreground: 0 0% 65%;
     --border: 0 0% 15%;
     --input: 0 0% 15%;
-    --ring: 347 77% 50%;
+    --ring: 262 83% 58%;
   }
 }
 
@@ -67,7 +67,7 @@
 }
 
 .premium-card:hover {
-  @apply border-primary shadow-[6px_6px_0px_0px_rgba(225,29,72,0.2)];
+  @apply border-primary shadow-[6px_6px_0px_0px_rgba(124,58,237,0.2)];
 }
 
 .dark .premium-card {
