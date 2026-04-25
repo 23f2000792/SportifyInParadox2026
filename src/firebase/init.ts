@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -63,7 +62,6 @@ export function initializeFirebase() {
 }
 
 /**
- * Replace 'YOUR_VAPID_KEY' with the key from Firebase Console:
- * Project Settings > Cloud Messaging > Web configuration > Web Push certificates
+ * Official VAPID Key for Sportify in Paradox 2026.
  */
-export const VAPID_KEY = 'YOUR_VAPID_KEY';
+export const VAPID_KEY = 'BMVONelA74Tj0E3AOslLx0SnCqBQJEBegudVfkXYBfDJ8RNKdy4tbj5u140YPD4oKFwjX6TIltDXSAn62pJiAJg';
