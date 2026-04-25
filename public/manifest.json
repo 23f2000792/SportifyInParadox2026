@@ -1,0 +1,25 @@
+
+{
+  "name": "Sportify Paradox 2026",
+  "short_name": "Sportify",
+  "description": "Official Sportify Portal for Paradox 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,34 +1,26 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Platinum Light Palette - Fixed for High Readability */
     --background: 240 10% 98%;
     --foreground: 240 10% 3.9%;
-    
-    --primary: 263 80% 40%; /* Deepened violet for contrast on white */
+    --primary: 263 80% 40%;
     --primary-foreground: 0 0% 100%;
-    
     --accent: 215 20% 50%;
     --accent-foreground: 240 10% 3.9%;
-    
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
-    
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    
     --secondary: 240 5% 94%;
     --secondary-foreground: 240 10% 3.9%;
-    
     --muted: 240 5% 90%;
     --muted-foreground: 240 5% 35%;
-    
     --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 98%;
-    
     --border: 240 5% 88%;
     --input: 240 5% 88%;
     --ring: 263 80% 40%;
@@ -36,28 +28,20 @@
   }
 
   .dark {
-    /* Midnight Dark Palette */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    
     --primary: 263 70% 50%;
     --primary-foreground: 0 0% 100%;
-    
     --accent: 215 20% 65%;
     --accent-foreground: 240 10% 3.9%;
-    
     --card: 240 10% 4.5%;
     --card-foreground: 0 0% 98%;
-    
     --popover: 240 10% 5%;
     --popover-foreground: 0 0% 98%;
-    
     --secondary: 240 10% 10%;
     --secondary-foreground: 0 0% 98%;
-    
     --muted: 240 5% 15%;
     --muted-foreground: 240 5% 65%;
-    
     --border: 240 10% 15%;
     --input: 240 10% 15%;
     --ring: 263 70% 50%;
@@ -67,10 +51,14 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* Native feel: prevent pull-to-refresh and horizontal bounce */
+    overscroll-behavior-y: none;
+    -webkit-touch-callout: none;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-black tracking-tighter uppercase italic;
@@ -83,6 +71,14 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
 }
 
 .premium-card {
@@ -104,7 +100,6 @@
   @apply opacity-100;
 }
 
-/* Hide arrows/spinners in number inputs for cleaner UI */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -112,4 +107,12 @@ input::-webkit-inner-spin-button {
 }
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+/* Perfect mobile buttons */
+button:active {
+  transform: scale(0.96);
+}
+button {
+  transition: transform 0.1s ease-in-out;
 }

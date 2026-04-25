@@ -33,8 +33,8 @@ export function Navbar() {
 
   return (
     <>
-      {/* Universal Top Bar */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.05] bg-background/80 backdrop-blur-xl h-16 flex items-center justify-between px-6">
+      {/* Universal Top Bar - Native iOS style blur */}
+      <header className="sticky top-0 z-50 w-full border-b border-white/[0.05] bg-background/80 backdrop-blur-2xl h-16 flex items-center justify-between px-6 pt-safe">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative h-8 w-8 overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.05] p-1.5">
             <Image 
@@ -129,10 +129,10 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-2xl border-t border-border h-16 flex items-center justify-around px-4 pb-safe">
+      {/* Mobile Bottom Navigation - Native App feel */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-2xl border-t border-border h-20 flex items-start justify-around px-4 pt-3 pb-safe">
         <Link href="/" className={cn("flex flex-col items-center gap-1 transition-all", pathname === "/" ? "text-primary" : "text-muted-foreground/30")}>
-          <Home className="h-4 w-4" />
+          <Home className="h-5 w-5" />
           <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
         </Link>
         {EVENTS.map((event) => {
@@ -145,7 +145,7 @@ export function Navbar() {
               href={`/events/${event.slug}`}
               className={cn("flex flex-col items-center gap-1 transition-all", isActive ? "text-primary" : "text-muted-foreground/30")}
             >
-              {IconComp && <IconComp className="h-4 w-4" />}
+              {IconComp && <IconComp className="h-5 w-5" />}
               <span className="text-[9px] font-black uppercase tracking-widest">{shortName}</span>
             </Link>
           );
