@@ -7,7 +7,6 @@ import { initializeFirebase } from './init';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
-import { Messaging } from 'firebase/messaging';
 
 /**
  * Orchestrates the Firebase singleton lifecycle on the client.
@@ -16,8 +15,7 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
   const [firebase, setFirebase] = useState<{ 
     app: FirebaseApp, 
     db: Firestore, 
-    auth: Auth,
-    messaging: Messaging | null
+    auth: Auth
   } | null>(null);
   const initialized = useRef(false);
 
@@ -40,7 +38,6 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
       app={firebase.app} 
       db={firebase.db} 
       auth={firebase.auth}
-      messaging={firebase.messaging}
     >
       {children}
     </FirebaseProvider>

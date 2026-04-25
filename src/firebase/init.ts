@@ -1,3 +1,4 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -8,7 +9,6 @@ import {
   getFirestore
 } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
-import { getMessaging, Messaging, isSupported } from 'firebase/messaging';
 import { firebaseConfig } from './config';
 
 /**
@@ -18,8 +18,7 @@ import { firebaseConfig } from './config';
 let cachedInstances: { 
   app: FirebaseApp, 
   db: Firestore, 
-  auth: Auth,
-  messaging: Messaging | null 
+  auth: Auth
 } | null = null;
 
 export function initializeFirebase() {
@@ -45,23 +44,9 @@ export function initializeFirebase() {
   }
 
   const auth = getAuth(app);
-  
-  // Messaging initialization
-  let messaging: Messaging | null = null;
-  isSupported().then(supported => {
-    if (supported) {
-      messaging = getMessaging(app);
-      if (cachedInstances) cachedInstances.messaging = messaging;
-    }
-  });
 
-  cachedInstances = { app, db, auth, messaging };
+  cachedInstances = { app, db, auth };
   _window.__FIREBASE_SINGLETON__ = cachedInstances;
 
   return cachedInstances;
 }
-
-/**
- * Official VAPID Key for Sportify in Paradox 2026.
- */
-export const VAPID_KEY = 'BMVONelA74Tj0E3AOslLx0SnCqBQJEBegudVfkXYBfDJ8RNKdy4tbj5u140YPD4oKFwjX6TIltDXSAn62pJiAJg';

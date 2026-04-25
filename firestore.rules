@@ -43,10 +43,5 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /fcmTokens/{tokenId} {
-      allow read: if false;
-      allow create, delete: if true; // Allow anyone to subscribe or unsubscribe
-      allow update: if false;
-    }
   }
 }

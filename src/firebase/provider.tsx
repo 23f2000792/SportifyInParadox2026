@@ -5,13 +5,11 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
-import { Messaging } from 'firebase/messaging';
 
 interface FirebaseContextType {
   app: FirebaseApp;
   db: Firestore;
   auth: Auth;
-  messaging: Messaging | null;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -24,16 +22,14 @@ export function FirebaseProvider({
   app,
   db,
   auth,
-  messaging,
 }: {
   children: ReactNode;
   app: FirebaseApp;
   db: Firestore;
   auth: Auth;
-  messaging: Messaging | null;
 }) {
   return (
-    <FirebaseContext.Provider value={{ app, db, auth, messaging }}>
+    <FirebaseContext.Provider value={{ app, db, auth }}>
       {children}
     </FirebaseContext.Provider>
   );
@@ -57,8 +53,4 @@ export function useFirestore() {
 
 export function useAuth() {
   return useFirebase().auth;
-}
-
-export function useMessaging() {
-  return useFirebase().messaging;
 }

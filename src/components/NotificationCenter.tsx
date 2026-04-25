@@ -1,13 +1,12 @@
+
 'use client';
 
 import { useMemo } from 'react';
-import { Bell, Megaphone, Clock, ShieldCheck, Loader2 } from 'lucide-react';
+import { Bell, Megaphone, Clock } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { useFirestore, useCollection, useNotifications } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Broadcast } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,7 +14,6 @@ import { cn } from '@/lib/utils';
 
 export function NotificationCenter() {
   const db = useFirestore();
-  const { isSubscribed, requestPermission, unsubscribe, loading: permissionLoading } = useNotifications();
 
   const broadcastQuery = useMemo(() => {
     if (!db) return null;
@@ -64,29 +62,6 @@ export function NotificationCenter() {
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Live Bulletins</h3>
             <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Sportify Broadcast</span>
-          </div>
-          
-          {/* Notification Opt-in */}
-          <div className="flex items-center justify-between p-2 rounded-lg bg-background/50 border border-border/50">
-            <div className="space-y-0.5">
-              <Label htmlFor="notif-toggle" className="text-[9px] font-black uppercase tracking-wider block">Mobile Alerts</Label>
-              <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-tight">System Push Notifications</p>
-            </div>
-            {permissionLoading ? (
-              <Loader2 className="h-3 w-3 animate-spin text-primary" />
-            ) : (
-              <Switch 
-                id="notif-toggle" 
-                checked={isSubscribed} 
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    requestPermission();
-                  } else {
-                    unsubscribe();
-                  }
-                }} 
-              />
-            )}
           </div>
         </div>
 
