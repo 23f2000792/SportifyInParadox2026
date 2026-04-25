@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,13 +9,13 @@
     --foreground: 0 0% 10%;
     --primary: 262 83% 58%; /* Paradox Violet */
     --primary-foreground: 0 0% 100%;
-    --accent: 48 96% 53%; /* Yellow from kit */
+    --accent: 48 96% 53%;
     --accent-foreground: 0 0% 10%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-    --secondary: 24 94% 50%; /* Orange from kit */
+    --secondary: 24 94% 50%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 94%;
     --muted-foreground: 0 0% 45%;
@@ -54,7 +55,6 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     overscroll-behavior-y: none;
     user-select: none;
   }
@@ -62,25 +62,19 @@
     @apply font-display font-black tracking-tight uppercase;
   }
   
-  /* Inputs and text content should be selectable */
   input, textarea, p, span, table {
     user-select: text;
   }
 }
 
 .premium-card {
-  @apply relative overflow-hidden bg-card border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)] transition-all duration-300 rounded-none;
+  @apply relative overflow-hidden bg-card border border-border shadow-sm transition-all duration-300 rounded-2xl;
 }
 
 .premium-card:hover {
-  @apply border-primary shadow-[6px_6px_0px_0px_rgba(124,58,237,0.2)];
+  @apply border-primary/50 shadow-md;
 }
 
-.dark .premium-card {
-  @apply shadow-[4px_4px_0px_0px_rgba(255,255,255,0.05)];
-}
-
-/* Perfect mobile native feel */
 button:active, a:active {
   @apply scale-95 transition-transform;
 }
@@ -95,4 +89,13 @@ button:active, a:active {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes progress-indefinite {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-progress-indefinite {
+  animation: progress-indefinite 1.5s infinite linear;
 }

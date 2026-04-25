@@ -5,17 +5,14 @@ import { useMemo, useState, useEffect } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { EVENTS } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Match, RunResult, Standing, GROUPS, HOUSES, Trial } from '@/lib/types';
-import Loading from '@/app/loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Share2, Activity, Star, Search, CalendarPlus, ClipboardList, Clock, Info, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { Match, RunResult, Standing, Trial } from '@/lib/types';
+import EventLoading from './loading';
+import { Trophy, Zap, CircleDot, Target, MapPin, Activity, Search, Filter } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -28,24 +25,18 @@ const ICON_MAP: Record<string, any> = {
   Target: Target,
 };
 
-const APP_URL = "https://sportify-in-paradox2026.vercel.app/";
-
 export default function EventPage() {
   const params = useParams();
   const sport = params.sport as string;
   const db = useFirestore();
-  const { toast } = useToast();
 
   const [myHouse, setMyHouse] = useState<string>('');
   const [focusMode, setFocusMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [todayStr, setTodayStr] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('followedHouse');
     if (saved) setMyHouse(saved);
-    const now = new Date();
-    setTodayStr(now.toISOString().split('T')[0]);
   }, []);
 
   const event = EVENTS.find(e => e.slug === sport);
@@ -61,100 +52,186 @@ export default function EventPage() {
     return query(collection(db, 'trials'), where('sport', '==', sport));
   }, [db, sport]);
 
-  const standingsQuery = useMemo(() => {
-    if (!db || sport === 'kampus-run') return null;
-    return query(collection(db, 'standings'), where('sport', '==', sport));
-  }, [db, sport]);
-
-  const runResultsQuery = useMemo(() => {
-    if (!db || sport !== 'kampus-run') return null;
-    return query(collection(db, 'runResults'));
-  }, [db, sport]);
-
   const { data: rawMatches, loading: matchesLoading } = useCollection<Match>(matchesQuery);
   const { data: trials, loading: trialsLoading } = useCollection<Trial>(trialsQuery);
-  const { data: standings, loading: stdLoading } = useCollection<Standing>(standingsQuery);
-  const { data: rawRunResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
 
-  const sportMatches = useMemo(() => {
+  const filteredMatches = useMemo(() => {
     let filtered = [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
+    
+    // Apply House Focus
     if (focusMode && myHouse) {
       filtered = filtered.filter(m => m.teamA === myHouse || m.teamB === myHouse);
     }
+
+    // Apply Search Query
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(m => 
+        m.teamA.toLowerCase().includes(q) || 
+        m.teamB.toLowerCase().includes(q) || 
+        m.matchNumber.toLowerCase().includes(q) ||
+        m.venue.toLowerCase().includes(q)
+      );
+    }
+
     return filtered;
-  }, [rawMatches, focusMode, myHouse]);
+  }, [rawMatches, focusMode, myHouse, searchQuery]);
 
-  const getWinner = (match: Match) => {
-    if (match.winner) return match.winner;
-    if (match.scoreA > match.scoreB) return match.teamA;
-    if (match.scoreB > match.scoreA) return match.teamB;
-    return "Draw";
-  };
-
-  if (matchesLoading || stdLoading || runLoading || trialsLoading) return <Loading />;
+  if (matchesLoading || trialsLoading) return <EventLoading />;
 
   const IconComp = ICON_MAP[event.icon];
 
-  return (
-    <div className="space-y-10 max-w-6xl mx-auto pb-32">
-      <div className="text-center space-y-4 px-4">
-        <h1 className="text-4xl md:text-6xl font-black uppercase text-foreground">{event.name}</h1>
-        <p className="text-xs font-bold uppercase tracking-[0.4em] text-primary">{event.description}</p>
-        {myHouse && sport !== 'kampus-run' && (
-          <div className="flex items-center justify-center gap-3 pt-4">
-            <Label htmlFor="focus-mode" className="text-[10px] font-black uppercase text-muted-foreground">Focus on {myHouse}</Label>
-            <Switch id="focus-mode" checked={focusMode} onCheckedChange={setFocusMode} />
+  const renderMatchCard = (match: Match) => {
+    const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
+    const winner = match.winner || (match.scoreA > match.scoreB ? match.teamA : match.scoreB > match.scoreA ? match.teamB : "Draw");
+    
+    return (
+      <Card key={match.id} className={cn(
+        "premium-card transition-all duration-300",
+        isMyMatch && "border-primary/40 bg-primary/[0.02]"
+      )}>
+        <CardContent className="p-0">
+          <div className="p-4 bg-muted/5 flex justify-between items-center border-b border-border">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Match #{match.matchNumber}</span>
+            <div className="flex items-center gap-2">
+               {isMyMatch && <Badge variant="default" className="h-4 text-[8px] px-1.5 uppercase font-black bg-primary">Your House</Badge>}
+               <Badge variant="outline" className="h-4 text-[8px] px-1.5 uppercase font-black border-border">{match.phase}</Badge>
+            </div>
           </div>
-        )}
+          
+          <div className="p-6 md:p-8 flex items-center justify-between gap-4">
+            <div className={cn(
+              "flex-1 text-right text-base md:text-2xl font-black uppercase transition-colors",
+              match.status === 'Completed' && winner !== match.teamA && "text-muted-foreground/30",
+              match.teamA === myHouse && "text-primary"
+            )}>
+              {match.teamA}
+            </div>
+            
+            <div className="px-4 py-2 bg-muted/20 border border-border rounded-xl flex flex-col items-center min-w-[80px]">
+              <span className="text-xl md:text-3xl font-black tracking-tighter">
+                {match.scoreA} - {match.scoreB}
+              </span>
+              {match.status === 'Live' && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[7px] font-black uppercase text-primary">Live</span>
+                </div>
+              )}
+            </div>
+
+            <div className={cn(
+              "flex-1 text-left text-base md:text-2xl font-black uppercase transition-colors",
+              match.status === 'Completed' && winner !== match.teamB && "text-muted-foreground/30",
+              match.teamB === myHouse && "text-primary"
+            )}>
+              {match.teamB}
+            </div>
+          </div>
+
+          <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1">
+                <MapPin className="h-3 w-3" /> {match.venue}
+              </span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase">{match.time}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {match.status === 'Completed' && <MatchRecapButton match={match} />}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="space-y-8 max-w-6xl mx-auto pb-32">
+      {/* Editorial Header */}
+      <div className="text-center space-y-4 px-4 pt-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted/20 rounded-full border border-border">
+          {IconComp && <IconComp className="h-3.5 w-3.5 text-primary" />}
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Tournament</p>
+        </div>
+        <h1 className="text-4xl md:text-7xl font-black uppercase text-foreground leading-none">{event.name}</h1>
+        <p className="text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>
+      </div>
+
+      {/* Global Filter & Search Bar */}
+      <div className="px-4 space-y-4">
+        <div className="flex flex-col md:flex-row items-center gap-4 bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search house or match #..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-11 bg-muted/10 border-none text-xs font-black uppercase placeholder:opacity-40"
+            />
+          </div>
+          <div className="flex items-center gap-6 shrink-0 bg-muted/20 px-4 py-2 rounded-xl border border-border/50">
+            <div className="flex items-center gap-2">
+              <Switch id="focus-mode" checked={focusMode} onCheckedChange={setFocusMode} disabled={!myHouse} />
+              <Label htmlFor="focus-mode" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground cursor-pointer">
+                Focus on {myHouse || 'Your House'}
+              </Label>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-2 text-primary">
+              <Filter className="h-3.5 w-3.5" />
+              <span className="text-[9px] font-black uppercase tracking-widest">{filteredMatches.length} Found</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="live" className="w-full">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl max-w-xl mx-auto mb-10">
-          <TabsTrigger value="live" className="flex-1 text-[9px] font-black uppercase">Live</TabsTrigger>
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl max-w-xl mx-auto mb-8">
+          <TabsTrigger value="live" className="flex-1 text-[9px] font-black uppercase">Live Updates</TabsTrigger>
           <TabsTrigger value="upcoming" className="flex-1 text-[9px] font-black uppercase">Fixtures</TabsTrigger>
-          <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase">Trials</TabsTrigger>
+          <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase">House Trials</TabsTrigger>
           <TabsTrigger value="completed" className="flex-1 text-[9px] font-black uppercase">Archives</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="live" className="space-y-4 px-4">
+          {filteredMatches.filter(m => m.status === 'Live').length > 0 ? (
+            filteredMatches.filter(m => m.status === 'Live').map(renderMatchCard)
+          ) : (
+            <div className="py-20 text-center space-y-4 opacity-40">
+              <Activity className="h-10 w-10 mx-auto text-muted-foreground" />
+              <p className="text-[10px] font-black uppercase tracking-[0.3em]">No Live Action Right Now</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="upcoming" className="space-y-4 px-4">
+          {filteredMatches.filter(m => m.status === 'Upcoming').map(renderMatchCard)}
+        </TabsContent>
+
         <TabsContent value="completed" className="space-y-4 px-4">
-          {sportMatches?.filter(m => m.status === 'Completed').map(match => {
-            const winner = getWinner(match);
-            return (
-              <Card key={match.id} className="premium-card">
-                <CardContent className="p-0">
-                  <div className="p-6 md:p-10 flex items-center justify-between gap-6">
-                    <p className={cn("flex-1 text-right text-base md:text-3xl font-black uppercase", winner === match.teamA ? 'text-foreground' : 'text-muted-foreground/40')}>{match.teamA}</p>
-                    <div className="text-xl md:text-5xl font-black bg-muted/30 px-4 py-2 rounded-xl border border-border">{match.scoreA} - {match.scoreB}</div>
-                    <p className={cn("flex-1 text-left text-base md:text-3xl font-black uppercase", winner === match.teamB ? 'text-foreground' : 'text-muted-foreground/40')}>{match.teamB}</p>
+          {filteredMatches.filter(m => m.status === 'Completed').reverse().map(renderMatchCard)}
+        </TabsContent>
+
+        <TabsContent value="trials" className="space-y-4 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {trials?.filter(t => !focusMode || t.house === myHouse).map((trial) => (
+              <Card key={trial.id} className={cn("premium-card", trial.house === myHouse && "border-primary/40 bg-primary/[0.02]")}>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 text-primary">{trial.house}</Badge>
+                    <span className="text-[10px] font-black text-muted-foreground uppercase">{trial.date}</span>
                   </div>
-                  <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                    <span>RESULT: {winner.toUpperCase()}</span>
-                    <MatchRecapButton match={match} />
+                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Selection Trials</h3>
+                  <div className="space-y-2 border-t border-border pt-4">
+                    <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><MapPin className="h-3 w-3" /> {trial.venue}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-widest"><Zap className="h-3 w-3" /> {trial.time}</p>
+                    {trial.notes && <p className="text-[9px] font-medium text-muted-foreground/60 leading-relaxed italic mt-2">{trial.notes}</p>}
                   </div>
                 </CardContent>
               </Card>
-            );
-          })}
+            ))}
+          </div>
         </TabsContent>
-
-        <TabsContent value="live" className="space-y-6 px-4">
-          {sportMatches?.filter(m => m.status === 'Live').map(match => (
-            <Card key={match.id} className="premium-card border-primary/40 bg-primary/[0.02]">
-              <CardContent className="p-6 md:p-14 flex flex-col items-center gap-8">
-                <div className="flex w-full items-center justify-between gap-4">
-                  <p className="flex-1 text-right text-xl md:text-4xl font-black uppercase">{match.teamA}</p>
-                  <div className="text-3xl md:text-7xl font-black px-6 py-4 rounded-2xl bg-muted/30 border border-border">{match.scoreA} : {match.scoreB}</div>
-                  <p className="flex-1 text-left text-xl md:text-4xl font-black uppercase">{match.teamB}</p>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Broadcast</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-        {/* Other Tabs content follows same pattern... */}
       </Tabs>
     </div>
   );
