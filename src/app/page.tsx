@@ -4,11 +4,11 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity, ClipboardList } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import { Match, HOUSES } from '@/lib/types';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { Match, HOUSES, Trial } from '@/lib/types';
 import Loading from '@/app/loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,7 @@ export default function Home() {
     localStorage.setItem('followedHouse', house);
   };
 
+  // Queries
   const liveMatchesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'matches'), where('status', '==', 'Live'));
@@ -44,16 +45,30 @@ export default function Home() {
     return query(collection(db, 'matches'), where('status', '==', 'Upcoming'));
   }, [db, myHouse]);
 
+  const houseTrialsQuery = useMemo(() => {
+    if (!db || !myHouse) return null;
+    return query(collection(db, 'trials'), where('house', '==', myHouse));
+  }, [db, myHouse]);
+
   const { data: liveMatches, loading: matchesLoading } = useCollection<Match>(liveMatchesQuery);
   const { data: allUpcoming } = useCollection<Match>(upcomingMatchesQuery);
+  const { data: allTrials } = useCollection<Trial>(houseTrialsQuery);
 
-  const houseUpcoming = useMemo(() => {
-    if (!myHouse || !allUpcoming) return [];
-    return allUpcoming
+  // Unified Timeline for Followed House
+  const myHouseTimeline = useMemo(() => {
+    if (!myHouse) return [];
+    
+    const houseMatches = (allUpcoming || [])
       .filter(m => m.teamA === myHouse || m.teamB === myHouse)
+      .map(m => ({ ...m, type: 'match' as const }));
+
+    const houseTrials = (allTrials || [])
+      .map(t => ({ ...t, type: 'trial' as const }));
+
+    return [...houseMatches, ...houseTrials]
       .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 3);
-  }, [allUpcoming, myHouse]);
+      .slice(0, 4);
+  }, [allUpcoming, allTrials, myHouse]);
 
   if (matchesLoading) return <Loading />;
 
@@ -63,22 +78,22 @@ export default function Home() {
       <div className="text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/20 border border-border mb-2">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Paradox 2026 Official</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Sportify Paradox 2026</p>
         </div>
         <div className="space-y-2">
           <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] text-foreground">
             SPORTIFY
           </h1>
-          <p className="text-xs font-bold uppercase tracking-[0.5em] text-primary/60">Broadcast Hub</p>
+          <p className="text-xs font-bold uppercase tracking-[0.5em] text-primary/60">Official Broadcast Hub</p>
         </div>
 
         {/* My House Personalization */}
         <div className="max-w-xs mx-auto pt-6">
           <div className="bg-card border border-border rounded-2xl p-4 space-y-3 shadow-sm">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Follow Your House</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Personalize Your Hub</p>
             <Select value={myHouse} onValueChange={handleFollowHouse}>
               <SelectTrigger className="bg-muted/30 border-border h-11 text-[11px] font-black uppercase">
-                <SelectValue placeholder="Select Team" />
+                <SelectValue placeholder="Follow Your House" />
               </SelectTrigger>
               <SelectContent>
                 {HOUSES.map(h => (
@@ -87,35 +102,50 @@ export default function Home() {
               </SelectContent>
             </Select>
             {myHouse && (
-              <p className="text-[9px] font-black text-primary uppercase animate-in fade-in slide-in-from-top-1">
-                Tracking: {myHouse}
-              </p>
+              <div className="flex items-center justify-center gap-1.5 animate-in fade-in slide-in-from-top-1">
+                <Star className="h-3 w-3 fill-primary text-primary" />
+                <p className="text-[9px] font-black text-primary uppercase tracking-widest">Tracking {myHouse} activities</p>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* House Specific Timeline */}
-      {myHouse && houseUpcoming.length > 0 && (
+      {/* Unified House Timeline */}
+      {myHouse && myHouseTimeline.length > 0 && (
         <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-              <CalendarClock className="h-4 w-4" /> {myHouse} Timeline
+              <CalendarClock className="h-4 w-4" /> Your House Schedule
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {houseUpcoming.map((match) => (
-              <Link key={match.id} href={`/events/${match.sport}`}>
-                <Card className="premium-card bg-primary/[0.02] border-primary/20 h-full group">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {myHouseTimeline.map((item: any) => (
+              <Link key={item.id} href={`/events/${item.sport}`}>
+                <Card className={cn(
+                  "premium-card h-full group",
+                  item.type === 'trial' ? "border-amber-500/20 bg-amber-500/[0.02]" : "border-primary/20 bg-primary/[0.02]"
+                )}>
                   <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">{match.sport.replace('-', ' ')}</p>
-                      <p className="text-lg font-black italic uppercase text-foreground leading-none">VS {match.teamA === myHouse ? match.teamB : match.teamA}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
+                        {item.type === 'trial' ? (
+                          <ClipboardList className="h-3 w-3 text-amber-500" />
+                        ) : (
+                          <Activity className="h-3 w-3 text-primary" />
+                        )}
+                      </div>
+                      <p className="text-base font-black italic uppercase text-foreground leading-tight">
+                        {item.type === 'match' 
+                          ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}`
+                          : `SELECTION TRIAL`}
+                      </p>
                     </div>
-                    <div className="space-y-1 border-t border-primary/10 pt-3">
-                      <p className="text-[10px] font-black text-foreground">{match.time} • {match.day}</p>
+                    <div className="space-y-1 border-t border-border/10 pt-3">
+                      <p className="text-[10px] font-black text-foreground">{item.time} • {item.date}</p>
                       <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {match.venue}
+                        <MapPin className="h-3 w-3" /> {item.venue}
                       </p>
                     </div>
                   </CardContent>
@@ -131,7 +161,7 @@ export default function Home() {
         <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-              <Radio className="h-4 w-4" /> Live Now
+              <Radio className="h-4 w-4" /> Live Highlights
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-4">
@@ -153,11 +183,6 @@ export default function Home() {
                           <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> {match.venue}
                           </span>
-                          {isMyMatch && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-[9px] font-black text-white uppercase">
-                              <Star className="h-2.5 w-2.5 fill-white" /> Followed
-                            </span>
-                          )}
                         </div>
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 overflow-hidden">
                           <p className={cn(
@@ -178,16 +203,6 @@ export default function Home() {
                             {match.teamB}
                           </p>
                         </div>
-                        {match.keyEvents && match.keyEvents.length > 0 && (
-                          <div className="flex items-center gap-3 pt-4 border-t border-border mt-4">
-                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                               <Activity className="h-3 w-3 text-primary" />
-                            </div>
-                            <span className="text-[11px] font-bold text-foreground leading-tight italic truncate">
-                              "{match.keyEvents[match.keyEvents.length - 1]}"
-                            </span>
-                          </div>
-                        )}
                       </div>
                       <ChevronRight className="h-8 w-8 text-muted-foreground/20 group-hover:text-primary transition-all shrink-0" />
                     </CardContent>
@@ -202,7 +217,7 @@ export default function Home() {
       {/* Sport Grid */}
       <section className="space-y-6">
         <h2 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/40 px-2">
-          Tournament Events
+          Explore Tournament
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {EVENTS.map((event) => {
