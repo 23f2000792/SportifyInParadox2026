@@ -93,8 +93,8 @@ export default function EventPage() {
   const isKampusRun = sport === 'kampus-run';
 
   const handleAddToCalendar = (match: Match) => {
-    const title = encodeURIComponent(`Sportify: ${match.teamA} vs ${match.teamB}`);
-    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Follow on Sportify.`);
+    const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
+    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Witness the glory on the Official Sportify Portal.`);
     const location = encodeURIComponent(match.venue);
     
     // Construct Date for Google Calendar (YYYYMMDDTHHMMSSZ)
@@ -120,8 +120,8 @@ export default function EventPage() {
   };
 
   const handleShareMatch = (match: Match) => {
-    const text = `🏆 *SPORTIFY: ${match.teamA} vs ${match.teamB}* 🏆\n\nPhase: ${match.phase}\nTime: ${match.time} • ${match.date}\nVenue: ${match.venue}\n\nLive scores: ${window.location.origin}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${event.name}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nCatch the live hype here! 👇\n🔗 ${window.location.origin}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
 
   const renderRunCategory = (title: string, category: string, gender: string, ageGroup: string = 'All') => {
@@ -145,7 +145,7 @@ export default function EventPage() {
                   <TableCell className="text-sm font-black uppercase">{r.name}</TableCell>
                   <TableCell className="text-right font-mono text-xs text-primary">{r.time}</TableCell>
                 </TableRow>
-              )) : <TableRow><TableCell colSpan={3} className="text-center py-6 opacity-30 text-[9px] uppercase font-black">Awaiting Official Feed</TableCell></TableRow>}
+              )) : <TableRow><TableCell colSpan={3} className="text-center py-6 opacity-30 text-[9px] uppercase font-black">Waiting for Official Finish Line Data</TableCell></TableRow>}
             </TableBody>
           </Table>
         </Card>
@@ -163,19 +163,19 @@ export default function EventPage() {
             <Badge variant="outline" className="text-[8px] uppercase font-black">{match.phase}</Badge>
           </div>
           {match.status === 'Upcoming' && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => handleAddToCalendar(match)}>
-              <Calendar className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10" onClick={() => handleAddToCalendar(match)}>
+              <Calendar className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
         <div className="p-6 md:p-8 flex items-center justify-between gap-4">
-          <div className={cn("flex-1 text-right text-base md:text-2xl font-black uppercase", match.teamA === myHouse && "text-primary")}>{match.teamA}</div>
+          <div className={cn("flex-1 text-right text-base md:text-2xl font-black uppercase tracking-tight", match.teamA === myHouse && "text-primary")}>{match.teamA}</div>
           <div className="px-4 py-2 bg-muted/20 border border-border rounded-xl flex flex-col items-center min-w-[80px]">
-            <span className="text-xl md:text-3xl font-black">{match.scoreA} - {match.scoreB}</span>
-            {match.status === 'Live' && <span className="text-[7px] font-black uppercase text-primary animate-pulse">Live</span>}
+            <span className="text-xl md:text-3xl font-black tracking-tighter">{match.scoreA} - {match.scoreB}</span>
+            {match.status === 'Live' && <span className="text-[7px] font-black uppercase text-primary animate-pulse tracking-[0.2em]">Live</span>}
             {match.status === 'Upcoming' && <span className="text-[7px] font-black uppercase opacity-40">{match.time}</span>}
           </div>
-          <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
+          <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase tracking-tight", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
         </div>
         <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center">
           <div className="flex flex-col gap-0.5">
@@ -198,9 +198,9 @@ export default function EventPage() {
       <div className="text-center space-y-4 px-4 pt-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted/20 rounded-full border border-border">
           {IconComp && <IconComp className="h-3.5 w-3.5 text-primary" />}
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Tournament</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Stream</p>
         </div>
-        <h1 className="text-4xl md:text-7xl font-black uppercase text-foreground leading-none">{event.name}</h1>
+        <h1 className="text-4xl md:text-7xl font-black uppercase text-foreground leading-none tracking-tighter">{event.name}</h1>
         <p className="text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>
       </div>
 
@@ -213,7 +213,7 @@ export default function EventPage() {
             </div>
             <div className="flex items-center gap-2 shrink-0 bg-muted/20 px-4 py-2 rounded-xl border border-border/50">
               <Switch checked={focusMode} onCheckedChange={setFocusMode} disabled={!myHouse} />
-              <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Focus on {myHouse || 'Your House'}</Label>
+              <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Follow {myHouse || 'House'}</Label>
             </div>
           </div>
         </div>
@@ -223,8 +223,8 @@ export default function EventPage() {
         <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar">
           {isKampusRun ? (
             <>
-              <TabsTrigger value="results" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Race Leaderboard</TabsTrigger>
-              <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Race Details</TabsTrigger>
+              <TabsTrigger value="results" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Rankings</TabsTrigger>
+              <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Race Info</TabsTrigger>
             </>
           ) : (
             <>
@@ -260,7 +260,7 @@ export default function EventPage() {
         ) : (
           <>
             <TabsContent value="live" className="space-y-4 px-4">
-              {filteredMatches.filter(m => m.status === 'Live').length > 0 ? filteredMatches.filter(m => m.status === 'Live').map(renderMatchCard) : <div className="py-20 text-center opacity-40 uppercase font-black text-[10px] tracking-widest">No Live Action</div>}
+              {filteredMatches.filter(m => m.status === 'Live').length > 0 ? filteredMatches.filter(m => m.status === 'Live').map(renderMatchCard) : <div className="py-20 text-center opacity-40 uppercase font-black text-[10px] tracking-widest">No Live Action Found</div>}
             </TabsContent>
             <TabsContent value="upcoming" className="space-y-4 px-4">{filteredMatches.filter(m => m.status === 'Upcoming').map(renderMatchCard)}</TabsContent>
             <TabsContent value="completed" className="space-y-4 px-4">{filteredMatches.filter(m => m.status === 'Completed').reverse().map(renderMatchCard)}</TabsContent>
@@ -304,7 +304,7 @@ export default function EventPage() {
                             <TableCell className="text-center text-xs">{s.won}</TableCell>
                             <TableCell className="text-center text-xs font-black text-primary">{s.points}</TableCell>
                           </TableRow>
-                        )) : <TableRow><TableCell colSpan={5} className="text-center py-6 opacity-30 text-[9px] font-black uppercase">Pending Group Data</TableCell></TableRow>}
+                        )) : <TableRow><TableCell colSpan={5} className="text-center py-6 opacity-30 text-[9px] font-black uppercase">Standings Pending</TableCell></TableRow>}
                       </TableBody>
                     </Table>
                   </Card>

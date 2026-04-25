@@ -7,7 +7,7 @@
   :root {
     --background: 0 0% 99%;
     --foreground: 0 0% 10%;
-    --primary: 262 83% 58%; /* Paradox Violet */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
     --accent: 48 96% 53%;
     --accent-foreground: 0 0% 10%;
@@ -59,7 +59,7 @@
     user-select: none;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-body font-black tracking-tight uppercase;
+    @apply font-body font-black uppercase tracking-tight;
   }
   
   input, textarea, p, span, table {
