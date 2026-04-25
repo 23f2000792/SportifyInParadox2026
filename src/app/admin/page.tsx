@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -143,14 +144,15 @@ export default function AdminPage() {
 
   const activeMatch = useMemo(() => matches?.find(m => m.id === selectedMatchId), [matches, selectedMatchId]);
 
-  // Handle initial active match load
+  // Handle initialization of form data when a match is selected
+  const lastInitializedId = useRef<string | null>(null);
+
   useEffect(() => {
-    if (activeMatch) {
+    if (activeMatch && selectedMatchId !== lastInitializedId.current) {
       setScoreA(activeMatch.scoreA);
       setScoreB(activeMatch.scoreB);
       setStatus(activeMatch.status as any);
       
-      // Only set local results if they exist, otherwise default
       if (activeMatch.badmintonResults && activeMatch.badmintonResults.length > 0) {
         setBadmintonResults(activeMatch.badmintonResults);
       } else if (selectedSportSlug === 'badminton') {
@@ -161,8 +163,16 @@ export default function AdminPage() {
           { type: 'XD', score: '0-0', winner: '' },
         ]);
       }
+      lastInitializedId.current = selectedMatchId;
     }
-  }, [selectedMatchId, selectedSportSlug]); // Only trigger on match selection, not on every data update
+  }, [activeMatch, selectedMatchId, selectedSportSlug]);
+
+  // Reset initialization tracker when switching matches
+  useEffect(() => {
+    if (!selectedMatchId) {
+      lastInitializedId.current = null;
+    }
+  }, [selectedMatchId]);
 
   // --- Handlers ---
   const handlePostBroadcast = (e?: React.FormEvent, customMsg?: string) => {
@@ -346,7 +356,7 @@ export default function AdminPage() {
   if (!user || !adminProfile) return null;
 
   const isSuperAdmin = adminProfile.role === 'super-admin';
-  const currentSport = EVENTS.find(e => e.slug === selectedSportSlug);
+  const currentEvent = EVENTS.find(e => e.slug === selectedSportSlug);
   const isKampusRun = selectedSportSlug === 'kampus-run';
 
   if (!selectedSportSlug) {
@@ -428,7 +438,7 @@ export default function AdminPage() {
     <div className="max-w-6xl mx-auto space-y-8 pb-32 px-4">
       <div className="border-b border-border pb-6">
         <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary hover:text-primary/70 gap-1.5 mb-2"><ChevronLeft className="h-3.5 w-3.5" /> Switch Sport</Button>
-        <h1 className="text-xl md:text-4xl font-black italic uppercase text-foreground">{ADMIN_SPORT_NAMES[currentSport?.slug || ''] || currentSport?.name} Control</h1>
+        <h1 className="text-xl md:text-4xl font-black italic uppercase text-foreground">{ADMIN_SPORT_NAMES[currentEvent?.slug || ''] || currentEvent?.name} Control</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

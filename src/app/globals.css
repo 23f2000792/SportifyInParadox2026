@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,9 +57,15 @@
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     overscroll-behavior-y: none;
+    user-select: none;
   }
-  h1, h2, h3 {
-    @apply font-headline font-black italic tracking-tighter uppercase;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-black italic tracking-tighter uppercase;
+  }
+  
+  /* Inputs and text content should be selectable */
+  input, textarea, p, span, table {
+    user-select: text;
   }
 }
 
@@ -76,11 +83,11 @@
 
 /* Perfect mobile native feel */
 button:active, a:active {
-  transform: scale(0.96) !important;
+  @apply scale-95 transition-transform;
 }
 
 .glass-morphism {
-  @apply bg-background/90 backdrop-blur-xl;
+  @apply bg-background/80 backdrop-blur-3xl backdrop-saturate-150;
 }
 
 .no-scrollbar::-webkit-scrollbar {
