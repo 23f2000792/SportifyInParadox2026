@@ -32,6 +32,7 @@ export function Navbar() {
 
   return (
     <>
+      {/* Top Header - Visible on both Desktop and Mobile */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm h-16 flex items-center justify-between px-4 pt-safe">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="relative h-8 w-8 overflow-hidden rounded-sm bg-muted p-1 border border-border">
@@ -69,7 +70,7 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Visible ONLY on Mobile */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-md border-t border-border h-16 flex items-center justify-around px-4 pb-safe shadow-lg">
         <Link href="/" className={cn("flex flex-col items-center gap-1 min-w-[50px]", pathname === "/" ? "text-primary" : "text-muted-foreground/40")}>
           <Home className="h-5 w-5" />

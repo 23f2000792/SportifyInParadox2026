@@ -147,10 +147,6 @@ export default function AdminPage() {
     return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
   }, [rawMatches]);
 
-  const trials = useMemo(() => {
-    return [...(rawTrials || [])].sort((a, b) => a.date.localeCompare(b.date));
-  }, [rawTrials]);
-
   useEffect(() => {
     if (!userLoading && !user) router.push('/admin/login');
   }, [user, userLoading, router]);
@@ -340,24 +336,6 @@ export default function AdminPage() {
     setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
   };
 
-  const handleBroadcastTrial = (t: Trial) => {
-    const msg = `📢 *TRIAL ALERT:* ${t.house} ${t.sport.toUpperCase().replace('-', ' ')} selection is starting now at ${t.venue}!\n\nTrack pulse at ${OFFICIAL_URL}`;
-    handlePostBroadcast(undefined, msg);
-  };
-
-  const handleEditTrial = (t: Trial) => {
-    setNewTrial(t);
-    setEditingTrialId(t.id);
-    setActiveTab('trials');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteTrial = (id: string) => {
-    if (!db) return;
-    deleteDoc(doc(db, 'trials', id));
-    toast({ title: "Trial removed." });
-  };
-
   const handleAddOrUpdateStanding = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug || !newStanding.team) return;
@@ -379,19 +357,6 @@ export default function AdminPage() {
     }
     
     setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
-  };
-
-  const handleEditStanding = (s: Standing) => {
-    setNewStanding(s);
-    setEditingStandingId(s.id);
-    setActiveTab('standings');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteStanding = (id: string) => {
-    if (!db) return;
-    deleteDoc(doc(db, 'standings', id));
-    toast({ title: "House removed from league." });
   };
 
   const updateBadmintonResult = (index: number, field: keyof BadmintonMatchResult, value: string) => {
@@ -422,7 +387,7 @@ export default function AdminPage() {
       <div className="space-y-10 max-w-5xl mx-auto py-10 px-4">
         <div className="flex justify-between items-center border-b border-border pb-6">
           <div className="space-y-1">
-            <h1 className="text-3xl font-black uppercase text-foreground tracking-tighter">Admin Terminal</h1>
+            <h1 className="text-xl md:text-3xl font-black uppercase text-foreground tracking-tighter">Admin Terminal</h1>
             <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paradox 2026 Core</p>
           </div>
           <div className="flex gap-2">
@@ -472,9 +437,9 @@ export default function AdminPage() {
                   <h3 className="text-[10px] font-black uppercase opacity-40 px-2">Access List</h3>
                   {allAdmins?.map(a => (
                     <div key={a.uid} className="flex items-center justify-between p-4 bg-muted/10 rounded-sm border border-border/40">
-                      <div>
-                        <p className="text-[11px] font-black uppercase">{a.email}</p>
-                        <p className="text-[8px] opacity-40 font-bold uppercase">{a.role} • {a.assignedSport === 'all' ? 'All Sports' : a.assignedSport?.toUpperCase()} • UID: {a.uid}</p>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-black uppercase truncate">{a.email}</p>
+                        <p className="text-[8px] opacity-40 font-bold uppercase truncate">{a.role} • {a.assignedSport === 'all' ? 'All Sports' : a.assignedSport?.toUpperCase()}</p>
                       </div>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="text-primary" onClick={() => handleEditAdmin(a)}><Edit2 className="h-4 w-4" /></Button>
@@ -502,7 +467,7 @@ export default function AdminPage() {
                     <Input 
                       value={broadcastMessage} 
                       onChange={e => setBroadcastMessage(e.target.value)} 
-                      placeholder="Type announcement for all students..." 
+                      placeholder="Type announcement..." 
                       className="bg-muted/20 h-12 text-xs font-black uppercase pr-10" 
                     />
                     {editingBroadcastId && (
@@ -535,17 +500,17 @@ export default function AdminPage() {
                   <Card key={b.id} className="premium-card bg-muted/5 border-border/40">
                     <CardContent className="p-4 flex items-center justify-between gap-4">
                       <div className="space-y-1 min-w-0">
-                        <p className="text-[11px] font-bold text-foreground leading-relaxed italic line-clamp-2">"{b.message}"</p>
+                        <p className="text-[10px] md:text-[11px] font-bold text-foreground leading-relaxed italic line-clamp-2">"{b.message}"</p>
                         <div className="flex items-center gap-2 opacity-40">
                           <Clock className="h-3 w-3" />
                           <span className="text-[8px] font-black uppercase tracking-widest">{formatTimestamp(b.timestamp)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleEditBroadcast(b)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleEditBroadcast(b)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBroadcast(b.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteBroadcast(b.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -562,12 +527,12 @@ export default function AdminPage() {
                 const IconComp = ICON_MAP[event.icon];
                 return (
                   <Button key={event.id} variant="ghost" className="p-0 h-auto text-left" onClick={() => setSelectedSportSlug(event.slug)}>
-                    <Card className="premium-card w-full h-28 flex items-center px-6 gap-6 hover:bg-muted/10">
-                      <div className="h-12 w-12 bg-muted/20 rounded-sm flex items-center justify-center border border-border">
-                        {IconComp && <IconComp className="h-6 w-6 text-primary" />}
+                    <Card className="premium-card w-full h-24 md:h-28 flex items-center px-6 gap-6 hover:bg-muted/10">
+                      <div className="h-10 w-10 md:h-12 md:w-12 bg-muted/20 rounded-sm flex items-center justify-center border border-border">
+                        {IconComp && <IconComp className="h-5 w-5 md:h-6 md:w-6 text-primary" />}
                       </div>
                       <div className="min-w-0">
-                        <h2 className="text-base sm:text-lg font-black uppercase text-foreground tracking-tight truncate">{event.name}</h2>
+                        <h2 className="text-sm md:text-lg font-black uppercase text-foreground tracking-tight truncate">{event.name}</h2>
                         <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Broadcast Control</p>
                       </div>
                     </Card>
@@ -591,21 +556,9 @@ export default function AdminPage() {
           {isSportSpecificAdmin && (
             <div className="text-[10px] font-black uppercase text-muted-foreground/40 mb-2">Restricted Terminal</div>
           )}
-          <h1 className="text-xl md:text-4xl font-black uppercase text-foreground tracking-tighter truncate">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
+          <h1 className="text-lg md:text-4xl font-black uppercase text-foreground tracking-tighter truncate">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {!isKampusRun && selectedMatchId && (
-            <Button onClick={() => {
-              const activeMatch = matches.find(m => m.id === selectedMatchId);
-              if (!activeMatch) return;
-              const msg = activeMatch.status === 'Completed' 
-                  ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch.teamA}* ${scoreA} - ${scoreB} *${activeMatch.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nGlory has been claimed! Witness full breakdown: ${OFFICIAL_URL}` 
-                  : `🏟️ *LIVE UPDATE:* ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow every point: ${OFFICIAL_URL}`;
-              window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-            }} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
-              <Share2 className="h-4 w-4" /> <span className="hidden sm:inline">Blast Result</span>
-            </Button>
-          )}
           <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="h-10 text-destructive bg-destructive/5 hover:bg-destructive/10 text-[9px] font-black uppercase px-4 rounded-sm flex items-center gap-2">
             <LogOut className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Logout</span>
           </Button>
@@ -785,7 +738,7 @@ export default function AdminPage() {
                 <form onSubmit={handleUpdateRaceSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Reporting Time</Label><Input placeholder="e.g. 05:00 AM" value={raceSchedule.reportingTime} onChange={e => setRaceSchedule({...raceSchedule, reportingTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Flag Off Time</Label><Input placeholder="e.g. 05:30 AM" value={raceSchedule.flagOffTime} onChange={e => setRaceSchedule({...raceSchedule, flagOffTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes</Label><Textarea placeholder="Instructions, water stations, route info..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
+                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes</Label><Textarea placeholder="Instructions..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
                   <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Update Race Details</Button>
                 </form>
               </CardContent>
@@ -926,11 +879,11 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 gap-3">
             {matches?.filter(m => m.status === 'Completed').reverse().map(m => (
               <div key={m.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
-                <div>
-                  <p className="text-[10px] font-black uppercase">{m.teamA} {m.scoreA} - {m.scoreB} {m.teamB}</p>
-                  <p className="text-[8px] opacity-40 uppercase font-bold">Match #{m.matchNumber} • {m.date}</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase truncate">{m.teamA} {m.scoreA} - {m.scoreB} {m.teamB}</p>
+                  <p className="text-[8px] opacity-40 uppercase font-bold truncate">Match #{m.matchNumber} • {m.date}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button variant="ghost" size="icon" onClick={() => {
                     setSelectedMatchId(m.id);
                     setActiveTab('control');
