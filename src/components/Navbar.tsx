@@ -87,9 +87,10 @@ export function Navbar() {
           
           {/* Right: Tools & Live Sync */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <div className="hidden md:flex items-center gap-2 border border-border px-4 py-2 rounded-full h-10">
-              <Radio className="h-3.5 w-3.5 text-primary animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Live Sync</span>
+            {/* Live Sync - Always visible on mobile, responsive text */}
+            <div className="flex items-center gap-2 border border-border px-3 sm:px-4 py-1.5 sm:py-2 rounded-full h-8 sm:h-10">
+              <Radio className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary animate-pulse" />
+              <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-foreground">Live Sync</span>
             </div>
             
             <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground/40 hidden xl:flex">
@@ -102,13 +103,13 @@ export function Navbar() {
             <Link
               href="/admin"
               className={cn(
-                "h-10 w-10 flex items-center justify-center transition-all border rounded-sm",
+                "h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center transition-all border rounded-sm",
                 pathname.startsWith("/admin") 
                   ? "text-white bg-primary border-primary" 
                   : "text-muted-foreground border-border bg-muted/20 hover:bg-muted/40"
               )}
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </div>
         </div>
