@@ -83,6 +83,7 @@ export default function AdminPage() {
   const [newMatch, setNewMatch] = useState<Partial<Match>>({
     matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: ''
   });
+  const [newMatchProcessing, setNewMatchProcessing] = useState(false);
   const [newTrial, setNewTrial] = useState<Partial<Trial>>({
     house: '', date: '', time: '', venue: '', notes: ''
   });
@@ -223,11 +224,20 @@ export default function AdminPage() {
     e.preventDefault();
     if (!db || !newAdmin.uid || !newAdmin.email) return;
     
-    setDoc(doc(db, 'admins', newAdmin.uid), {
+    const adminData: any = {
       ...newAdmin,
       updatedAt: serverTimestamp(),
-      createdAt: editingAdminUid ? undefined : serverTimestamp()
-    }, { merge: true });
+    };
+
+    if (!editingAdminUid) {
+      adminData.createdAt = serverTimestamp();
+    } else {
+      // Explicitly remove createdAt from the update object if editing to avoid passing undefined
+      // and let merge handle preserving the existing value.
+      delete adminData.createdAt;
+    }
+
+    setDoc(doc(db, 'admins', newAdmin.uid), adminData, { merge: true });
     
     setNewAdmin({ uid: '', email: '', role: 'admin', assignedSport: 'all' });
     setEditingAdminUid(null);
@@ -879,7 +889,7 @@ export default function AdminPage() {
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" title="Broadcast Live" onClick={() => handleBroadcastTrial(t)}><Radio className="h-3.5 w-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditTrial(t)}><Edit2 className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTrial(t.id)}><Trash2 className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTrial(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -980,7 +990,7 @@ export default function AdminPage() {
                             </div>
                             <div className="flex items-center gap-1">
                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditStanding(s)}><Edit2 className="h-3 w-3" /></Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStanding(s.id)}><Trash2 className="h-3 w-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStanding(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                             </div>
                           </div>
                         )) : (
@@ -1009,7 +1019,7 @@ export default function AdminPage() {
                     setSelectedMatchId(m.id);
                     setActiveTab('control');
                   }}><Settings className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', m.id))}><Trash2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', m.id))}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>
             ))}
