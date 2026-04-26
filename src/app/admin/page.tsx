@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock, UserPlus, ShieldCheck, Info, LogOut
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock, UserPlus, ShieldCheck, Info, LogOut, CalendarDays
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth, useDoc } from '@/firebase';
@@ -83,6 +83,8 @@ export default function AdminPage() {
   const [newMatch, setNewMatch] = useState<Partial<Match>>({
     matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: ''
   });
+  const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
+
   const [newTrial, setNewTrial] = useState<Partial<Trial>>({
     house: '', date: '', time: '', venue: '', notes: ''
   });
@@ -310,16 +312,35 @@ export default function AdminPage() {
   const handleAddMatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug) return;
-    addDoc(collection(db, 'matches'), { 
-      ...newMatch, 
-      sport: selectedSportSlug, 
-      scoreA: 0, 
-      scoreB: 0, 
-      status: 'Upcoming', 
-      createdAt: serverTimestamp() 
-    });
+    
+    const matchData = {
+      ...newMatch,
+      sport: selectedSportSlug,
+      updatedAt: serverTimestamp()
+    };
+
+    if (editingMatchId) {
+      updateDoc(doc(db, 'matches', editingMatchId), matchData);
+      setEditingMatchId(null);
+      toast({ title: "Fixture updated." });
+    } else {
+      addDoc(collection(db, 'matches'), { 
+        ...matchData, 
+        scoreA: 0, 
+        scoreB: 0, 
+        status: 'Upcoming', 
+        createdAt: serverTimestamp() 
+      });
+      toast({ title: "Fixture added." });
+    }
+    
     setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '' });
-    toast({ title: "Fixture added." });
+  };
+
+  const handleDeleteMatch = (id: string) => {
+    if (!db) return;
+    deleteDoc(doc(db, 'matches', id));
+    toast({ title: "Fixture removed." });
   };
 
   const handleAddOrUpdateTrial = (e: React.FormEvent) => {
@@ -757,9 +778,9 @@ export default function AdminPage() {
           </TabsContent>
         )}
 
-        <TabsContent value="fixtures" className="space-y-6">
+        <TabsContent value="fixtures" className="space-y-10">
           <Card className="premium-card">
-            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><MapPin className="h-4 w-4" /> Create Fixture</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><CalendarDays className="h-4 w-4" /> {editingMatchId ? 'Edit Fixture' : 'Create Fixture'}</CardTitle></CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleAddMatch} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Match Number</Label><Input placeholder="e.g. 1" value={newMatch.matchNumber} onChange={e => setNewMatch({...newMatch, matchNumber: e.target.value})} className="bg-muted/20 h-11" required /></div>
@@ -788,10 +809,42 @@ export default function AdminPage() {
                 <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Date</Label><Input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Time</Label><Input placeholder="e.g. 09:00 AM" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <div className="space-y-1.5 md:col-span-2"><Label className="text-[9px] font-black uppercase opacity-50">Venue</Label><Input placeholder="Venue" value={newMatch.venue} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Schedule Match</Button>
+                <div className="md:col-span-2 flex gap-2">
+                  <Button type="submit" className="flex-1 h-12 uppercase font-black text-[10px] tracking-widest">{editingMatchId ? 'Update Fixture' : 'Schedule Match'}</Button>
+                  {editingMatchId && (
+                    <Button variant="outline" onClick={() => {
+                      setEditingMatchId(null);
+                      setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '' });
+                    }} className="h-12 w-12 p-0"><X className="h-4 w-4" /></Button>
+                  )}
+                </div>
               </form>
             </CardContent>
           </Card>
+
+          <div className="space-y-4">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-primary px-2">Manage Scheduled Matches</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {matches?.map(m => (
+                <Card key={m.id} className="premium-card bg-muted/5 border-border/40 group">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-black uppercase">{m.teamA} vs {m.teamB} (#{m.matchNumber})</p>
+                      <p className="text-[8px] opacity-40 uppercase font-black tracking-widest">{m.phase} • {m.date} • {m.time}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => {
+                        setNewMatch(m);
+                        setEditingMatchId(m.id);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}><Edit2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteMatch(m.id)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="trials" className="space-y-10">
@@ -836,6 +889,30 @@ export default function AdminPage() {
               </form>
             </CardContent>
           </Card>
+
+          <div className="space-y-4">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-primary px-2">Manage Scheduled Trials</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {rawTrials?.map(t => (
+                <Card key={t.id} className="premium-card bg-muted/5 border-border/40 group">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-black uppercase">{t.house} Trials</p>
+                      <p className="text-[8px] opacity-40 uppercase font-black tracking-widest">{t.venue} • {t.date} • {t.time}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => {
+                        setNewTrial(t);
+                        setEditingTrialId(t.id);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}><Edit2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'trials', t.id))}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="standings" className="space-y-12">
