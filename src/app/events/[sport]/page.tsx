@@ -105,7 +105,7 @@ export default function EventPage() {
 
   const handleAddToCalendar = (match: Match) => {
     const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
-    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch every goal live at ${OFFICIAL_URL}`);
+    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}.`);
     const location = encodeURIComponent(match.venue);
     const dateStr = match.date.replace(/-/g, '');
     const timeParts = match.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -128,12 +128,17 @@ export default function EventPage() {
 
   const handleAddTrialToCalendar = (trial: Trial) => {
     const title = encodeURIComponent(`Sportify Trial: ${event.name} (${trial.house})`);
-    const details = encodeURIComponent(`Selection trials for ${event.name} - ${trial.house} House. Venue: ${trial.venue}. Details at ${OFFICIAL_URL}`);
+    const details = encodeURIComponent(`Selection trials for ${event.name} - ${trial.house} House. Venue: ${trial.venue}.`);
     const location = encodeURIComponent(trial.venue);
+    
+    // Admin sets date as YYYY-MM-DD
     const dateStr = trial.date.replace(/-/g, '');
+    
+    // Admin sets time as "HH:MM AM/PM"
     const timeParts = trial.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     let hourStr = '00';
     let minStr = '00';
+    
     if (timeParts) {
       let hours = parseInt(timeParts[1]);
       const minutes = timeParts[2];
@@ -143,8 +148,20 @@ export default function EventPage() {
       hourStr = hours.toString().padStart(2, '0');
       minStr = minutes;
     }
+    
     const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
-    const endTime = `${dateStr}T${(parseInt(hourStr) + 2).toString().padStart(2, '0')}${minStr}00Z`;
+    
+    // Set end time to exactly 30 mins after start as requested
+    let endHours = parseInt(hourStr);
+    let endMins = parseInt(minStr) + 30;
+    if (endMins >= 60) {
+      endHours += 1;
+      endMins -= 60;
+    }
+    const endHourStr = endHours.toString().padStart(2, '0');
+    const endMinStr = endMins.toString().padStart(2, '0');
+    const endTime = `${dateStr}T${endHourStr}${endMinStr}00Z`;
+
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
     window.open(url, '_blank');
   };
@@ -153,11 +170,11 @@ export default function EventPage() {
     const currentSport = event.name.toUpperCase();
     let hypedText = '';
     if (match.status === 'Completed') {
-      hypedText = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}\n\nHistory has been made! View the full breakdown 👇\n🔗 ${OFFICIAL_URL}`;
+      hypedText = `🏆 FINAL RESULT ALERT: ${currentSport}\n⚔️ ${match.teamA} ${match.scoreA} - ${match.scoreB} ${match.teamB}\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}`;
     } else if (match.status === 'Live') {
-      hypedText = `🔥 *LIVE ACTION INTENSIFIES!* 🔥\n\n🏟️ *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}\n\nDon't blink! Catch the pulse live! 👇\n🔗 ${OFFICIAL_URL}`;
+      hypedText = `🔥 LIVE ACTION ALERT: ${currentSport}\n⚔️ ${match.teamA} ${match.scoreA} - ${match.scoreB} ${match.teamB}\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}`;
     } else {
-      hypedText = `🏟️ *DON'T MISS THE RIVALRY!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nBe there to witness the glory! 👇\n🔗 ${OFFICIAL_URL}`;
+      hypedText = `🏟️ MATCH FIXTURE: ${currentSport}\n⚔️ ${match.teamA} vs ${match.teamB}\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}`;
     }
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
@@ -308,8 +325,8 @@ export default function EventPage() {
         </h1>
         {isKampusRun ? (
           <div className="space-y-2">
-             <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.5em] text-foreground/80">Miles With Purpose.</p>
-             <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60">Run for your mind, run for yourself.</p>
+             <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.5em] text-foreground/80">MILES WITH PURPOSE.</p>
+             <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60">RUN FOR YOUR MIND, RUN FOR YOURSELF.</p>
           </div>
         ) : (
           <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>

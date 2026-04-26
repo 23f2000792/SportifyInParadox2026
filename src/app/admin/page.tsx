@@ -34,8 +34,6 @@ const ICON_MAP: Record<string, any> = {
   Target: Target,
 };
 
-const OFFICIAL_URL = "https://sportify-in-paradox2026.vercel.app/";
-
 export default function AdminPage() {
   const { toast } = useToast();
   const db = useFirestore();
@@ -229,16 +227,15 @@ export default function AdminPage() {
       updatedAt: serverTimestamp(),
     });
     
-    // Trigger automated broadcasts based on status transitions
+    // Automated broadcast notifications (Clean, no URL, no asterisks)
     if (status === 'Live' && prevStatus !== 'Live') {
-      const msg = `🔥 *LIVE ACTION ALERT:* ${activeMatch?.teamA} vs ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()}) is NOW LIVE!\n\nFollow live: ${OFFICIAL_URL}`;
+      const msg = `📢 LIVE ACTION ALERT: ${activeMatch?.teamA} vs ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()}) is NOW LIVE!`;
       handlePostBroadcast(undefined, msg);
     } else if (status === 'Completed' && prevStatus !== 'Completed') {
-      const msg = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch?.teamA}* ${scoreA} - ${scoreB} *${activeMatch?.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nView stats: ${OFFICIAL_URL}`;
+      const msg = `🏆 FINAL RESULT ALERT: ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB}. Winner: ${matchWinner || 'N/A'}`;
       handlePostBroadcast(undefined, msg);
     } else if (status === 'Live') {
-      // Periodic live update
-      const msg = `🏟️ *LIVE SCORE UPDATE:* ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow: ${OFFICIAL_URL}`;
+      const msg = `🏟️ LIVE SCORE UPDATE: ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})`;
       handlePostBroadcast(undefined, msg);
     }
     
@@ -260,7 +257,7 @@ export default function AdminPage() {
   const handleBroadcastTrialStart = (trial: Trial) => {
     if (!db) return;
     const sportName = EVENTS.find(e => e.slug === trial.sport)?.name || trial.sport;
-    const msg = `📢 *SELECTION TRIALS ALERT!* 📢\n\nTrials for *${sportName}* (${trial.house} House) are starting NOW at *${trial.venue}*.\n\nBe there to claim your spot! 🔗 ${OFFICIAL_URL}`;
+    const msg = `📢 TRIAL ALERT: ${trial.house} ${sportName.toUpperCase()} selection is starting now at ${trial.venue}! Report immediately.`;
     handlePostBroadcast(undefined, msg);
     toast({ title: "Trial start broadcast pushed." });
   };
