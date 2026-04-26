@@ -20,13 +20,6 @@ const ICON_MAP: Record<string, any> = {
   Target: Target,
 };
 
-const SHORT_NAMES: Record<string, string> = {
-  'kampus-run': 'Run',
-  'football': 'FB',
-  'volleyball': 'VB',
-  'badminton': 'BD',
-};
-
 export function Navbar() {
   const pathname = usePathname();
 
@@ -87,7 +80,7 @@ export function Navbar() {
           
           {/* Right: Tools & Live Sync */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            {/* Live Sync - Always visible on mobile, responsive text */}
+            {/* Live Sync - Always visible */}
             <div className="flex items-center gap-2 border border-border px-3 sm:px-4 py-1.5 sm:py-2 rounded-full h-8 sm:h-10">
               <Radio className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary animate-pulse" />
               <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-foreground">Live Sync</span>
@@ -116,23 +109,22 @@ export function Navbar() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background border-t border-border h-16 flex items-center justify-around px-4 pb-safe shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background border-t border-border h-16 flex items-center justify-around px-2 pb-safe shadow-lg">
         <Link href="/" className={cn("flex flex-col items-center gap-1", pathname === "/" ? "text-primary" : "text-muted-foreground/40")}>
-          <Home className="h-5 w-5" />
-          <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+          <Home className="h-4 w-4" />
+          <span className="text-[7px] font-black uppercase tracking-widest">Home</span>
         </Link>
         {EVENTS.map((event) => {
           const IconComp = ICON_MAP[event.icon];
           const isActive = pathname === `/events/${event.slug}`;
-          const shortName = SHORT_NAMES[event.slug] || event.name.split(' ')[0];
           return (
             <Link
               key={event.id}
               href={`/events/${event.slug}`}
               className={cn("flex flex-col items-center gap-1", isActive ? "text-primary" : "text-muted-foreground/40")}
             >
-              {IconComp && <IconComp className="h-5 w-5" />}
-              <span className="text-[8px] font-black uppercase tracking-widest">{shortName}</span>
+              {IconComp && <IconComp className="h-4 w-4" />}
+              <span className="text-[7px] font-black uppercase tracking-widest text-center">{event.name}</span>
             </Link>
           );
         })}

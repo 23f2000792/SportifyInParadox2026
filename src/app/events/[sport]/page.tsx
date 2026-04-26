@@ -12,7 +12,7 @@ import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, Info, ChevronDown } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, Info, ChevronDown, ExternalLink } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 const OFFICIAL_URL = "https://sportify-in-paradox2026.vercel.app/";
+const OAT_MAPS_LINK = "https://maps.app.goo.gl/smHmEL9hih1NqRvW6";
 
 export default function EventPage() {
   const params = useParams();
@@ -333,7 +334,20 @@ export default function EventPage() {
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter">Reporting: {event.reportingTime || '05:00 AM'}</h2>
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: {event.flagOffTime || '05:30 AM'} • SAC Grounds</p>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: {event.flagOffTime || '05:30 AM'}</p>
+                      <div className="flex flex-col items-center gap-2 pt-2">
+                        <p className="text-[10px] font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                          <MapPin className="h-3 w-3 text-primary" /> Open Air Theater, IIT Madras
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 rounded-sm text-[8px] font-black uppercase gap-1.5 border-primary/20"
+                          onClick={() => window.open(OAT_MAPS_LINK, '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3" /> Get Directions
+                        </Button>
+                      </div>
                     </div>
                     {event.notes && (
                       <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed whitespace-pre-wrap">
