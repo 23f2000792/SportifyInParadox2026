@@ -276,10 +276,7 @@ export default function EventPage() {
           {IconComp && <IconComp className="h-3.5 w-3.5 text-primary" />}
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Stream</p>
         </div>
-        <h1 className={cn(
-          "font-black uppercase text-foreground leading-none tracking-tighter",
-          isKampusRun ? "text-5xl sm:text-7xl md:text-9xl italic" : "text-3xl sm:text-4xl md:text-7xl"
-        )}>
+        <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase text-foreground leading-none tracking-tighter italic">
           {event.name}
         </h1>
         {isKampusRun ? (
