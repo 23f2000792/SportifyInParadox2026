@@ -64,7 +64,7 @@ export default function EventPage() {
 
   const standingsQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'standings'), where('sport', '==', sport), orderBy('points', 'desc'));
+    return query(collection(db, 'standings'), where('sport', '==', sport));
   }, [db, sport]);
 
   const runResultsQuery = useMemo(() => {
@@ -90,7 +90,9 @@ export default function EventPage() {
   const groupedStandings = useMemo(() => {
     if (!standings) return {};
     return GROUPS.reduce((acc, g) => {
-      acc[g] = standings.filter(s => s.group === g);
+      acc[g] = [...standings]
+        .filter(s => s.group === g)
+        .sort((a, b) => b.points - a.points);
       return acc;
     }, {} as Record<string, Standing[]>);
   }, [standings]);
@@ -102,7 +104,7 @@ export default function EventPage() {
 
   const handleAddToCalendar = (match: Match) => {
     const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
-    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch the pulse at ${OFFICIAL_URL}`);
+    const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch every goal live at ${OFFICIAL_URL}`);
     const location = encodeURIComponent(match.venue);
     
     const dateStr = match.date.replace(/-/g, '');
@@ -131,11 +133,11 @@ export default function EventPage() {
     let hypedText = '';
     
     if (match.status === 'Completed') {
-      hypedText = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}\n\nGlory is sealed! Check the full scorecard 👇\n🔗 ${OFFICIAL_URL}`;
+      hypedText = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}\n\nHistory has been made! View the full breakdown 👇\n🔗 ${OFFICIAL_URL}`;
     } else if (match.status === 'Live') {
-      hypedText = `🔥 *LIVE ACTION INTENSIFIES!* 🔥\n\n🏟️ *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}\n\nCatch the pulse live! 👇\n🔗 ${OFFICIAL_URL}`;
+      hypedText = `🔥 *LIVE ACTION INTENSIFIES!* 🔥\n\n🏟️ *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}\n\nDon't blink! Catch the pulse live! 👇\n🔗 ${OFFICIAL_URL}`;
     } else {
-      hypedText = `🏟️ *DON'T MISS THE ACTION!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nWitness the rivalry! 👇\n🔗 ${OFFICIAL_URL}`;
+      hypedText = `🏟️ *DON'T MISS THE RIVALRY!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nBe there to witness the glory! 👇\n🔗 ${OFFICIAL_URL}`;
     }
     
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');

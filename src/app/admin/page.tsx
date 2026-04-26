@@ -113,7 +113,7 @@ export default function AdminPage() {
 
   const standingsQuery = useMemo(() => {
     if (!db || !selectedSportSlug) return null;
-    return query(collection(db, 'standings'), where('sport', '==', selectedSportSlug), orderBy('points', 'desc'));
+    return query(collection(db, 'standings'), where('sport', '==', selectedSportSlug));
   }, [db, selectedSportSlug]);
   const { data: standings } = useCollection<Standing>(standingsQuery);
 
@@ -255,7 +255,7 @@ export default function AdminPage() {
     if (status === 'Completed' || status === 'Live') {
       const activeMatch = matches.find(m => m.id === selectedMatchId);
       const msg = status === 'Completed' 
-        ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n*${activeMatch?.teamA}* ${scoreA} - ${scoreB} *${activeMatch?.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nCatch all action at ${OFFICIAL_URL}` 
+        ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch?.teamA}* ${scoreA} - ${scoreB} *${activeMatch?.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nView stats at ${OFFICIAL_URL}` 
         : `🏟️ *LIVE UPDATE:* ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow live: ${OFFICIAL_URL}`;
       handlePostBroadcast(undefined, msg);
     }
@@ -319,7 +319,7 @@ export default function AdminPage() {
   };
 
   const handleBroadcastTrial = (t: Trial) => {
-    const msg = `📢 *TRIAL ALERT:* ${t.house} ${t.sport.toUpperCase().replace('-', ' ')} selection is starting now at ${t.venue}!\n\nDetails: ${OFFICIAL_URL}`;
+    const msg = `📢 *TRIAL ALERT:* ${t.house} ${t.sport.toUpperCase().replace('-', ' ')} selection is starting now at ${t.venue}!\n\nTrack pulse at ${OFFICIAL_URL}`;
     handlePostBroadcast(undefined, msg);
   };
 
@@ -551,8 +551,8 @@ export default function AdminPage() {
              const activeMatch = matches.find(m => m.id === selectedMatchId);
              if (!activeMatch) return;
              const msg = activeMatch.status === 'Completed' 
-                ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n*${activeMatch.teamA}* ${scoreA} - ${scoreB} *${activeMatch.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nView full breakdown: ${OFFICIAL_URL}` 
-                : `🏟️ *LIVE UPDATE:* ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB}\n\nTrack progress: ${OFFICIAL_URL}`;
+                ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch.teamA}* ${scoreA} - ${scoreB} *${activeMatch.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nGlory has been claimed! Witness full breakdown: ${OFFICIAL_URL}` 
+                : `🏟️ *LIVE UPDATE:* ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow every point: ${OFFICIAL_URL}`;
              window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
           }} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
             <Share2 className="h-4 w-4" /> Blast Result
@@ -709,8 +709,8 @@ export default function AdminPage() {
                             <SelectItem value="Draw">Draw / Tie</SelectItem>
                             {activeMatch && (
                               <>
-                                <SelectItem value={activeMatch.teamA}>{activeMatch.teamA} Wins</SelectItem>
-                                <SelectItem value={activeMatch.teamB}>{activeMatch.teamB} Wins</SelectItem>
+                                <SelectItem value={activeMatch.teamA}>{activeMatch.teamA}</SelectItem>
+                                <SelectItem value={activeMatch.teamB}>{activeMatch.teamB}</SelectItem>
                               </>
                             )}
                           </SelectContent>
