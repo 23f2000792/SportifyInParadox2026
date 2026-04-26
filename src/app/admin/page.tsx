@@ -391,7 +391,6 @@ export default function AdminPage() {
   if (userLoading) return <div className="flex items-center justify-center min-h-[50vh]"><Timer className="animate-spin text-primary" /></div>;
   if (!user || !adminProfile) return null;
 
-  const currentEvent = EVENTS.find(e => e.slug === selectedSportSlug);
   const isKampusRun = selectedSportSlug === 'kampus-run';
   const isSuperAdmin = adminProfile.role === 'super-admin';
 
@@ -544,7 +543,7 @@ export default function AdminPage() {
       <div className="border-b border-border pb-6 pt-4 flex items-center justify-between">
         <div>
           <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Terminal</Button>
-          <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground tracking-tighter">{currentEvent?.name}</h1>
+          <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground tracking-tighter">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
         </div>
         {!isKampusRun && selectedMatchId && (
           <Button onClick={() => {
@@ -889,11 +888,11 @@ export default function AdminPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-50">Draws</Label>
-                  <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                  <Input type="number" value={newStanding.drawn || 0} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-50">Losses</Label>
-                  <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                  <Input type="number" value={newStanding.lost || 0} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-50">Points</Label>
@@ -932,7 +931,7 @@ export default function AdminPage() {
                               <span className="text-[9px] font-black opacity-30">#{idx + 1}</span>
                               <div>
                                 <p className="text-[10px] font-black uppercase">{s.team}</p>
-                                <p className="text-[8px] opacity-40 uppercase font-bold">P: {s.played} • W: {s.won} • D: {s.drawn} • PTS: {s.points}</p>
+                                <p className="text-[8px] opacity-40 uppercase font-bold">P: {s.played} • W: {s.won} • D: {s.drawn || 0} • L: {s.lost || 0} • PTS: {s.points}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-1">

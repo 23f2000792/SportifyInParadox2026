@@ -103,11 +103,15 @@ export default function EventPage() {
   const isKampusRun = sport === 'kampus-run';
 
   const handleAddToCalendar = (match: Match) => {
-    const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
+    const sportName = event.name;
+    const title = encodeURIComponent(`Sportify: ${sportName} - ${match.teamA} vs ${match.teamB}`);
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch every goal live at ${OFFICIAL_URL}`);
     const location = encodeURIComponent(match.venue);
     
+    // Parse the date properly (YYYY-MM-DD)
     const dateStr = match.date.replace(/-/g, '');
+    
+    // Parse the time (e.g., 09:00 AM)
     const timeParts = match.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     let hourStr = '00';
     let minStr = '00';
@@ -334,7 +338,7 @@ export default function EventPage() {
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: {event.flagOffTime || '05:30 AM'} • SAC Grounds</p>
                     </div>
                     {event.notes && (
-                      <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed">
+                      <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed whitespace-pre-wrap">
                         {event.notes}
                       </div>
                     )}
@@ -388,6 +392,8 @@ export default function EventPage() {
                           <TableHead>House</TableHead>
                           <TableHead className="text-center">P</TableHead>
                           <TableHead className="text-center">W</TableHead>
+                          <TableHead className="text-center">D</TableHead>
+                          <TableHead className="text-center">L</TableHead>
                           <TableHead className="text-center">PTS</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -398,9 +404,11 @@ export default function EventPage() {
                             <TableCell className="text-xs font-black uppercase">{s.team}</TableCell>
                             <TableCell className="text-center text-xs">{s.played}</TableCell>
                             <TableCell className="text-center text-xs">{s.won}</TableCell>
+                            <TableCell className="text-center text-xs">{s.drawn || 0}</TableCell>
+                            <TableCell className="text-center text-xs">{s.lost || 0}</TableCell>
                             <TableCell className="text-center text-xs font-black text-primary">{s.points}</TableCell>
                           </TableRow>
-                        )) : <TableRow><TableCell colSpan={5} className="text-center py-6 opacity-30 text-[9px] font-black uppercase">Standings Pending</TableCell></TableRow>}
+                        )) : <TableRow><TableCell colSpan={7} className="text-center py-6 opacity-30 text-[9px] font-black uppercase">Standings Pending</TableCell></TableRow>}
                       </TableBody>
                     </Table>
                   </Card>
