@@ -245,6 +245,18 @@ export default function AdminPage() {
     toast({ title: "Match updated." });
   };
 
+  const handleUpdateRaceSchedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || selectedSportSlug !== 'kampus-run') return;
+    updateDoc(doc(db, 'events', 'kampus-run'), {
+      reportingTime: raceSchedule.reportingTime,
+      flagOffTime: raceSchedule.flagOffTime,
+      notes: raceSchedule.notes,
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: "Race information updated." });
+  };
+
   const handleBroadcastTrialStart = (trial: Trial) => {
     if (!db) return;
     const sportName = EVENTS.find(e => e.slug === trial.sport)?.name || trial.sport;
@@ -1019,4 +1031,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

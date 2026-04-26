@@ -8,13 +8,17 @@ import {LiveScoreWatcher} from '@/components/LiveScoreWatcher';
 import {OfflineBanner} from '@/components/OfflineBanner';
 
 export const metadata: Metadata = {
-  title: 'Sportify in Paradox 2026',
+  title: 'Sportify Paradox 2026',
   description: 'Official Sportify Portal for Paradox 2026 - Real-time sports broadcast control.',
   manifest: '/manifest.json',
+  applicationName: 'Sportify',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Sportify',
+  },
+  formatDetection: {
+    telephone: false,
   },
   icons: {
     icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
@@ -42,14 +46,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
-        <link rel="manifest" href="/manifest.json" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
                   var theme = localStorage.getItem('paradox-theme');
-                  if (!theme) theme = 'light';
+                  if (!theme) theme = 'dark';
                   document.documentElement.classList.toggle('dark', theme === 'dark');
                 } catch (e) {}
               })();
