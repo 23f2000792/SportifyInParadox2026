@@ -68,6 +68,11 @@ export default {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      boxShadow: {
+        'sharp': '4px 4px 0px rgba(0, 0, 0, 0.05)',
+        'sharp-lg': '8px 8px 0px rgba(0, 0, 0, 0.05)',
+        'sharp-primary': '4px 4px 0px rgba(124, 58, 237, 0.2)',
+      }
     },
   },
   plugins: [require('tailwindcss-animate')],
