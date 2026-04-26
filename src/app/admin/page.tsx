@@ -214,32 +214,57 @@ export default function AdminPage() {
     if (!customMsg) setBroadcastMessage('');
   };
 
-  const handleUpdateRaceSchedule = (e: React.FormEvent) => {
+  const handleUpdateMatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || selectedSportSlug !== 'kampus-run') return;
-    setDoc(doc(db, 'events', 'kampus-run'), {
-      ...raceSchedule,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    toast({ title: "Race schedule updated." });
+    if (!selectedMatchId || !db) return;
+    
+    const prevStatus = activeMatch?.status;
+    
+    updateDoc(doc(db, 'matches', selectedMatchId), {
+      scoreA: Number(scoreA), 
+      scoreB: Number(scoreB), 
+      status, 
+      winner: matchWinner,
+      badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
+      updatedAt: serverTimestamp(),
+    });
+    
+    // Trigger automated broadcasts based on status transitions
+    if (status === 'Live' && prevStatus !== 'Live') {
+      const msg = `🔥 *LIVE ACTION ALERT:* ${activeMatch?.teamA} vs ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()}) is NOW LIVE!\n\nFollow live: ${OFFICIAL_URL}`;
+      handlePostBroadcast(undefined, msg);
+    } else if (status === 'Completed' && prevStatus !== 'Completed') {
+      const msg = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch?.teamA}* ${scoreA} - ${scoreB} *${activeMatch?.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nView stats: ${OFFICIAL_URL}`;
+      handlePostBroadcast(undefined, msg);
+    } else if (status === 'Live') {
+      // Periodic live update
+      const msg = `🏟️ *LIVE SCORE UPDATE:* ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow: ${OFFICIAL_URL}`;
+      handlePostBroadcast(undefined, msg);
+    }
+    
+    toast({ title: "Match updated." });
+  };
+
+  const handleBroadcastTrialStart = (trial: Trial) => {
+    if (!db) return;
+    const sportName = EVENTS.find(e => e.slug === trial.sport)?.name || trial.sport;
+    const msg = `📢 *SELECTION TRIALS ALERT!* 📢\n\nTrials for *${sportName}* (${trial.house} House) are starting NOW at *${trial.venue}*.\n\nBe there to claim your spot! 🔗 ${OFFICIAL_URL}`;
+    handlePostBroadcast(undefined, msg);
+    toast({ title: "Trial start broadcast pushed." });
   };
 
   const handleSaveAdmin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !newAdmin.uid || !newAdmin.email) return;
-    
     const { createdAt, ...updateData } = newAdmin as any;
     const adminData: any = {
       ...updateData,
       updatedAt: serverTimestamp(),
     };
-
     if (!editingAdminUid) {
       adminData.createdAt = serverTimestamp();
     }
-
     setDoc(doc(db, 'admins', newAdmin.uid), adminData, { merge: true });
-    
     setNewAdmin({ uid: '', email: '', role: 'admin', assignedSport: 'all' });
     setEditingAdminUid(null);
     toast({ title: editingAdminUid ? "Admin updated." : "New admin added." });
@@ -269,29 +294,6 @@ export default function AdminPage() {
     toast({ title: "Broadcast removed." });
   };
 
-  const handleUpdateMatch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedMatchId || !db) return;
-    updateDoc(doc(db, 'matches', selectedMatchId), {
-      scoreA: Number(scoreA), 
-      scoreB: Number(scoreB), 
-      status, 
-      winner: matchWinner,
-      badmintonResults: selectedSportSlug === 'badminton' ? badmintonResults : null,
-      updatedAt: serverTimestamp(),
-    });
-    
-    if (status === 'Completed' || status === 'Live') {
-      const activeMatch = matches.find(m => m.id === selectedMatchId);
-      const msg = status === 'Completed' 
-        ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch?.teamA}* ${scoreA} - ${scoreB} *${activeMatch?.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nView stats at ${OFFICIAL_URL}` 
-        : `🏟️ *LIVE UPDATE:* ${activeMatch?.teamA} ${scoreA} - ${scoreB} ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow live: ${OFFICIAL_URL}`;
-      handlePostBroadcast(undefined, msg);
-    }
-    
-    toast({ title: "Match updated." });
-  };
-
   const handleAddRunResult = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !runResult.name || !runResult.time) return;
@@ -312,13 +314,11 @@ export default function AdminPage() {
   const handleAddMatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug) return;
-    
     const matchData = {
       ...newMatch,
       sport: selectedSportSlug,
       updatedAt: serverTimestamp()
     };
-
     if (editingMatchId) {
       updateDoc(doc(db, 'matches', editingMatchId), matchData);
       setEditingMatchId(null);
@@ -333,7 +333,6 @@ export default function AdminPage() {
       });
       toast({ title: "Fixture added." });
     }
-    
     setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '' });
   };
 
@@ -346,7 +345,6 @@ export default function AdminPage() {
   const handleAddOrUpdateTrial = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug || !newTrial.house) return;
-    
     if (editingTrialId) {
       updateDoc(doc(db, 'trials', editingTrialId), { 
         ...newTrial, 
@@ -362,14 +360,12 @@ export default function AdminPage() {
       });
       toast({ title: "Trial scheduled successfully." });
     }
-    
     setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
   };
 
   const handleAddOrUpdateStanding = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug || !newStanding.team) return;
-    
     if (editingStandingId) {
       updateDoc(doc(db, 'standings', editingStandingId), { 
         ...newStanding, 
@@ -385,7 +381,6 @@ export default function AdminPage() {
       });
       toast({ title: "House added to group." });
     }
-    
     setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
   };
 
@@ -600,7 +595,7 @@ export default function AdminPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-sm overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
           <TabsTrigger value="control" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">{isKampusRun ? 'Race Results' : 'Live Feed'}</TabsTrigger>
-          {isKampusRun && <TabsTrigger value="schedule" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Race Schedule</TabsTrigger>}
+          {isKampusRun && <TabsTrigger value="schedule" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Race Info</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="fixtures" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Fixtures</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="trials" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Trials</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="standings" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Standings</TabsTrigger>}
@@ -762,21 +757,19 @@ export default function AdminPage() {
           )}
         </TabsContent>
 
-        {isKampusRun && (
-          <TabsContent value="schedule" className="space-y-6">
-            <Card className="premium-card">
-              <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Clock className="h-4 w-4" /> Edit Race Schedule</CardTitle></CardHeader>
-              <CardContent className="p-6">
-                <form onSubmit={handleUpdateRaceSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Reporting Time</Label><Input placeholder="e.g. 05:00 AM" value={raceSchedule.reportingTime} onChange={e => setRaceSchedule({...raceSchedule, reportingTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Flag Off Time</Label><Input placeholder="e.g. 05:30 AM" value={raceSchedule.flagOffTime} onChange={e => setRaceSchedule({...raceSchedule, flagOffTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes</Label><Textarea placeholder="Instructions..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
-                  <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Update Race Details</Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
+        <TabsContent value="schedule" className="space-y-6">
+          <Card className="premium-card">
+            <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Clock className="h-4 w-4" /> Edit Race Info</CardTitle></CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleUpdateRaceSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Reporting Time</Label><Input placeholder="e.g. 05:00 AM" value={raceSchedule.reportingTime} onChange={e => setRaceSchedule({...raceSchedule, reportingTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Flag Off Time</Label><Input placeholder="e.g. 05:30 AM" value={raceSchedule.flagOffTime} onChange={e => setRaceSchedule({...raceSchedule, flagOffTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes</Label><Textarea placeholder="Instructions..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
+                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Update Race Details</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="fixtures" className="space-y-10">
           <Card className="premium-card">
@@ -900,7 +893,10 @@ export default function AdminPage() {
                       <p className="text-[11px] font-black uppercase">{t.house} Trials</p>
                       <p className="text-[8px] opacity-40 uppercase font-black tracking-widest">{t.venue} • {t.date} • {t.time}</p>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="h-8 text-[8px] font-black uppercase gap-1" onClick={() => handleBroadcastTrialStart(t)}>
+                        <Radio className="h-3 w-3" /> Broadcast Start
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => {
                         setNewTrial(t);
                         setEditingTrialId(t.id);
@@ -1023,3 +1019,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

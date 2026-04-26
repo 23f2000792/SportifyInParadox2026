@@ -107,9 +107,7 @@ export default function EventPage() {
     const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch every goal live at ${OFFICIAL_URL}`);
     const location = encodeURIComponent(match.venue);
-    
     const dateStr = match.date.replace(/-/g, '');
-    
     const timeParts = match.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     let hourStr = '00';
     let minStr = '00';
@@ -122,10 +120,31 @@ export default function EventPage() {
       hourStr = hours.toString().padStart(2, '0');
       minStr = minutes;
     }
-    
     const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
     const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00Z`;
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
+    window.open(url, '_blank');
+  };
 
+  const handleAddTrialToCalendar = (trial: Trial) => {
+    const title = encodeURIComponent(`Sportify Trial: ${event.name} (${trial.house})`);
+    const details = encodeURIComponent(`Selection trials for ${event.name} - ${trial.house} House. Venue: ${trial.venue}. Details at ${OFFICIAL_URL}`);
+    const location = encodeURIComponent(trial.venue);
+    const dateStr = trial.date.replace(/-/g, '');
+    const timeParts = trial.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    let hourStr = '00';
+    let minStr = '00';
+    if (timeParts) {
+      let hours = parseInt(timeParts[1]);
+      const minutes = timeParts[2];
+      const ampm = timeParts[3].toUpperCase();
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      hourStr = hours.toString().padStart(2, '0');
+      minStr = minutes;
+    }
+    const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
+    const endTime = `${dateStr}T${(parseInt(hourStr) + 2).toString().padStart(2, '0')}${minStr}00Z`;
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
     window.open(url, '_blank');
   };
@@ -133,7 +152,6 @@ export default function EventPage() {
   const handleShareMatch = (match: Match) => {
     const currentSport = event.name.toUpperCase();
     let hypedText = '';
-    
     if (match.status === 'Completed') {
       hypedText = `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *SPORTIFY: ${currentSport}*\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}\n\nHistory has been made! View the full breakdown 👇\n🔗 ${OFFICIAL_URL}`;
     } else if (match.status === 'Live') {
@@ -141,7 +159,6 @@ export default function EventPage() {
     } else {
       hypedText = `🏟️ *DON'T MISS THE RIVALRY!* 🏟️\n\n🏆 *SPORTIFY: ${currentSport}* 🏆\n⚔️ *${match.teamA}* vs *${match.teamB}*\n\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}\n\nBe there to witness the glory! 👇\n🔗 ${OFFICIAL_URL}`;
     }
-    
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
 
@@ -390,7 +407,9 @@ export default function EventPage() {
                     <CardContent className="p-6 space-y-4">
                       <div className="flex justify-between items-start">
                         <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{trial.house}</Badge>
-                        <Trophy className="h-4 w-4 text-primary opacity-20" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleAddTrialToCalendar(trial)}>
+                          <Calendar className="h-4 w-4" />
+                        </Button>
                       </div>
                       <h3 className="text-lg font-black uppercase tracking-tighter">Selection Trials</h3>
                       <div className="space-y-1.5 border-t border-border pt-4">
@@ -443,3 +462,4 @@ export default function EventPage() {
     </div>
   );
 }
+
