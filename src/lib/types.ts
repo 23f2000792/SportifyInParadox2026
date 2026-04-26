@@ -102,7 +102,7 @@ export interface AdminUser {
   uid: string;
   email: string;
   role: UserRole;
-  assignedSport?: string;
+  assignedSport: string; // 'all' or a SportType slug
 }
 
 export const HOUSES = [

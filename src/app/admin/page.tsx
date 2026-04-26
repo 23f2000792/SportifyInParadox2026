@@ -76,7 +76,7 @@ export default function AdminPage() {
   });
 
   // --- System Admin Management State ---
-  const [newAdmin, setNewAdmin] = useState<Partial<AdminUser>>({ uid: '', email: '', role: 'admin' });
+  const [newAdmin, setNewAdmin] = useState<Partial<AdminUser>>({ uid: '', email: '', role: 'admin', assignedSport: 'all' });
 
   // --- New Item States ---
   const [newMatch, setNewMatch] = useState<Partial<Match>>({
@@ -154,6 +154,13 @@ export default function AdminPage() {
     if (!userLoading && !user) router.push('/admin/login');
   }, [user, userLoading, router]);
 
+  // Restrict access for non-super admins with specific assigned sport
+  useEffect(() => {
+    if (adminProfile && adminProfile.role !== 'super-admin' && adminProfile.assignedSport !== 'all') {
+      setSelectedSportSlug(adminProfile.assignedSport as SportType);
+    }
+  }, [adminProfile]);
+
   const activeMatch = useMemo(() => matches?.find(m => m.id === selectedMatchId), [matches, selectedMatchId]);
   const lastMatchIdRef = useRef<string | null>(null);
 
@@ -218,7 +225,7 @@ export default function AdminPage() {
       ...newAdmin,
       createdAt: serverTimestamp()
     });
-    setNewAdmin({ uid: '', email: '', role: 'admin' });
+    setNewAdmin({ uid: '', email: '', role: 'admin', assignedSport: 'all' });
     toast({ title: "New admin added." });
   };
 
@@ -393,6 +400,7 @@ export default function AdminPage() {
 
   const isKampusRun = selectedSportSlug === 'kampus-run';
   const isSuperAdmin = adminProfile.role === 'super-admin';
+  const isSportSpecificAdmin = adminProfile.role === 'admin' && adminProfile.assignedSport !== 'all';
 
   if (!selectedSportSlug) {
     return (
@@ -416,7 +424,7 @@ export default function AdminPage() {
             <Card className="premium-card">
               <CardHeader><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><UserPlus className="h-4 w-4" /> Manage Admins</CardTitle></CardHeader>
               <CardContent className="p-6">
-                <form onSubmit={handleAddAdmin} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                <form onSubmit={handleAddAdmin} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">UID</Label><Input value={newAdmin.uid} onChange={e => setNewAdmin({...newAdmin, uid: e.target.value})} className="bg-muted/20 h-11" required /></div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Email</Label><Input type="email" value={newAdmin.email} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} className="bg-muted/20 h-11" required /></div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Role</Label>
@@ -425,7 +433,16 @@ export default function AdminPage() {
                       <SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="super-admin">Super Admin</SelectItem></SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="md:col-span-3 h-11 uppercase font-black text-[10px]">Add Access</Button>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Assigned Sport</Label>
+                    <Select value={newAdmin.assignedSport} onValueChange={v => setNewAdmin({...newAdmin, assignedSport: v})}>
+                      <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sports</SelectItem>
+                        {EVENTS.map(e => <SelectItem key={e.id} value={e.slug}>{e.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="md:col-span-2 lg:col-span-4 h-11 uppercase font-black text-[10px]">Add Access</Button>
                 </form>
                 
                 <div className="space-y-3">
@@ -434,7 +451,7 @@ export default function AdminPage() {
                     <div key={a.uid} className="flex items-center justify-between p-4 bg-muted/10 rounded-xl border border-border/40">
                       <div>
                         <p className="text-[11px] font-black uppercase">{a.email}</p>
-                        <p className="text-[8px] opacity-40 font-bold uppercase">{a.role} • UID: {a.uid}</p>
+                        <p className="text-[8px] opacity-40 font-bold uppercase">{a.role} • {a.assignedSport === 'all' ? 'All Sports' : a.assignedSport?.toUpperCase()} • UID: {a.uid}</p>
                       </div>
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAdmin(a.uid)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -515,7 +532,7 @@ export default function AdminPage() {
             </section>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {EVENTS.map((event) => {
+              {EVENTS.filter(e => isSuperAdmin || adminProfile.assignedSport === 'all' || e.slug === adminProfile.assignedSport).map((event) => {
                 const IconComp = ICON_MAP[event.icon];
                 return (
                   <Button key={event.id} variant="ghost" className="p-0 h-auto text-left" onClick={() => setSelectedSportSlug(event.slug)}>
@@ -542,7 +559,12 @@ export default function AdminPage() {
     <div className="max-w-6xl mx-auto space-y-8 pb-32 px-4">
       <div className="border-b border-border pb-6 pt-4 flex items-center justify-between">
         <div>
-          <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Terminal</Button>
+          {!isSportSpecificAdmin && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Terminal</Button>
+          )}
+          {isSportSpecificAdmin && (
+            <div className="text-[10px] font-black uppercase text-muted-foreground/40 mb-2">Restricted Terminal</div>
+          )}
           <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground tracking-tighter">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
         </div>
         {!isKampusRun && selectedMatchId && (

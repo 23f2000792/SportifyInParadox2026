@@ -7,37 +7,43 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email == "23f2000792@ds.study.iitm.ac.in";
     }
 
-    function isAdmin() {
-      return isSuperAdminEmail() || exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    function getAdminData() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
     }
-    
+
     function isSuperAdmin() {
-      return isSuperAdminEmail() || (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'super-admin');
+      return isSuperAdminEmail() || (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) && getAdminData().role == 'super-admin');
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function canManageSport(sportSlug) {
+      if (isSuperAdmin()) return true;
+      let data = getAdminData();
+      return data.assignedSport == 'all' || data.assignedSport == sportSlug;
     }
 
     match /events/{eventId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin() || (isAdmin() && canManageSport(eventId));
     }
     match /matches/{matchId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin() || (isAdmin() && canManageSport(request.resource.data.sport || resource.data.sport));
     }
     match /trials/{trialId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin() || (isAdmin() && canManageSport(request.resource.data.sport || resource.data.sport));
     }
     match /standings/{standingId} {
       allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /championship/{standingId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin() || (isAdmin() && canManageSport(request.resource.data.sport || resource.data.sport));
     }
     match /runResults/{resultId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin() || (isAdmin() && canManageSport('kampus-run'));
     }
     match /admins/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isSuperAdmin());
