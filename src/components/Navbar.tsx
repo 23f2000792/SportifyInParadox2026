@@ -1,10 +1,9 @@
-
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle, Share2 } from 'lucide-react';
+import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -22,10 +21,10 @@ const ICON_MAP: Record<string, any> = {
 };
 
 const SHORT_NAMES: Record<string, string> = {
-  'kampus-run': 'Kampus Run',
+  'kampus-run': 'Run',
   'football': 'Football',
-  'volleyball': 'Volleyball',
-  'badminton': 'Badminton',
+  'volleyball': 'Volley',
+  'badminton': 'Bdmntn',
 };
 
 export function Navbar() {
@@ -33,15 +32,14 @@ export function Navbar() {
 
   return (
     <>
-      {/* Universal Top Bar - Native iOS style blur */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.05] bg-background/80 backdrop-blur-3xl backdrop-saturate-150 h-16 flex items-center justify-between px-6 pt-safe">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative h-8 w-8 overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.05] p-1.5 shadow-sm">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md h-16 flex items-center justify-between px-4 pt-safe">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="relative h-8 w-8 overflow-hidden rounded-md bg-muted p-1 border border-border">
             <Image 
               src={LOGO_URL}
               alt="Sportify Logo"
               fill
-              className="object-contain p-1"
+              className="object-contain p-0.5"
               priority
             />
           </div>
@@ -51,42 +49,16 @@ export function Navbar() {
           </div>
         </Link>
         
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-border rounded-full mr-2">
-            <Radio className="h-3 w-3 text-primary animate-pulse" />
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Live Sync</span>
-          </div>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className="h-9 w-9 rounded-xl border border-border bg-white/[0.03] hover:bg-white/[0.06] text-muted-foreground hover:text-primary transition-all"
-                >
-                  <a href="mailto:Thesportify.society@study.iitm.ac.in">
-                    <HelpCircle className="h-[18px] w-[18px]" />
-                  </a>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="text-[10px] font-black uppercase tracking-widest">
-                Quick Help
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
+        <div className="flex items-center gap-2">
           <NotificationCenter />
           <ThemeToggle />
-
           <Link
             href="/admin"
             className={cn(
-              "h-9 w-9 flex items-center justify-center rounded-xl transition-all border",
+              "h-9 w-9 flex items-center justify-center rounded-md transition-all border",
               pathname.startsWith("/admin") 
                 ? "text-primary bg-primary/10 border-primary/20" 
-                : "text-muted-foreground border-border bg-white/[0.03] hover:bg-white/[0.06] hover:text-foreground"
+                : "text-muted-foreground border-border bg-muted/30 hover:bg-muted/50"
             )}
           >
             <Settings className="h-4 w-4" />
@@ -95,15 +67,15 @@ export function Navbar() {
       </header>
 
       {/* Desktop Navigation */}
-      <nav className="hidden md:flex w-full border-b border-border bg-background/40 backdrop-blur-sm">
+      <nav className="hidden md:flex w-full border-b border-border bg-muted/5">
         <div className="container mx-auto max-w-5xl flex items-center px-4">
           <Link
             href="/"
             className={cn(
-              "flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 whitespace-nowrap",
+              "px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors",
               pathname === "/" 
-                ? "text-primary border-primary bg-primary/[0.02]" 
-                : "text-muted-foreground/40 border-transparent hover:text-foreground hover:bg-white/[0.01]"
+                ? "text-primary border-primary bg-primary/5" 
+                : "text-muted-foreground/60 border-transparent hover:text-foreground"
             )}
           >
             Home
@@ -116,10 +88,10 @@ export function Navbar() {
                 key={event.id}
                 href={`/events/${event.slug}`}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 whitespace-nowrap",
+                  "px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors",
                   isActive 
-                    ? "text-primary border-primary bg-primary/[0.02]" 
-                    : "text-muted-foreground/40 border-transparent hover:text-foreground hover:bg-white/[0.01]"
+                    ? "text-primary border-primary bg-primary/5" 
+                    : "text-muted-foreground/60 border-transparent hover:text-foreground"
                 )}
               >
                 {shortName}
@@ -129,11 +101,11 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation - Native App feel */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-3xl border-t border-border h-20 flex items-start justify-around px-4 pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <Link href="/" className={cn("flex flex-col items-center gap-1 transition-all", pathname === "/" ? "text-primary" : "text-muted-foreground/30")}>
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-md border-t border-border h-16 flex items-center justify-around px-4 pb-safe shadow-lg">
+        <Link href="/" className={cn("flex flex-col items-center gap-1", pathname === "/" ? "text-primary" : "text-muted-foreground/40")}>
           <Home className="h-5 w-5" />
-          <span className="text-[9px] font-black uppercase tracking-widest">Home</span>
+          <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
         </Link>
         {EVENTS.map((event) => {
           const IconComp = ICON_MAP[event.icon];
@@ -143,10 +115,10 @@ export function Navbar() {
             <Link
               key={event.id}
               href={`/events/${event.slug}`}
-              className={cn("flex flex-col items-center gap-1 transition-all", isActive ? "text-primary" : "text-muted-foreground/30")}
+              className={cn("flex flex-col items-center gap-1", isActive ? "text-primary" : "text-muted-foreground/40")}
             >
               {IconComp && <IconComp className="h-5 w-5" />}
-              <span className="text-[9px] font-black uppercase tracking-widest">{shortName}</span>
+              <span className="text-[8px] font-black uppercase tracking-widest">{shortName}</span>
             </Link>
           );
         })}

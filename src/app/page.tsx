@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -19,7 +18,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -62,7 +60,6 @@ export default function Home() {
   const { data: allUpcoming } = useCollection<Match>(upcomingMatchesQuery);
   const { data: allTrials } = useCollection<Trial>(houseTrialsQuery);
 
-  // Unified Timeline for Followed House
   const myHouseTimeline = useMemo(() => {
     if (!myHouse) return [];
     
@@ -83,9 +80,9 @@ export default function Home() {
     <div className="space-y-12 max-w-5xl mx-auto py-10 md:py-16 px-4 mb-24">
       {/* Hero Section */}
       <div className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/20 border border-border mb-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border mb-2">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Sportify Paradox 2026</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Sportify Paradox 2026</p>
         </div>
         <div className="space-y-2">
           <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] text-foreground">
@@ -96,10 +93,10 @@ export default function Home() {
 
         {/* My House Personalization */}
         <div className="max-w-xs mx-auto pt-6">
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3 shadow-sm">
+          <div className="bg-card border border-border rounded-md p-4 space-y-3 shadow-sm">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Personalize Your Hub</p>
             <Select value={myHouse} onValueChange={handleFollowHouse}>
-              <SelectTrigger className="bg-muted/30 border-border h-11 text-[11px] font-black uppercase">
+              <SelectTrigger className="bg-muted h-11 text-[11px] font-black uppercase rounded-sm">
                 <SelectValue placeholder="Follow Your House" />
               </SelectTrigger>
               <SelectContent>
@@ -118,7 +115,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Unified House Timeline - CAROUSEL */}
+      {/* Unified House Timeline */}
       {myHouse && myHouseTimeline.length > 0 && (
         <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
@@ -133,14 +130,14 @@ export default function Home() {
                   <CarouselItem key={item.id} className="pl-4 basis-[85%] sm:basis-[45%] md:basis-[30%] lg:basis-[25%]">
                     <Link href={`/events/${item.sport}`} className="block h-full">
                       <Card className={cn(
-                        "premium-card h-full group transition-transform active:scale-95",
-                        item.type === 'trial' ? "border-amber-500/20 bg-amber-500/[0.02]" : "border-primary/20 bg-primary/[0.02]"
+                        "premium-card h-full group",
+                        item.type === 'trial' ? "border-accent/20 bg-accent/5" : "border-primary/10 bg-primary/5"
                       )}>
                         <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
                           <div className="space-y-1">
                             <div className="flex items-center justify-between">
-                              <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
-                              {item.type === 'trial' ? <ClipboardList className="h-3 w-3 text-amber-500" /> : <Activity className="h-3 w-3 text-primary" />}
+                              <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
+                              {item.type === 'trial' ? <ClipboardList className="h-3 w-3 text-accent" /> : <Activity className="h-3 w-3 text-primary" />}
                             </div>
                             <p className="text-base font-black italic uppercase text-foreground leading-tight line-clamp-2">
                               {item.type === 'match' ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}` : `SELECTION TRIAL`}
@@ -181,24 +178,24 @@ export default function Home() {
               return (
                 <Link key={match.id} href={`/events/${match.sport}`}>
                   <Card className={cn(
-                    "premium-card group border-primary/20",
-                    isMyMatch && "border-primary shadow-xl shadow-primary/10 bg-primary/[0.02]"
+                    "premium-card group",
+                    isMyMatch && "border-primary bg-primary/5"
                   )}>
                     <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
                       <div className="space-y-3 flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-3">
                           <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                            <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Arena</span>
+                            <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live</span>
                           </div>
-                          <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1">
+                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> {match.venue}
                           </span>
                         </div>
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 overflow-hidden">
                           <p className={cn("text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight flex-1", match.teamA === myHouse && "text-primary")}>{match.teamA}</p>
                           <div className="flex flex-col items-center">
-                            <span className="text-3xl md:text-5xl font-black text-primary bg-muted/20 px-4 py-1 rounded-xl border border-border">{match.scoreA} : {match.scoreB}</span>
+                            <span className="text-3xl md:text-5xl font-black text-primary bg-muted px-4 py-1 rounded-md border border-border">{match.scoreA} : {match.scoreB}</span>
                           </div>
                           <p className={cn("text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight flex-1 md:text-left", match.teamB === myHouse && "text-primary")}>{match.teamB}</p>
                         </div>
@@ -224,8 +221,8 @@ export default function Home() {
                 <Card className="premium-card group h-full">
                   <CardContent className="p-0">
                     <div className="flex h-36 md:h-44">
-                      <div className="w-1/4 bg-muted/10 flex items-center justify-center border-r border-border group-hover:bg-primary/[0.05] transition-colors">
-                        <IconComp className="h-8 w-8 text-muted-foreground/20 group-hover:text-primary transition-all duration-500" />
+                      <div className="w-1/4 bg-muted/50 flex items-center justify-center border-r border-border group-hover:bg-primary/5 transition-colors">
+                        {IconComp && <IconComp className="h-8 w-8 text-muted-foreground/30 group-hover:text-primary transition-all duration-300" />}
                       </div>
                       <div className="w-3/4 p-6 flex flex-col justify-center space-y-1">
                         <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground group-hover:text-primary transition-colors">{event.name}</h2>
