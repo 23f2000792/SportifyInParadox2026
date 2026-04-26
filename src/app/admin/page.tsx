@@ -875,6 +875,28 @@ export default function AdminPage() {
               </form>
             </CardContent>
           </Card>
+
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Assigned Houses</h3>
+            <div className="grid grid-cols-1 gap-3">
+              {standings?.map(s => (
+                <div key={s.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black uppercase truncate">{s.team} - Group {s.group}</p>
+                    <p className="text-[8px] opacity-40 uppercase font-bold">P: {s.played} • W: {s.won} • PTS: {s.points}</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      setNewStanding(s);
+                      setEditingStandingId(s.id);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}><Edit2 className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'standings', s.id))}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="archives" className="space-y-4">

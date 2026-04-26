@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -181,26 +182,38 @@ export default function Home() {
                     "premium-card group",
                     isMyMatch && "border-primary bg-primary/5"
                   )}>
-                    <CardContent className="p-6 md:p-8 flex items-center justify-between gap-4">
+                    <CardContent className="p-4 md:p-8 flex items-center justify-between gap-2 md:gap-4">
                       <div className="space-y-3 flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                            <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live</span>
+                            <span className="text-[8px] md:text-[9px] font-black text-primary uppercase tracking-widest">Live</span>
                           </div>
-                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {match.venue}
+                          <span className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                            <MapPin className="h-2.5 w-2.5" /> {match.venue}
                           </span>
                         </div>
-                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 overflow-hidden">
-                          <p className={cn("text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight flex-1", match.teamA === myHouse && "text-primary")}>{match.teamA}</p>
-                          <div className="flex flex-col items-center">
-                            <span className="text-3xl md:text-5xl font-black text-primary bg-muted px-4 py-1 rounded-md border border-border">{match.scoreA} : {match.scoreB}</span>
+                        <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
+                          <p className={cn(
+                            "text-[13px] md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-none flex-1 text-right break-words", 
+                            match.teamA === myHouse && "text-primary"
+                          )}>
+                            {match.teamA}
+                          </p>
+                          <div className="flex flex-col items-center shrink-0">
+                            <span className="text-xl md:text-5xl font-black text-primary bg-muted px-2 md:px-4 py-1 rounded-md border border-border">
+                              {match.scoreA}:{match.scoreB}
+                            </span>
                           </div>
-                          <p className={cn("text-xl md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight flex-1 md:text-left", match.teamB === myHouse && "text-primary")}>{match.teamB}</p>
+                          <p className={cn(
+                            "text-[13px] md:text-4xl font-black uppercase italic tracking-tighter text-foreground leading-none flex-1 text-left break-words", 
+                            match.teamB === myHouse && "text-primary"
+                          )}>
+                            {match.teamB}
+                          </p>
                         </div>
                       </div>
-                      <ChevronRight className="h-8 w-8 text-muted-foreground/20 group-hover:text-primary transition-all shrink-0" />
+                      <ChevronRight className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground/20 group-hover:text-primary transition-all shrink-0" />
                     </CardContent>
                   </Card>
                 </Link>
