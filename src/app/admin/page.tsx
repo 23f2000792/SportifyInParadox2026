@@ -527,13 +527,13 @@ export default function AdminPage() {
               {EVENTS.filter(e => isSuperAdmin || adminProfile.assignedSport === 'all' || e.slug === adminProfile.assignedSport).map((event) => {
                 const IconComp = ICON_MAP[event.icon];
                 return (
-                  <Button key={event.id} variant="ghost" className="p-0 h-auto text-left" onClick={() => setSelectedSportSlug(event.slug)}>
+                  <Button key={event.id} variant="ghost" className="p-0 h-auto text-left w-full" onClick={() => setSelectedSportSlug(event.slug)}>
                     <Card className="premium-card w-full h-24 md:h-28 flex items-center px-4 sm:px-6 gap-3 sm:gap-6 hover:bg-muted/10 overflow-hidden">
                       <div className="h-10 w-10 md:h-12 md:w-12 bg-muted/20 rounded-sm flex items-center justify-center border border-border shrink-0">
                         {IconComp && <IconComp className="h-5 w-5 md:h-6 md:w-6 text-primary" />}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-[10px] sm:text-sm md:text-lg font-black uppercase text-foreground tracking-tight truncate">
+                        <h2 className="text-[10px] sm:text-xs md:text-lg font-black uppercase text-foreground tracking-tight line-clamp-2 leading-tight">
                           {event.name}
                         </h2>
                         <p className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-bold tracking-widest truncate">Broadcast Control</p>
