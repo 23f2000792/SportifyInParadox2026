@@ -108,10 +108,8 @@ export default function EventPage() {
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch every goal live at ${OFFICIAL_URL}`);
     const location = encodeURIComponent(match.venue);
     
-    // Parse the date properly (YYYY-MM-DD)
     const dateStr = match.date.replace(/-/g, '');
     
-    // Parse the time (e.g., 09:00 AM)
     const timeParts = match.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     let hourStr = '00';
     let minStr = '00';
@@ -298,19 +296,19 @@ export default function EventPage() {
       )}
 
       <Tabs defaultValue={isKampusRun ? "results" : "live"} className="w-full">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar">
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-2xl max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
           {isKampusRun ? (
             <>
-              <TabsTrigger value="results" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Rankings</TabsTrigger>
-              <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Race Info</TabsTrigger>
+              <TabsTrigger value="results" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Rankings</TabsTrigger>
+              <TabsTrigger value="schedule" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Race Info</TabsTrigger>
             </>
           ) : (
             <>
-              <TabsTrigger value="live" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Live Feed</TabsTrigger>
-              <TabsTrigger value="upcoming" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Fixtures</TabsTrigger>
-              <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">House Trials</TabsTrigger>
-              <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Standings</TabsTrigger>
-              <TabsTrigger value="completed" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-6">Archives</TabsTrigger>
+              <TabsTrigger value="live" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Live Feed</TabsTrigger>
+              <TabsTrigger value="upcoming" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Fixtures</TabsTrigger>
+              <TabsTrigger value="trials" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">House Trials</TabsTrigger>
+              <TabsTrigger value="standings" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Standings</TabsTrigger>
+              <TabsTrigger value="completed" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Archives</TabsTrigger>
             </>
           )}
         </TabsList>

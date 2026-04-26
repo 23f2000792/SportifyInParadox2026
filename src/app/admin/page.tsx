@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock, UserPlus, ShieldCheck, Info
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock, UserPlus, ShieldCheck, Info, LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth, useDoc } from '@/firebase';
@@ -232,8 +232,6 @@ export default function AdminPage() {
     if (!editingAdminUid) {
       adminData.createdAt = serverTimestamp();
     } else {
-      // Explicitly remove createdAt from the update object if editing to avoid passing undefined
-      // and let merge handle preserving the existing value.
       delete adminData.createdAt;
     }
 
@@ -599,28 +597,33 @@ export default function AdminPage() {
           )}
           <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground tracking-tighter">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
         </div>
-        {!isKampusRun && selectedMatchId && (
-          <Button onClick={() => {
-             const activeMatch = matches.find(m => m.id === selectedMatchId);
-             if (!activeMatch) return;
-             const msg = activeMatch.status === 'Completed' 
-                ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch.teamA}* ${scoreA} - ${scoreB} *${activeMatch.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nGlory has been claimed! Witness full breakdown: ${OFFICIAL_URL}` 
-                : `🏟️ *LIVE UPDATE:* ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow every point: ${OFFICIAL_URL}`;
-             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-          }} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
-            <Share2 className="h-4 w-4" /> Blast Result
+        <div className="flex items-center gap-2">
+          {!isKampusRun && selectedMatchId && (
+            <Button onClick={() => {
+              const activeMatch = matches.find(m => m.id === selectedMatchId);
+              if (!activeMatch) return;
+              const msg = activeMatch.status === 'Completed' 
+                  ? `🏆 *FINAL RESULT ALERT!* 🏆\n\n🥇 *${activeMatch.teamA}* ${scoreA} - ${scoreB} *${activeMatch.teamB}*\nWinner: ${matchWinner || 'N/A'}\n\nGlory has been claimed! Witness full breakdown: ${OFFICIAL_URL}` 
+                  : `🏟️ *LIVE UPDATE:* ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow every point: ${OFFICIAL_URL}`;
+              window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+            }} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
+              <Share2 className="h-4 w-4" /> Blast Result
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="h-10 text-destructive bg-destructive/5 hover:bg-destructive/10 text-[9px] font-black uppercase px-4 rounded-xl flex items-center gap-2">
+            <LogOut className="h-3.5 w-3.5" /> Logout
           </Button>
-        )}
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-12 rounded-xl overflow-x-auto no-scrollbar">
-          <TabsTrigger value="control" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">{isKampusRun ? 'Race Results' : 'Live Feed'}</TabsTrigger>
-          {isKampusRun && <TabsTrigger value="schedule" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Race Schedule</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="fixtures" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Fixtures</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="trials" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Trials</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="standings" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Standings</TabsTrigger>}
-          {!isKampusRun && <TabsTrigger value="archives" className="flex-1 text-[9px] font-black uppercase whitespace-nowrap px-4">Archives</TabsTrigger>}
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-2xl overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
+          <TabsTrigger value="control" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">{isKampusRun ? 'Race Results' : 'Live Feed'}</TabsTrigger>
+          {isKampusRun && <TabsTrigger value="schedule" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Race Schedule</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="fixtures" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Fixtures</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="trials" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Trials</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="standings" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Standings</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="archives" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Archives</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="control" className="space-y-6">
