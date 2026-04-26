@@ -83,7 +83,6 @@ export default function AdminPage() {
   const [newMatch, setNewMatch] = useState<Partial<Match>>({
     matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: ''
   });
-  const [newMatchProcessing, setNewMatchProcessing] = useState(false);
   const [newTrial, setNewTrial] = useState<Partial<Trial>>({
     house: '', date: '', time: '', venue: '', notes: ''
   });
@@ -156,7 +155,6 @@ export default function AdminPage() {
     if (!userLoading && !user) router.push('/admin/login');
   }, [user, userLoading, router]);
 
-  // Restrict access for non-super admins with specific assigned sport
   useEffect(() => {
     if (adminProfile && adminProfile.role !== 'super-admin' && adminProfile.assignedSport !== 'all') {
       setSelectedSportSlug(adminProfile.assignedSport as SportType);
@@ -231,8 +229,6 @@ export default function AdminPage() {
 
     if (!editingAdminUid) {
       adminData.createdAt = serverTimestamp();
-    } else {
-      delete adminData.createdAt;
     }
 
     setDoc(doc(db, 'admins', newAdmin.uid), adminData, { merge: true });
@@ -431,9 +427,9 @@ export default function AdminPage() {
           </div>
           <div className="flex gap-2">
             {isSuperAdmin && (
-              <Button variant="outline" size="sm" onClick={() => setActiveTab('system')} className="text-[9px] font-black uppercase rounded-full px-6">System Mgmt</Button>
+              <Button variant="outline" size="sm" onClick={() => setActiveTab('system')} className="text-[9px] font-black uppercase rounded-sm px-6">System Mgmt</Button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="bg-destructive/10 text-destructive text-[9px] font-black uppercase rounded-full px-6">Logout</Button>
+            <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="bg-destructive/10 text-destructive text-[9px] font-black uppercase rounded-sm px-6">Logout</Button>
           </div>
         </div>
         
@@ -475,7 +471,7 @@ export default function AdminPage() {
                 <div className="space-y-3">
                   <h3 className="text-[10px] font-black uppercase opacity-40 px-2">Access List</h3>
                   {allAdmins?.map(a => (
-                    <div key={a.uid} className="flex items-center justify-between p-4 bg-muted/10 rounded-xl border border-border/40">
+                    <div key={a.uid} className="flex items-center justify-between p-4 bg-muted/10 rounded-sm border border-border/40">
                       <div>
                         <p className="text-[11px] font-black uppercase">{a.email}</p>
                         <p className="text-[8px] opacity-40 font-bold uppercase">{a.role} • {a.assignedSport === 'all' ? 'All Sports' : a.assignedSport?.toUpperCase()} • UID: {a.uid}</p>
@@ -567,11 +563,11 @@ export default function AdminPage() {
                 return (
                   <Button key={event.id} variant="ghost" className="p-0 h-auto text-left" onClick={() => setSelectedSportSlug(event.slug)}>
                     <Card className="premium-card w-full h-28 flex items-center px-6 gap-6 hover:bg-muted/10">
-                      <div className="h-12 w-12 bg-muted/20 rounded-xl flex items-center justify-center border border-border">
+                      <div className="h-12 w-12 bg-muted/20 rounded-sm flex items-center justify-center border border-border">
                         {IconComp && <IconComp className="h-6 w-6 text-primary" />}
                       </div>
-                      <div>
-                        <h2 className="text-lg font-black uppercase text-foreground tracking-tight">{event.name}</h2>
+                      <div className="min-w-0">
+                        <h2 className="text-base sm:text-lg font-black uppercase text-foreground tracking-tight truncate">{event.name}</h2>
                         <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Broadcast Control</p>
                       </div>
                     </Card>
@@ -588,16 +584,16 @@ export default function AdminPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-32 px-4">
       <div className="border-b border-border pb-6 pt-4 flex items-center justify-between">
-        <div>
+        <div className="min-w-0">
           {!isSportSpecificAdmin && (
             <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Terminal</Button>
           )}
           {isSportSpecificAdmin && (
             <div className="text-[10px] font-black uppercase text-muted-foreground/40 mb-2">Restricted Terminal</div>
           )}
-          <h1 className="text-2xl md:text-4xl font-black uppercase text-foreground tracking-tighter">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
+          <h1 className="text-xl md:text-4xl font-black uppercase text-foreground tracking-tighter truncate">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {!isKampusRun && selectedMatchId && (
             <Button onClick={() => {
               const activeMatch = matches.find(m => m.id === selectedMatchId);
@@ -607,17 +603,17 @@ export default function AdminPage() {
                   : `🏟️ *LIVE UPDATE:* ${activeMatch.teamA} ${scoreA} - ${scoreB} ${activeMatch.teamB} (${selectedSportSlug?.toUpperCase()})\n\nFollow every point: ${OFFICIAL_URL}`;
               window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
             }} variant="outline" className="h-10 text-[10px] font-black uppercase tracking-widest gap-2">
-              <Share2 className="h-4 w-4" /> Blast Result
+              <Share2 className="h-4 w-4" /> <span className="hidden sm:inline">Blast Result</span>
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="h-10 text-destructive bg-destructive/5 hover:bg-destructive/10 text-[9px] font-black uppercase px-4 rounded-xl flex items-center gap-2">
-            <LogOut className="h-3.5 w-3.5" /> Logout
+          <Button variant="ghost" size="sm" onClick={() => signOut(auth)} className="h-10 text-destructive bg-destructive/5 hover:bg-destructive/10 text-[9px] font-black uppercase px-4 rounded-sm flex items-center gap-2">
+            <LogOut className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Logout</span>
           </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-2xl overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-sm overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
           <TabsTrigger value="control" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">{isKampusRun ? 'Race Results' : 'Live Feed'}</TabsTrigger>
           {isKampusRun && <TabsTrigger value="schedule" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Race Schedule</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="fixtures" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Fixtures</TabsTrigger>}
@@ -714,7 +710,7 @@ export default function AdminPage() {
                     </div>
 
                     {selectedSportSlug === 'badminton' && (
-                      <div className="space-y-6 bg-muted/10 p-6 rounded-2xl border border-border">
+                      <div className="space-y-6 bg-muted/10 p-6 rounded-sm border border-border">
                         <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
                           <Target className="h-4 w-4" /> Sub-Match Results
                         </h3>
@@ -728,7 +724,7 @@ export default function AdminPage() {
                               </Label>
                               <div className="flex gap-2">
                                 <Input 
-                                  placeholder="Score (e.g. 21-18)" 
+                                  placeholder="Score" 
                                   value={res.score} 
                                   onChange={(e) => updateBadmintonResult(idx, 'score', e.target.value)}
                                   className="h-10 bg-muted/20 text-[10px] font-black uppercase"
@@ -789,7 +785,7 @@ export default function AdminPage() {
                 <form onSubmit={handleUpdateRaceSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Reporting Time</Label><Input placeholder="e.g. 05:00 AM" value={raceSchedule.reportingTime} onChange={e => setRaceSchedule({...raceSchedule, reportingTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Flag Off Time</Label><Input placeholder="e.g. 05:30 AM" value={raceSchedule.flagOffTime} onChange={e => setRaceSchedule({...raceSchedule, flagOffTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes (Visible to all participants)</Label><Textarea placeholder="Instructions, water stations, route info..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
+                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes</Label><Textarea placeholder="Instructions, water stations, route info..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
                   <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Update Race Details</Button>
                 </form>
               </CardContent>
@@ -825,7 +821,7 @@ export default function AdminPage() {
                   <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                 </Select>
                 </div>
-                <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Date (YYYY-MM-DD)</Label><Input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Date</Label><Input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Time</Label><Input placeholder="e.g. 09:00 AM" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <div className="space-y-1.5 md:col-span-2"><Label className="text-[9px] font-black uppercase opacity-50">Venue</Label><Input placeholder="Venue" value={newMatch.venue} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required /></div>
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px] tracking-widest">Schedule Match</Button>
@@ -855,16 +851,12 @@ export default function AdminPage() {
                   <Input placeholder="e.g. SAC Grounds" value={newTrial.venue} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Date (YYYY-MM-DD)</Label>
+                  <Label className="text-[9px] font-black uppercase opacity-50">Date</Label>
                   <Input type="date" value={newTrial.date} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-50">Time</Label>
                   <Input placeholder="e.g. 04:30 PM" value={newTrial.time} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
-                </div>
-                <div className="md:col-span-2 space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Notes (Optional)</Label>
-                  <Input placeholder="Any specific requirements..." value={newTrial.notes} onChange={e => setNewTrial({...newTrial, notes: e.target.value})} className="bg-muted/20 h-11" />
                 </div>
                 <div className="md:col-span-2 flex gap-2">
                   <Button type="submit" className="flex-1 h-12 uppercase font-black text-[10px] tracking-widest">
@@ -880,36 +872,6 @@ export default function AdminPage() {
               </form>
             </CardContent>
           </Card>
-
-          <div className="space-y-6">
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary px-2">Active Trials</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {trials && trials.length > 0 ? trials.map((t) => (
-                <Card key={t.id} className="premium-card bg-muted/5 border-border/40">
-                  <CardContent className="p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{t.house}</Badge>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" title="Broadcast Live" onClick={() => handleBroadcastTrial(t)}><Radio className="h-3.5 w-3.5" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditTrial(t)}><Edit2 className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTrial(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[11px] font-black uppercase tracking-tight">{t.date} • {t.time}</p>
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" /> {t.venue}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )) : (
-                <div className="md:col-span-3 py-16 text-center opacity-20 text-[10px] font-black uppercase tracking-[0.2em]">
-                  No trials scheduled
-                </div>
-              )}
-            </div>
-          </div>
         </TabsContent>
 
         <TabsContent value="standings" className="space-y-8">
@@ -943,19 +905,7 @@ export default function AdminPage() {
                   <Label className="text-[9px] font-black uppercase opacity-50">Wins</Label>
                   <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Draws</Label>
-                  <Input type="number" value={newStanding.drawn || 0} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Losses</Label>
-                  <Input type="number" value={newStanding.lost || 0} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-50">Points</Label>
-                  <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" />
-                </div>
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2 md:col-span-2">
                   <Button type="submit" className="flex-1 h-11 uppercase font-black text-[10px] tracking-widest">
                     {editingStandingId ? 'Save' : 'Add'}
                   </Button>
@@ -969,43 +919,6 @@ export default function AdminPage() {
               </form>
             </CardContent>
           </Card>
-
-          <div className="space-y-6">
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary px-2">Active League Table</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {GROUPS.map(g => {
-                const groupTeams = standings?.filter(s => s.group === g) || [];
-                return (
-                  <Card key={g} className="premium-card bg-muted/5 border-border/50">
-                    <CardHeader className="py-4 border-b border-border/30 bg-muted/10">
-                      <CardTitle className="text-[10px] font-black uppercase tracking-widest text-foreground">Group {g}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="divide-y divide-border/20">
-                        {groupTeams.length > 0 ? groupTeams.map((s, idx) => (
-                          <div key={s.id} className="flex items-center justify-between p-4 hover:bg-muted/5 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <span className="text-[9px] font-black opacity-30">#{idx + 1}</span>
-                              <div>
-                                <p className="text-[10px] font-black uppercase">{s.team}</p>
-                                <p className="text-[8px] opacity-40 uppercase font-bold">P: {s.played} • W: {s.won} • D: {s.drawn || 0} • L: {s.lost || 0} • PTS: {s.points}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditStanding(s)}><Edit2 className="h-3 w-3" /></Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStanding(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                            </div>
-                          </div>
-                        )) : (
-                          <div className="p-6 text-center opacity-20 text-[9px] font-black uppercase">No teams assigned</div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
         </TabsContent>
 
         <TabsContent value="archives" className="space-y-4">

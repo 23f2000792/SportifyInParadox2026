@@ -2,23 +2,25 @@
 {
   "name": "Sportify Paradox 2026",
   "short_name": "Sportify",
-  "description": "Official Real-time Sports Broadcast Portal for Paradox 2026",
+  "description": "Official Sports Broadcast Hub for Paradox 2026",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#09090b",
+  "background_color": "#000000",
   "theme_color": "#7c3aed",
   "icons": [
     {
       "src": "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "orientation": "portrait",
+  "scope": "/"
 }

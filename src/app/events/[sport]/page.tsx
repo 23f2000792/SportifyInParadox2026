@@ -185,7 +185,7 @@ export default function EventPage() {
               )) : (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-8 opacity-30">
-                    <p className="text-[9px] uppercase font-black tracking-widest">Waiting for Official Finish Line Data</p>
+                    <p className="text-[9px] uppercase font-black tracking-widest">Waiting for Results</p>
                   </TableCell>
                 </TableRow>
               )}
@@ -212,20 +212,20 @@ export default function EventPage() {
           )}
         </div>
         <div className="p-6 md:p-8 flex items-center justify-between gap-4">
-          <div className={cn("flex-1 text-right text-base md:text-2xl font-black uppercase tracking-tight", match.teamA === myHouse && "text-primary")}>{match.teamA}</div>
-          <div className="px-4 py-2 bg-muted/20 border border-border rounded-xl flex flex-col items-center min-w-[80px]">
-            <span className="text-xl md:text-3xl font-black tracking-tighter">{match.scoreA} - {match.scoreB}</span>
+          <div className={cn("flex-1 text-right text-base sm:text-lg md:text-2xl font-black uppercase tracking-tight truncate", match.teamA === myHouse && "text-primary")}>{match.teamA}</div>
+          <div className="px-2 py-2 bg-muted/20 border border-border rounded-sm flex flex-col items-center min-w-[70px] md:min-w-[80px]">
+            <span className="text-lg md:text-3xl font-black tracking-tighter">{match.scoreA} - {match.scoreB}</span>
             {match.status === 'Live' && <span className="text-[7px] font-black uppercase text-primary animate-pulse tracking-[0.2em]">Live</span>}
             {match.status === 'Upcoming' && <span className="text-[7px] font-black uppercase opacity-40">{match.time}</span>}
             {match.status === 'Completed' && <span className="text-[7px] font-black uppercase text-green-500 tracking-[0.2em]">Final</span>}
           </div>
-          <div className={cn("flex-1 text-left text-base md:text-2xl font-black uppercase tracking-tight", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
+          <div className={cn("flex-1 text-left text-base sm:text-lg md:text-2xl font-black uppercase tracking-tight truncate", match.teamB === myHouse && "text-primary")}>{match.teamB}</div>
         </div>
 
         {sport === 'badminton' && match.badmintonResults && match.badmintonResults.length > 0 && (
           <div className="px-6 pb-6">
             <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="results" className="border-none bg-muted/10 rounded-xl px-4">
+              <AccordionItem value="results" className="border-none bg-muted/10 rounded-sm px-4">
                 <AccordionTrigger className="hover:no-underline py-3">
                   <span className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                     <Target className="h-3 w-3" /> Match Breakdown
@@ -254,11 +254,11 @@ export default function EventPage() {
         )}
 
         <div className="p-4 bg-muted/10 border-t border-border flex justify-between items-center">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1"><MapPin className="h-3 w-3" /> {match.venue}</span>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1 truncate"><MapPin className="h-3 w-3 shrink-0" /> {match.venue}</span>
             <span className="text-[8px] font-bold text-muted-foreground/40 uppercase">{match.date}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button variant="ghost" size="icon" className="h-7 w-7 opacity-30 hover:opacity-100" onClick={() => handleShareMatch(match)}>
               <Share2 className="h-3.5 w-3.5" />
             </Button>
@@ -276,18 +276,18 @@ export default function EventPage() {
           {IconComp && <IconComp className="h-3.5 w-3.5 text-primary" />}
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Stream</p>
         </div>
-        <h1 className="text-4xl md:text-7xl font-black uppercase text-foreground leading-none tracking-tighter">{event.name}</h1>
-        <p className="text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>
+        <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase text-foreground leading-none tracking-tighter">{event.name}</h1>
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>
       </div>
 
       {!isKampusRun && (
         <div className="px-4">
-          <div className="flex flex-col md:flex-row items-center gap-4 bg-card border border-border p-3 rounded-2xl">
+          <div className="flex flex-col md:flex-row items-center gap-4 bg-card border border-border p-3 rounded-sm">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search house..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 h-11 bg-muted/10 border-none text-xs font-black uppercase" />
             </div>
-            <div className="flex items-center gap-2 shrink-0 bg-muted/20 px-4 py-2 rounded-xl border border-border/50">
+            <div className="flex items-center gap-2 shrink-0 bg-muted/20 px-4 py-2 rounded-sm border border-border/50">
               <Switch checked={focusMode} onCheckedChange={setFocusMode} disabled={!myHouse} />
               <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Follow {myHouse || 'House'}</Label>
             </div>
@@ -296,7 +296,7 @@ export default function EventPage() {
       )}
 
       <Tabs defaultValue={isKampusRun ? "results" : "live"} className="w-full">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-2xl max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-sm max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
           {isKampusRun ? (
             <>
               <TabsTrigger value="results" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Rankings</TabsTrigger>
@@ -332,18 +332,12 @@ export default function EventPage() {
                       <Clock className="h-8 w-8 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-2xl font-black uppercase tracking-tighter">Reporting Time: {event.reportingTime || '05:00 AM'}</h2>
+                      <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter">Reporting: {event.reportingTime || '05:00 AM'}</h2>
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Flag Off: {event.flagOffTime || '05:30 AM'} • SAC Grounds</p>
                     </div>
                     {event.notes && (
                       <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed whitespace-pre-wrap">
                         {event.notes}
-                      </div>
-                    )}
-                    {!event.notes && (
-                      <div className="pt-6 border-t border-border/50 text-[9px] font-bold text-muted-foreground/60 uppercase leading-relaxed">
-                        All participants must carry their Paradox 2026 ID cards. 
-                        Water stations will be available every 1KM.
                       </div>
                     )}
                   </Card>
@@ -353,7 +347,7 @@ export default function EventPage() {
         ) : (
           <>
             <TabsContent value="live" className="space-y-4 px-4">
-              {filteredMatches.filter(m => m.status === 'Live').length > 0 ? filteredMatches.filter(m => m.status === 'Live').map(renderMatchCard) : <div className="py-20 text-center opacity-40 uppercase font-black text-[10px] tracking-widest">No Live Action Found</div>}
+              {filteredMatches.filter(m => m.status === 'Live').length > 0 ? filteredMatches.filter(m => m.status === 'Live').map(renderMatchCard) : <div className="py-20 text-center opacity-40 uppercase font-black text-[10px] tracking-widest">No Live Action</div>}
             </TabsContent>
             <TabsContent value="upcoming" className="space-y-4 px-4">{filteredMatches.filter(m => m.status === 'Upcoming').map(renderMatchCard)}</TabsContent>
             <TabsContent value="completed" className="space-y-4 px-4">{filteredMatches.filter(m => m.status === 'Completed').reverse().map(renderMatchCard)}</TabsContent>
@@ -366,22 +360,20 @@ export default function EventPage() {
                         <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{trial.house}</Badge>
                         <Trophy className="h-4 w-4 text-primary opacity-20" />
                       </div>
-                      <h3 className="text-xl font-black uppercase tracking-tighter">Selection Trials</h3>
+                      <h3 className="text-lg font-black uppercase tracking-tighter">Selection Trials</h3>
                       <div className="space-y-1.5 border-t border-border pt-4">
-                        <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><MapPin className="h-3 w-3" /> {trial.venue}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><Timer className="h-3 w-3" /> {trial.time} • {trial.date}</p>
-                        {trial.notes && <p className="text-[9px] opacity-40 italic mt-2">Note: {trial.notes}</p>}
+                        <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><MapPin className="h-3 w-3 shrink-0" /> {trial.venue}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><Timer className="h-3 w-3 shrink-0" /> {trial.time} • {trial.date}</p>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
-                {(!trials || trials.length === 0) && <div className="md:col-span-2 py-20 text-center opacity-40 uppercase font-black text-[10px] tracking-widest">No Trials Scheduled</div>}
               </div>
             </TabsContent>
             <TabsContent value="standings" className="px-4 space-y-8">
               {GROUPS.map(g => (
                 <div key={g} className="space-y-4">
-                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary px-2">Group {g}</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Group {g}</h3>
                   <Card className="premium-card">
                     <Table>
                       <TableHeader>
@@ -406,7 +398,7 @@ export default function EventPage() {
                             <TableCell className="text-center text-xs">{s.lost || 0}</TableCell>
                             <TableCell className="text-center text-xs font-black text-primary">{s.points}</TableCell>
                           </TableRow>
-                        )) : <TableRow><TableCell colSpan={7} className="text-center py-6 opacity-30 text-[9px] font-black uppercase">Standings Pending</TableCell></TableRow>}
+                        )) : <TableRow><TableCell colSpan={7} className="text-center py-6 opacity-30 text-[9px] font-black uppercase">Pending</TableCell></TableRow>}
                       </TableBody>
                     </Table>
                   </Card>
