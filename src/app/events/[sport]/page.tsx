@@ -211,21 +211,21 @@ export default function EventPage() {
             </Button>
           )}
         </div>
-        <div className="p-6 md:p-12 flex items-center justify-between gap-2 md:gap-4 overflow-hidden">
+        <div className="p-6 flex items-center justify-between gap-4">
           <div className={cn(
-            "flex-1 text-right text-[13px] sm:text-lg md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
+            "flex-1 text-right text-[13px] sm:text-base md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
             match.teamA === myHouse && "text-primary"
           )}>
             {match.teamA}
           </div>
-          <div className="px-1.5 py-1.5 md:px-3 md:py-2 bg-muted/20 border border-border rounded-sm flex flex-col items-center min-w-[60px] md:min-w-[100px] shrink-0">
-            <span className="text-lg md:text-4xl font-black tracking-tighter leading-none">{match.scoreA} - {match.scoreB}</span>
-            {match.status === 'Live' && <span className="text-[6px] md:text-[8px] font-black uppercase text-primary animate-pulse tracking-[0.2em] mt-1">Live</span>}
-            {match.status === 'Upcoming' && <span className="text-[6px] md:text-[8px] font-black uppercase opacity-40 mt-1">{match.time}</span>}
-            {match.status === 'Completed' && <span className="text-[6px] md:text-[8px] font-black uppercase text-green-500 tracking-[0.2em] mt-1">Final</span>}
+          <div className="px-3 py-2 bg-muted/20 border border-border rounded-sm flex flex-col items-center min-w-[70px] md:min-w-[100px] shrink-0">
+            <span className="text-xl md:text-4xl font-black tracking-tighter leading-none">{match.scoreA} - {match.scoreB}</span>
+            {match.status === 'Live' && <span className="text-[8px] font-black uppercase text-primary animate-pulse tracking-[0.2em] mt-1">Live</span>}
+            {match.status === 'Upcoming' && <span className="text-[8px] font-black uppercase opacity-40 mt-1">{match.time}</span>}
+            {match.status === 'Completed' && <span className="text-[8px] font-black uppercase text-green-500 tracking-[0.2em] mt-1">Final</span>}
           </div>
           <div className={cn(
-            "flex-1 text-left text-[13px] sm:text-lg md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
+            "flex-1 text-left text-[13px] sm:text-base md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
             match.teamB === myHouse && "text-primary"
           )}>
             {match.teamB}
@@ -291,8 +291,8 @@ export default function EventPage() {
         </h1>
         {isKampusRun ? (
           <div className="space-y-2">
-             <p className="text-xs sm:text-sm font-black uppercase tracking-[0.4em] text-foreground/80">Miles With Purpose.</p>
-             <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/60">Run for your mind, run for yourself.</p>
+             <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.5em] text-foreground/80">Miles With Purpose.</p>
+             <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60">Run for your mind, run for yourself.</p>
           </div>
         ) : (
           <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>

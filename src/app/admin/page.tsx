@@ -147,6 +147,14 @@ export default function AdminPage() {
     return [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));
   }, [rawMatches]);
 
+  const groupedStandings = useMemo(() => {
+    if (!standings) return {};
+    return GROUPS.reduce((acc, g) => {
+      acc[g] = standings.filter(s => s.group === g).sort((a, b) => b.points - a.points);
+      return acc;
+    }, {} as Record<string, Standing[]>);
+  }, [standings]);
+
   useEffect(() => {
     if (!userLoading && !user) router.push('/admin/login');
   }, [user, userLoading, router]);
@@ -830,7 +838,7 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="standings" className="space-y-8">
+        <TabsContent value="standings" className="space-y-12">
           <Card className="premium-card">
             <CardHeader>
               <CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
@@ -863,35 +871,50 @@ export default function AdminPage() {
                 </div>
                 <div className="flex items-end gap-2 md:col-span-2">
                   <Button type="submit" className="flex-1 h-11 uppercase font-black text-[10px] tracking-widest">
-                    {editingStandingId ? 'Save' : 'Add'}
+                    {editingStandingId ? 'Save Changes' : 'Assign House'}
                   </Button>
                   {editingStandingId && (
                     <Button type="button" variant="outline" onClick={() => {
                       setEditingStandingId(null);
                       setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
-                    }} className="h-11 uppercase font-black text-[10px]">X</Button>
+                    }} className="h-11 uppercase font-black text-[10px]">Cancel</Button>
                   )}
                 </div>
               </form>
             </CardContent>
           </Card>
 
-          <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Assigned Houses</h3>
-            <div className="grid grid-cols-1 gap-3">
-              {standings?.map(s => (
-                <div key={s.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase truncate">{s.team} - Group {s.group}</p>
-                    <p className="text-[8px] opacity-40 uppercase font-bold">P: {s.played} • W: {s.won} • PTS: {s.points}</p>
+          <div className="space-y-10">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary px-2">Assigned Houses (By Group)</h3>
+            <div className="space-y-10">
+              {GROUPS.map(g => (
+                <div key={g} className="space-y-4">
+                  <div className="flex items-center gap-3 px-2">
+                    <div className="h-px flex-1 bg-border/40" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Group {g}</span>
+                    <div className="h-px flex-1 bg-border/40" />
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      setNewStanding(s);
-                      setEditingStandingId(s.id);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}><Edit2 className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'standings', s.id))}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  <div className="grid grid-cols-1 gap-3">
+                    {groupedStandings[g]?.length ? groupedStandings[g].map(s => (
+                      <div key={s.id} className="premium-card p-4 flex items-center justify-between bg-muted/5 group hover:bg-muted/10">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-black uppercase tracking-tight truncate">{s.team}</p>
+                          <p className="text-[8px] opacity-40 uppercase font-black tracking-widest mt-0.5">P: {s.played} • W: {s.won} • PTS: {s.points}</p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary" onClick={() => {
+                            setNewStanding(s);
+                            setEditingStandingId(s.id);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}><Edit2 className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => deleteDoc(doc(db!, 'standings', s.id))}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="py-8 text-center border border-dashed border-border/40 rounded-sm opacity-20 text-[8px] font-black uppercase tracking-widest">
+                        No houses assigned
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
