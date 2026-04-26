@@ -75,7 +75,7 @@ export default function EventPage() {
   const { data: rawMatches, loading: matchesLoading } = useCollection<Match>(matchesQuery);
   const { data: trials, loading: trialsLoading } = useCollection<Trial>(trialsQuery);
   const { data: standings, loading: standingsLoading } = useCollection<Standing>(standingsQuery);
-  const { data: runResults, loading: runLoading } = useCollection<RunResult>(runResultsQuery);
+  const { data: runResults, loading: runLoading } = useCollection<RunResult>(runLoading);
 
   const filteredMatches = useMemo(() => {
     let filtered = [...(rawMatches || [])].sort((a, b) => (parseInt(a.matchNumber) || 0) - (parseInt(b.matchNumber) || 0));

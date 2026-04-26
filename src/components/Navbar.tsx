@@ -102,7 +102,7 @@ export function Navbar() {
             <Link
               href="/admin"
               className={cn(
-                "h-10 w-10 flex items-center justify-center transition-all border",
+                "h-10 w-10 flex items-center justify-center transition-all border rounded-sm",
                 pathname.startsWith("/admin") 
                   ? "text-white bg-primary border-primary" 
                   : "text-muted-foreground border-border bg-muted/20 hover:bg-muted/40"
