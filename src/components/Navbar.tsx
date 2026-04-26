@@ -34,21 +34,48 @@ export function Navbar() {
     <>
       {/* Top Header - Visible on both Desktop and Mobile */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm h-16 flex items-center justify-between px-4 pt-safe">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="relative h-8 w-8 overflow-hidden rounded-sm bg-muted p-1 border border-border">
-            <Image 
-              src={LOGO_URL}
-              alt="Sportify Logo"
-              fill
-              className="object-contain p-0.5"
-              priority
-            />
-          </div>
-          <div className="hidden xs:block min-w-0">
-            <p className="text-[10px] font-black tracking-tighter text-foreground uppercase leading-none truncate">SPORTIFY</p>
-            <p className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] mt-0.5">Paradox 2026</p>
-          </div>
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <div className="relative h-8 w-8 overflow-hidden rounded-sm bg-muted p-1 border border-border">
+              <Image 
+                src={LOGO_URL}
+                alt="Sportify Logo"
+                fill
+                className="object-contain p-0.5"
+                priority
+              />
+            </div>
+            <div className="hidden xs:block min-w-0">
+              <p className="text-[10px] font-black tracking-tighter text-foreground uppercase leading-none truncate">SPORTIFY</p>
+              <p className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] mt-0.5">Paradox 2026</p>
+            </div>
+          </Link>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-1">
+            <Link 
+              href="/" 
+              className={cn(
+                "px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-colors",
+                pathname === "/" ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary"
+              )}
+            >
+              Home
+            </Link>
+            {EVENTS.map((event) => (
+              <Link
+                key={event.id}
+                href={`/events/${event.slug}`}
+                className={cn(
+                  "px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-colors",
+                  pathname === `/events/${event.slug}` ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                {event.name}
+              </Link>
+            ))}
+          </nav>
+        </div>
         
         <div className="flex items-center gap-1.5 sm:gap-2">
           <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground/40 hidden sm:flex">
