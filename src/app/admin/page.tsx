@@ -77,6 +77,7 @@ export default function AdminPage() {
 
   // --- System Admin Management State ---
   const [newAdmin, setNewAdmin] = useState<Partial<AdminUser>>({ uid: '', email: '', role: 'admin', assignedSport: 'all' });
+  const [editingAdminUid, setEditingAdminUid] = useState<string | null>(null);
 
   // --- New Item States ---
   const [newMatch, setNewMatch] = useState<Partial<Match>>({
@@ -218,15 +219,25 @@ export default function AdminPage() {
     toast({ title: "Race schedule updated." });
   };
 
-  const handleAddAdmin = (e: React.FormEvent) => {
+  const handleSaveAdmin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !newAdmin.uid || !newAdmin.email) return;
+    
     setDoc(doc(db, 'admins', newAdmin.uid), {
       ...newAdmin,
-      createdAt: serverTimestamp()
-    });
+      updatedAt: serverTimestamp(),
+      createdAt: editingAdminUid ? undefined : serverTimestamp()
+    }, { merge: true });
+    
     setNewAdmin({ uid: '', email: '', role: 'admin', assignedSport: 'all' });
-    toast({ title: "New admin added." });
+    setEditingAdminUid(null);
+    toast({ title: editingAdminUid ? "Admin updated." : "New admin added." });
+  };
+
+  const handleEditAdmin = (admin: AdminUser) => {
+    setNewAdmin(admin);
+    setEditingAdminUid(admin.uid);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteAdmin = (uid: string) => {
@@ -422,10 +433,10 @@ export default function AdminPage() {
           <div className="space-y-10">
             <Button variant="link" onClick={() => setActiveTab('control')} className="p-0 h-auto text-[10px] font-black uppercase">Back to Broadcasts</Button>
             <Card className="premium-card">
-              <CardHeader><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><UserPlus className="h-4 w-4" /> Manage Admins</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><UserPlus className="h-4 w-4" /> Manage Access</CardTitle></CardHeader>
               <CardContent className="p-6">
-                <form onSubmit={handleAddAdmin} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">UID</Label><Input value={newAdmin.uid} onChange={e => setNewAdmin({...newAdmin, uid: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                <form onSubmit={handleSaveAdmin} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">UID</Label><Input value={newAdmin.uid} onChange={e => setNewAdmin({...newAdmin, uid: e.target.value})} className="bg-muted/20 h-11" required disabled={!!editingAdminUid} /></div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Email</Label><Input type="email" value={newAdmin.email} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} className="bg-muted/20 h-11" required /></div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Role</Label>
                     <Select value={newAdmin.role} onValueChange={v => setNewAdmin({...newAdmin, role: v as any})}>
@@ -442,7 +453,15 @@ export default function AdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="md:col-span-2 lg:col-span-4 h-11 uppercase font-black text-[10px]">Add Access</Button>
+                  <div className="md:col-span-2 lg:col-span-4 flex gap-2">
+                    <Button type="submit" className="flex-1 h-11 uppercase font-black text-[10px]">{editingAdminUid ? 'Update Access' : 'Add Access'}</Button>
+                    {editingAdminUid && (
+                      <Button variant="outline" type="button" onClick={() => {
+                        setEditingAdminUid(null);
+                        setNewAdmin({ uid: '', email: '', role: 'admin', assignedSport: 'all' });
+                      }} className="h-11 w-11 p-0"><X className="h-4 w-4" /></Button>
+                    )}
+                  </div>
                 </form>
                 
                 <div className="space-y-3">
@@ -453,7 +472,10 @@ export default function AdminPage() {
                         <p className="text-[11px] font-black uppercase">{a.email}</p>
                         <p className="text-[8px] opacity-40 font-bold uppercase">{a.role} • {a.assignedSport === 'all' ? 'All Sports' : a.assignedSport?.toUpperCase()} • UID: {a.uid}</p>
                       </div>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAdmin(a.uid)}><Trash2 className="h-4 w-4" /></Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="text-primary" onClick={() => handleEditAdmin(a)}><Edit2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAdmin(a.uid)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </div>
                   ))}
                 </div>
