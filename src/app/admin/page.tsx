@@ -227,7 +227,6 @@ export default function AdminPage() {
       updatedAt: serverTimestamp(),
     });
     
-    // Automated broadcast notifications (Clean, no URL, no asterisks)
     if (status === 'Live' && prevStatus !== 'Live') {
       const msg = `📢 LIVE ACTION ALERT: ${activeMatch?.teamA} vs ${activeMatch?.teamB} (${selectedSportSlug?.toUpperCase()}) is NOW LIVE!`;
       handlePostBroadcast(undefined, msg);

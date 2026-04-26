@@ -28,7 +28,6 @@ const ICON_MAP: Record<string, any> = {
   Target: Target,
 };
 
-const OFFICIAL_URL = "https://sportify-in-paradox2026.vercel.app/";
 const OAT_MAPS_LINK = "https://maps.app.goo.gl/smHmEL9hih1NqRvW6";
 
 export default function EventPage() {
@@ -120,8 +119,8 @@ export default function EventPage() {
       hourStr = hours.toString().padStart(2, '0');
       minStr = minutes;
     }
-    const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
-    const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00Z`;
+    const startTime = `${dateStr}T${hourStr}${minStr}00`;
+    const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00`;
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
     window.open(url, '_blank');
   };
@@ -131,10 +130,7 @@ export default function EventPage() {
     const details = encodeURIComponent(`Selection trials for ${event.name} - ${trial.house} House. Venue: ${trial.venue}.`);
     const location = encodeURIComponent(trial.venue);
     
-    // Admin sets date as YYYY-MM-DD
     const dateStr = trial.date.replace(/-/g, '');
-    
-    // Admin sets time as "HH:MM AM/PM"
     const timeParts = trial.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     let hourStr = '00';
     let minStr = '00';
@@ -149,9 +145,8 @@ export default function EventPage() {
       minStr = minutes;
     }
     
-    const startTime = `${dateStr}T${hourStr}${minStr}00Z`;
+    const startTime = `${dateStr}T${hourStr}${minStr}00`;
     
-    // Set end time to exactly 30 mins after start as requested
     let endHours = parseInt(hourStr);
     let endMins = parseInt(minStr) + 30;
     if (endMins >= 60) {
@@ -160,7 +155,7 @@ export default function EventPage() {
     }
     const endHourStr = endHours.toString().padStart(2, '0');
     const endMinStr = endMins.toString().padStart(2, '0');
-    const endTime = `${dateStr}T${endHourStr}${endMinStr}00Z`;
+    const endTime = `${dateStr}T${endHourStr}${endMinStr}00`;
 
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
     window.open(url, '_blank');
@@ -247,7 +242,7 @@ export default function EventPage() {
         </div>
         <div className="p-6 flex items-center justify-between gap-4">
           <div className={cn(
-            "flex-1 text-right text-[13px] sm:text-base md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
+            "flex-1 text-right text-[11px] sm:text-base md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
             match.teamA === myHouse && "text-primary"
           )}>
             {match.teamA}
@@ -259,7 +254,7 @@ export default function EventPage() {
             {match.status === 'Completed' && <span className="text-[8px] font-black uppercase text-green-500 tracking-[0.2em] mt-1">Final</span>}
           </div>
           <div className={cn(
-            "flex-1 text-left text-[13px] sm:text-base md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
+            "flex-1 text-left text-[11px] sm:text-base md:text-2xl font-black uppercase tracking-tight break-words leading-none", 
             match.teamB === myHouse && "text-primary"
           )}>
             {match.teamB}
