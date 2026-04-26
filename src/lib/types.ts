@@ -8,6 +8,8 @@ export interface SportEvent {
   slug: SportType;
   icon: string;
   description: string;
+  tagline?: string;
+  subTagline?: string;
   reportingTime?: string;
   flagOffTime?: string;
   notes?: string;

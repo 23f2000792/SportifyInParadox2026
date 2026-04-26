@@ -104,8 +104,7 @@ export default function EventPage() {
   const isKampusRun = sport === 'kampus-run';
 
   const handleAddToCalendar = (match: Match) => {
-    const sportName = event.name;
-    const title = encodeURIComponent(`Sportify: ${sportName} - ${match.teamA} vs ${match.teamB}`);
+    const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}. Catch every goal live at ${OFFICIAL_URL}`);
     const location = encodeURIComponent(match.venue);
     
@@ -277,8 +276,20 @@ export default function EventPage() {
           {IconComp && <IconComp className="h-3.5 w-3.5 text-primary" />}
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Stream</p>
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase text-foreground leading-none tracking-tighter">{event.name}</h1>
-        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>
+        <h1 className={cn(
+          "font-black uppercase text-foreground leading-none tracking-tighter",
+          isKampusRun ? "text-5xl sm:text-7xl md:text-9xl italic" : "text-3xl sm:text-4xl md:text-7xl"
+        )}>
+          {event.name}
+        </h1>
+        {isKampusRun ? (
+          <div className="space-y-2">
+             <p className="text-xs sm:text-sm font-black uppercase tracking-[0.4em] text-foreground/80">{event.tagline}</p>
+             <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/60">{event.subTagline}</p>
+          </div>
+        ) : (
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground max-w-lg mx-auto">{event.description}</p>
+        )}
       </div>
 
       {!isKampusRun && (
