@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -53,11 +54,11 @@ export default function RulesPage() {
                 </AccordionTrigger>
                 <AccordionContent className="px-6 py-6 space-y-4">
                   <div className="p-4 bg-muted/20 rounded-sm border border-border/40 text-[10px] font-bold text-muted-foreground uppercase leading-relaxed">
-                    Click the button below to access the full official rulebook for {event.name}. This document includes eligibility, match formats, and conduct guidelines.
+                    Access the definitive official rulebook for {event.name}. This document includes eligibility, match formats, and conduct guidelines.
                   </div>
                   <Button 
                     variant="outline" 
-                    className="w-full h-14 text-[10px] font-black uppercase tracking-widest gap-2 rounded-sm border-primary/20 hover:bg-accent hover:text-accent-foreground shadow-lg shadow-primary/5 transition-all duration-200"
+                    className="w-full h-14 text-[10px] font-black uppercase tracking-widest gap-2 rounded-sm border-primary/20 hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                     onClick={() => handleOpenRulebook(event.rulebookUrl)}
                   >
                     <ExternalLink className="h-4 w-4" /> Open Official {event.name} Rulebook
@@ -71,7 +72,7 @@ export default function RulesPage() {
         <div className="flex items-center gap-3 p-6 bg-primary/5 rounded-sm border border-primary/10">
           <Info className="h-5 w-5 text-primary shrink-0" />
           <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70 leading-relaxed">
-            Note: The Sports Organizing Committee reserves the right to modify rules or schedules in response to rain or logistical contingencies. Please check back regularly for updates.
+            Note: The Sports Organizing Committee reserves the right to modify rules or schedules in response to logistical contingencies.
           </p>
         </div>
       </div>
