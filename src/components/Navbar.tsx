@@ -1,9 +1,10 @@
+
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle } from 'lucide-react';
+import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, BookOpen, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -29,11 +30,10 @@ export function Navbar() {
 
   return (
     <>
-      {/* Top Header - Main Navigation */}
+      {/* Top Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background h-20 md:h-24 pt-safe shadow-sm">
         <div className="container mx-auto h-full px-4 flex items-center justify-between gap-4">
           
-          {/* Left: Logo & Branding */}
           <Link href="/" onClick={handleNavClick} className="flex items-center gap-3 shrink-0">
             <div className="relative h-11 w-11 overflow-hidden rounded-sm bg-black p-1 border border-white/10">
               <Image 
@@ -50,7 +50,6 @@ export function Navbar() {
             </div>
           </Link>
 
-          {/* Center: Desktop Navigation Tabs */}
           <nav className="hidden lg:flex items-center justify-center flex-1 h-full px-4">
             <div className="flex h-full items-center gap-1 xl:gap-4">
               <Link 
@@ -72,7 +71,7 @@ export function Navbar() {
                     href={`/events/${event.slug}`}
                     onClick={handleNavClick}
                     className={cn(
-                      "relative h-full flex items-center px-4 text-[10px] font-black uppercase tracking-widest transition-all text-center",
+                      "relative h-full flex items-center px-4 text-[10px] font-black uppercase tracking-widest transition-all",
                       isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -81,20 +80,25 @@ export function Navbar() {
                   </Link>
                 );
               })}
+              <Link 
+                href="/rules" 
+                onClick={handleNavClick}
+                className={cn(
+                  "relative h-full flex items-center px-4 text-[10px] font-black uppercase tracking-widest transition-all",
+                  pathname === "/rules" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Rules
+                {pathname === "/rules" && <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary" />}
+              </Link>
             </div>
           </nav>
           
-          {/* Right: Tools & Live Sync */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            {/* Live Sync - Always visible */}
             <div className="flex items-center gap-2 border border-border px-3 sm:px-4 py-1.5 sm:py-2 rounded-full h-8 sm:h-10">
               <Radio className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary animate-pulse" />
               <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-foreground">Live Sync</span>
             </div>
-            
-            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground/40 hidden xl:flex">
-              <HelpCircle className="h-5 w-5" />
-            </Button>
             
             <NotificationCenter />
             <ThemeToggle />
@@ -136,6 +140,10 @@ export function Navbar() {
             </Link>
           );
         })}
+        <Link href="/rules" onClick={handleNavClick} className={cn("flex flex-col items-center gap-1", pathname === "/rules" ? "text-primary" : "text-muted-foreground/40")}>
+          <BookOpen className="h-4 w-4" />
+          <span className="text-[7px] font-black uppercase tracking-widest">Rules</span>
+        </Link>
       </nav>
     </>
   );
