@@ -1,10 +1,8 @@
-
 'use client';
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Trophy, ShieldCheck, Scale, Info, Zap, CircleDot, Target, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Zap, Trophy, CircleDot, Target, ExternalLink, Info } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { triggerHaptic } from '@/lib/haptics';
 
@@ -15,38 +13,30 @@ export default function RulesPage() {
     window.open(url, '_blank');
   };
 
+  const ICON_MAP: Record<string, any> = {
+    Zap: Zap,
+    Trophy: Trophy,
+    CircleDot: CircleDot,
+    Target: Target,
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-32">
       <div className="text-center space-y-4 px-4 pt-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Fair Play Guidelines</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Constitution</p>
         </div>
         <h1 className="text-4xl sm:text-6xl font-black uppercase text-foreground leading-none tracking-tighter italic">
-          Official Rulebook
+          Tournament Rules
         </h1>
-        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground">Paradox 2026 Sports Constitution</p>
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground">Paradox 2026 Sports Directives</p>
       </div>
 
-      <div className="space-y-10 px-4">
-        <Card className="premium-card">
-          <CardHeader className="bg-muted/5">
-            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-              <Scale className="h-4 w-4 text-primary" /> General Conduct
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 text-sm text-muted-foreground leading-relaxed space-y-4">
-            <p>1. <strong>Sportsmanship:</strong> All participants must maintain the highest standards of sportsmanship. Taunting, vulgarity, or aggressive behavior toward officials or opponents will lead to immediate disqualification.</p>
-            <p>2. <strong>Eligibility:</strong> Only registered IIT Madras BS students with valid ID cards are eligible to represent their houses.</p>
-            <p>3. <strong>Timings:</strong> Teams must report at least 15 minutes before the scheduled flag-off/reporting time. A 5-minute grace period is allowed, after which the match will be forfeited (Walkover).</p>
-          </CardContent>
-        </Card>
-
+      <div className="space-y-6 px-4">
         <Accordion type="single" collapsible className="space-y-4">
           {EVENTS.map((event) => {
-            const IconComp = event.slug === 'kampus-run' ? Zap : 
-                            event.slug === 'football' ? Trophy : 
-                            event.slug === 'volleyball' ? CircleDot : Target;
+            const IconComp = ICON_MAP[event.icon] || Target;
             
             return (
               <AccordionItem key={event.id} value={event.slug} className="premium-card border-none bg-card">
@@ -57,48 +47,20 @@ export default function RulesPage() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-black uppercase tracking-tighter">{event.name}</p>
-                      <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/60">{event.description}</p>
+                      <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/60">Official Rulebook v1.0</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="px-6 py-4 space-y-6">
-                  <div className="space-y-3 text-sm text-muted-foreground">
-                    {event.slug === 'kampus-run' && (
-                      <>
-                        <p>• Participants must wear the official bib at all times during the race.</p>
-                        <p>• Cutting corners or using any form of transportation will lead to immediate DQ.</p>
-                        <p>• Checkpoints must be cleared in the specified order to be eligible for ranking.</p>
-                      </>
-                    )}
-                    {event.slug === 'football' && (
-                      <>
-                        <p>• Standard 7-a-side rules apply. Maximum squad size: 10 players.</p>
-                        <p>• Matches consist of two 15-minute halves with a 5-minute break.</p>
-                        <p>• Direct red card leads to a 2-match ban.</p>
-                      </>
-                    )}
-                    {event.slug === 'volleyball' && (
-                      <>
-                        <p>• Matches are Best of 3 sets. Final matches are Best of 5 sets.</p>
-                        <p>• Sets are played to 25 points (win by 2).</p>
-                        <p>• Each team is allowed a maximum of 3 hits to return the ball.</p>
-                      </>
-                    )}
-                    {event.slug === 'badminton' && (
-                      <>
-                        <p>• Each house dual consists of 4 matches: MS, WS, MD, XD.</p>
-                        <p>• Matches are Best of 3 sets to 21 points (standard BWF rules).</p>
-                        <p>• A house wins the tie if they win 3 out of 4 sub-matches.</p>
-                      </>
-                    )}
+                <AccordionContent className="px-6 py-6 space-y-4">
+                  <div className="p-4 bg-muted/20 rounded-sm border border-border/40 text-[10px] font-bold text-muted-foreground uppercase leading-relaxed">
+                    Click the button below to access the full official rulebook for {event.name}. This document includes eligibility, match formats, and conduct guidelines.
                   </div>
-                  
                   <Button 
                     variant="outline" 
-                    className="w-full h-11 text-[9px] font-black uppercase tracking-widest gap-2 rounded-sm border-primary/20 hover:bg-primary/5"
+                    className="w-full h-14 text-[10px] font-black uppercase tracking-widest gap-2 rounded-sm border-primary/20 hover:bg-primary/10 shadow-lg shadow-primary/5"
                     onClick={() => handleOpenRulebook(event.rulebookUrl)}
                   >
-                    <ExternalLink className="h-3 w-3" /> View Official Rulebook
+                    <ExternalLink className="h-4 w-4" /> Open Official {event.name} Rulebook
                   </Button>
                 </AccordionContent>
               </AccordionItem>
@@ -109,7 +71,7 @@ export default function RulesPage() {
         <div className="flex items-center gap-3 p-6 bg-primary/5 rounded-sm border border-primary/10">
           <Info className="h-5 w-5 text-primary shrink-0" />
           <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70 leading-relaxed">
-            Note: The Sports Organizing Committee reserves the right to modify rules or schedules in case of rain or unforeseen logistics.
+            Note: The Sports Organizing Committee reserves the right to modify rules or schedules in response to rain or logistical contingencies. Please check back regularly for updates.
           </p>
         </div>
       </div>

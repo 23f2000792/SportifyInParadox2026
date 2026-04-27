@@ -1,4 +1,3 @@
-
 import { SportEvent } from './types';
 
 export const EVENTS: SportEvent[] = [
