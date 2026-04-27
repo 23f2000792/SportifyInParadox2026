@@ -122,7 +122,13 @@ export default function EventPage() {
       minStr = minutes;
     }
     const startTime = `${dateStr}T${hourStr}${minStr}00`;
-    const endTime = `${dateStr}T${(parseInt(hourStr) + 1).toString().padStart(2, '0')}${minStr}00`;
+    let endHours = parseInt(hourStr);
+    let endMins = parseInt(minStr) + 30;
+    if (endMins >= 60) {
+      endHours += 1;
+      endMins -= 60;
+    }
+    const endTime = `${dateStr}T${endHours.toString().padStart(2, '0')}${endMins.toString().padStart(2, '0')}00`;
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
     window.open(url, '_blank');
   };
