@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { EVENTS } from '@/lib/mock-data';
 import { 
@@ -587,9 +586,6 @@ export default function AdminPage() {
         <div className="min-w-0">
           {!isSportSpecificAdmin && (
             <Button variant="ghost" size="sm" onClick={() => setSelectedSportSlug(null)} className="p-0 h-auto text-[10px] font-black uppercase text-primary gap-1.5 mb-2">Switch Terminal</Button>
-          )}
-          {isSportSpecificAdmin && (
-            <div className="text-[10px] font-black uppercase text-muted-foreground/40 mb-2">Restricted Terminal</div>
           )}
           <h1 className="text-lg md:text-4xl font-black uppercase text-foreground tracking-tighter truncate">{EVENTS.find(e => e.slug === selectedSportSlug)?.name}</h1>
         </div>
