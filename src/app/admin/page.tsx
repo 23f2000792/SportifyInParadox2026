@@ -804,6 +804,7 @@ export default function AdminPage() {
                   <p className="text-[8px] opacity-40 uppercase font-black">{t.venue} • {t.date} • {t.time}</p>
                 </div>
                 <div className="flex gap-2">
+                  <Button variant="ghost" size="icon" className="text-primary" onClick={() => { triggerHaptic('light'); setNewTrial(t); setEditingTrialId(t.id); }}><Edit2 className="h-4 w-4" /></Button>
                   <Button variant="outline" size="sm" className="h-8 text-[8px] font-black uppercase" onClick={() => handleBroadcastTrialStart(t)}>Broadcast Start</Button>
                   <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'trials', t.id))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -820,43 +821,47 @@ export default function AdminPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleAddOrUpdateStanding} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-40">Team</Label>
-                  <Select value={newStanding.team} onValueChange={v => setNewStanding({...newStanding, team: v})}>
-                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
-                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                  </Select>
+              <form onSubmit={handleAddOrUpdateStanding} className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase opacity-40">Team</Label>
+                    <Select value={newStanding.team} onValueChange={v => setNewStanding({...newStanding, team: v})}>
+                      <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
+                      <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase opacity-40">Group</Label>
+                    <Select value={newStanding.group} onValueChange={v => setNewStanding({...newStanding, group: v})}>
+                      <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Group" /></SelectTrigger>
+                      <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g}>Group {g}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase opacity-40">Played</Label>
+                    <Input type="number" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase opacity-40">Wins</Label>
+                    <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-40">Group</Label>
-                  <Select value={newStanding.group} onValueChange={v => setNewStanding({...newStanding, group: v})}>
-                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Group" /></SelectTrigger>
-                    <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g}>Group {g}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-40">Played</Label>
-                  <Input type="number" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-40">Wins</Label>
-                  <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-40">Draws</Label>
-                  <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-40">Losses</Label>
-                  <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase opacity-40">Points</Label>
-                  <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
-                </div>
-                <div className="flex items-end">
-                  <Button type="submit" className="w-full h-11 uppercase font-black text-[10px] tracking-widest">{editingStandingId ? 'Update' : 'Assign'}</Button>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase opacity-40">Draws</Label>
+                    <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase opacity-40">Losses</Label>
+                    <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase opacity-40">Points</Label>
+                    <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                  </div>
+                  <div className="flex items-end">
+                    <Button type="submit" className="w-full h-11 uppercase font-black text-[10px] tracking-widest">{editingStandingId ? 'Update Standing' : 'Assign to Group'}</Button>
+                  </div>
                 </div>
               </form>
             </CardContent>
@@ -883,3 +888,4 @@ export default function AdminPage() {
     </div>
   );
 }
+
