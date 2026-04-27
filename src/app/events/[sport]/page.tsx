@@ -171,7 +171,7 @@ export default function EventPage() {
   };
 
   const renderRunCategory = (title: string, category: string, gender: 'M' | 'F', ageGroup: string = 'All') => {
-    const results = runResults?.filter(r => r.category === category && r.gender === gender && r.ageGroup === ageGroup) || [];
+    const results = runResults?.filter(r => r.category === category && r.gender === gender && (ageGroup === 'All' || r.ageGroup === ageGroup)) || [];
     return (
       <div key={title} className="space-y-4">
         <div className="flex items-center gap-2 px-1">
@@ -482,4 +482,3 @@ export default function EventPage() {
     </div>
   );
 }
-

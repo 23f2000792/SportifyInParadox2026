@@ -634,9 +634,48 @@ export default function AdminPage() {
                 <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Trophy className="h-4 w-4" /> Enter Race Outcome</CardTitle></CardHeader>
                 <CardContent className="p-6">
                   <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Participant Name</Label><Input value={runResult.name} onChange={e => setRunResult({...runResult, name: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                    <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Position</Label><Input type="number" value={runResult.position} onChange={e => setRunResult({...runResult, position: Number(e.target.value)})} className="bg-muted/20 h-11" required /></div>
-                    <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Time</Label><Input value={runResult.time} onChange={e => setRunResult({...runResult, time: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase">Participant Name</Label>
+                      <Input value={runResult.name} onChange={e => setRunResult({...runResult, name: e.target.value})} className="bg-muted/20 h-11" required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase">Position</Label>
+                      <Input type="number" value={runResult.position} onChange={e => setRunResult({...runResult, position: Number(e.target.value)})} className="bg-muted/20 h-11" required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase">Time</Label>
+                      <Input value={runResult.time} onChange={e => setRunResult({...runResult, time: e.target.value})} className="bg-muted/20 h-11" required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase">Gender</Label>
+                      <Select value={runResult.gender} onValueChange={v => setRunResult({...runResult, gender: v as any})}>
+                        <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="M">Male</SelectItem>
+                          <SelectItem value="F">Female</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase">Age Group</Label>
+                      <Select value={runResult.ageGroup} onValueChange={v => setRunResult({...runResult, ageGroup: v})}>
+                        <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="18-25">18-25</SelectItem>
+                          <SelectItem value="26+">26+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase">Category</Label>
+                      <Select value={runResult.category} onValueChange={v => setRunResult({...runResult, category: v})}>
+                        <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3km">3KM</SelectItem>
+                          <SelectItem value="5km">5KM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <Button type="submit" className="lg:col-span-3 h-12 uppercase font-black text-[10px] tracking-widest">Publish Result</Button>
                   </form>
                 </CardContent>
@@ -646,7 +685,7 @@ export default function AdminPage() {
                   <div key={r.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
                     <div>
                       <p className="text-[11px] font-black uppercase">#{r.position} {r.name}</p>
-                      <p className="text-[8px] opacity-40 uppercase font-black">{r.time} • {r.gender} • {r.category}</p>
+                      <p className="text-[8px] opacity-40 uppercase font-black">{r.time} • {r.gender} • {r.ageGroup} • {r.category.toUpperCase()}</p>
                     </div>
                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'runResults', r.id))}><Trash2 className="h-4 w-4" /></Button>
                   </div>
@@ -772,7 +811,7 @@ export default function AdminPage() {
                   <p className="text-[8px] opacity-40 uppercase font-black">{m.date} • {m.time}</p>
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => { setNewMatch(m); setEditingMatchId(m.id); }}><Edit2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => { triggerHaptic('light'); setNewMatch(m); setEditingMatchId(m.id); }}><Edit2 className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', m.id))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
@@ -888,4 +927,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
