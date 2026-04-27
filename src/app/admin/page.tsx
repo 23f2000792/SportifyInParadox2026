@@ -369,6 +369,17 @@ export default function AdminPage() {
     setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '' });
   };
 
+  const handleEditMatch = (m: Match) => {
+    triggerHaptic('light');
+    setNewMatch(m);
+    setEditingMatchId(m.id);
+    setActiveTab(m.status === 'Completed' ? 'archives' : (m.status === 'Live' ? 'control' : 'fixtures'));
+    // For consistency, if editing we always show the form. Let's force it to fixtures/control where the form is.
+    if (m.status === 'Upcoming' || m.status === 'Completed') setActiveTab('fixtures');
+    else setActiveTab('control');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleAddOrUpdateTrial = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug || !newTrial.house) return;
@@ -391,6 +402,14 @@ export default function AdminPage() {
     setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
   };
 
+  const handleEditTrial = (t: Trial) => {
+    triggerHaptic('light');
+    setNewTrial(t);
+    setEditingTrialId(t.id);
+    setActiveTab('trials');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleAddOrUpdateStanding = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !selectedSportSlug || !newStanding.team) return;
@@ -411,6 +430,14 @@ export default function AdminPage() {
       toast({ title: "House added to group." });
     }
     setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
+  };
+
+  const handleEditStanding = (s: Standing) => {
+    triggerHaptic('light');
+    setNewStanding(s);
+    setEditingStandingId(s.id);
+    setActiveTab('standings');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const updateBadmintonResult = (index: number, field: keyof BadmintonMatchResult, value: string) => {
@@ -800,7 +827,7 @@ export default function AdminPage() {
                 <Input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required />
                 <Input placeholder="Time" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required />
                 <Input placeholder="Venue" value={newMatch.venue} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required />
-                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">Schedule Match</Button>
+                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingMatchId ? 'Update Fixture' : 'Schedule Match'}</Button>
               </form>
             </CardContent>
           </Card>
@@ -812,7 +839,7 @@ export default function AdminPage() {
                   <p className="text-[8px] opacity-40 uppercase font-black">{m.date} • {m.time}</p>
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => { triggerHaptic('light'); setNewMatch(m); setEditingMatchId(m.id); }}><Edit2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleEditMatch(m)}><Edit2 className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', m.id))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
@@ -829,7 +856,7 @@ export default function AdminPage() {
                   <p className="text-[8px] opacity-40 uppercase font-black">{m.date} • Winner: {m.winner || 'N/A'}</p>
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => { triggerHaptic('light'); setNewMatch(m); setEditingMatchId(m.id); }}><Edit2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleEditMatch(m)}><Edit2 className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', m.id))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
@@ -861,7 +888,7 @@ export default function AdminPage() {
                   <p className="text-[8px] opacity-40 uppercase font-black">{t.venue} • {t.date} • {t.time}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" className="text-primary" onClick={() => { triggerHaptic('light'); setNewTrial(t); setEditingTrialId(t.id); }}><Edit2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="text-primary" onClick={() => handleEditTrial(t)}><Edit2 className="h-4 w-4" /></Button>
                   <Button variant="outline" size="sm" className="h-8 text-[8px] font-black uppercase" onClick={() => handleBroadcastTrialStart(t)}>Broadcast Start</Button>
                   <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'trials', t.id))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -933,7 +960,7 @@ export default function AdminPage() {
                     <p className="text-[8px] opacity-40 uppercase font-black">P: {s.played} • W: {s.won} • D: {s.drawn} • L: {s.lost} • PTS: {s.points}</p>
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => { triggerHaptic('light'); setNewStanding(s); setEditingStandingId(s.id); }}><Edit2 className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditStanding(s)}><Edit2 className="h-3.5 w-3.5" /></Button>
                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => { triggerHaptic('error'); deleteDoc(doc(db!, 'standings', s.id)); }}><Trash2 className="h-3.5 w-3.5" /></Button>
                   </div>
                 </div>

@@ -80,7 +80,7 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
   const handleShareRecap = () => {
     if (!recap) return;
     triggerHaptic('success');
-    const text = `🎙️ *AI MATCH RECAP: ${match.teamA} vs ${match.teamB}* 🎙️\n\n"${recap}"\n\nCheck full stats and highlights on the Official Sportify Portal:\n🔗 ${OFFICIAL_URL}`;
+    const text = `🎙️ *UNBELIEVABLE AI MATCH RECAP!* 🎙️\n\n"${recap}"\n\nExperience the full thrill, stats, and glory on the Official Sportify Portal! Support your house here:\n🔗 ${OFFICIAL_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 

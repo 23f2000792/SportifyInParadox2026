@@ -170,11 +170,11 @@ export default function EventPage() {
     
     let msg = "";
     if (match.status === 'Live') {
-      msg = `🔥 *LIVE ACTION ALERT: ${currentSport}* 🔥\n\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n📍 Venue: ${match.venue}\n\nCatch every play on the Official Sportify Portal:\n🔗 ${OFFICIAL_PORTAL_URL}`;
+      msg = `🔥 *UNSTOPPABLE LIVE ACTION!* 🔥\n\nThe atmosphere is electric at the venue! ⚔️ *${match.teamA}* is clashing with *${match.teamB}* in an epic ${currentSport} battle!\n\n📣 Current Standing: *${match.scoreA} - ${match.scoreB}*\n📍 Location: ${match.venue}\n\nDon't blink! Track every second of the pulse-pounding action on the Official Sportify Portal:\n🔗 ${OFFICIAL_PORTAL_URL}`;
     } else if (match.status === 'Completed') {
-      msg = `🏆 *MATCH RESULT: ${currentSport}* 🏆\n\n🏁 *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n🏅 Winner: *${match.winner || 'N/A'}*\n\nView full standings and highlights:\n🔗 ${OFFICIAL_PORTAL_URL}`;
+      msg = `🏆 *VICTORY IS SECURED!* 🏆\n\nWhat a performance! The dust has settled and the results are IN for ${currentSport}!\n\n🏁 *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n🔥 Winner: *${match.winner || 'N/A'}* 🔥\n\nThis victory will echo through the halls of Paradox! See the full standings and highlights here:\n🔗 ${OFFICIAL_PORTAL_URL}`;
     } else {
-      msg = `🗓️ *MATCH SCHEDULE: ${currentSport}* 🗓️\n\n⚔️ *${match.teamA}* vs *${match.teamB}*\n⏰ Time: ${match.time}\n📅 Date: ${match.date}\n📍 Venue: ${match.venue}\n\nStay updated with the official broadcast:\n🔗 ${OFFICIAL_PORTAL_URL}`;
+      msg = `🗓️ *PREPARE FOR BATTLE!* 🗓️\n\nThe ultimate showdown is coming! ⚔️ *${match.teamA}* takes on *${match.teamB}* in a must-watch ${currentSport} match!\n\n⏰ Zero Hour: ${match.time}\n📅 Date: ${match.date}\n📍 Venue: ${match.venue}\n\nSupport your house and witness greatness! Stay updated with the official broadcast:\n🔗 ${OFFICIAL_PORTAL_URL}`;
     }
     
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
