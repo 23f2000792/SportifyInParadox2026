@@ -4,7 +4,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity, ClipboardList, Medal } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Star, CalendarClock, Activity, ClipboardList, Medal, TrendingUp } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
@@ -12,6 +12,7 @@ import { Match, HOUSES, Trial, ChampionshipStanding } from '@/lib/types';
 import Loading from '@/app/loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { triggerHaptic } from '@/lib/haptics';
 import {
   Carousel,
   CarouselContent,
@@ -19,12 +20,29 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
   Trophy: Trophy,
   CircleDot: CircleDot,
   Target: Target,
+};
+
+const HOUSE_COLORS: Record<string, string> = {
+  Sundarbans: "#10b981",
+  Nallamala: "#f59e0b",
+  Gir: "#3b82f6",
+  Bandipur: "#ef4444",
+  Kaziranga: "#8b5cf6",
+  Corbett: "#ec4899",
+  Wayanad: "#06b6d4",
+  Nilgiri: "#f97316",
+  Saranda: "#6366f1",
+  Namdapha: "#14b8a6",
+  Pichavaram: "#a855f7",
+  Kanha: "#fbbf24",
 };
 
 export default function Home() {
@@ -37,6 +55,7 @@ export default function Home() {
   }, []);
 
   const handleFollowHouse = (house: string) => {
+    triggerHaptic('success');
     setMyHouse(house);
     localStorage.setItem('followedHouse', house);
   };
@@ -57,9 +76,24 @@ export default function Home() {
     return query(collection(db, 'trials'), where('house', '==', myHouse));
   }, [db, myHouse]);
 
+  const standingsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'championship'), orderBy('points', 'desc'));
+  }, [db]);
+
   const { data: liveMatches, loading: matchesLoading } = useCollection<Match>(liveMatchesQuery);
   const { data: allUpcoming } = useCollection<Match>(upcomingMatchesQuery);
   const { data: allTrials } = useCollection<Trial>(houseTrialsQuery);
+  const { data: overallStandings } = useCollection<ChampionshipStanding>(standingsQuery);
+
+  const chartData = useMemo(() => {
+    if (!overallStandings) return [];
+    return overallStandings.slice(0, 6).map(s => ({
+      name: s.house,
+      points: s.points,
+      fill: HOUSE_COLORS[s.house] || "#7c3aed"
+    }));
+  }, [overallStandings]);
 
   const myHouseTimeline = useMemo(() => {
     if (!myHouse) return [];
@@ -97,7 +131,7 @@ export default function Home() {
           <div className="bg-card border border-border rounded-md p-4 space-y-3 shadow-sm">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Personalize Your Hub</p>
             <Select value={myHouse} onValueChange={handleFollowHouse}>
-              <SelectTrigger className="bg-muted h-11 text-[11px] font-black uppercase rounded-sm">
+              <SelectTrigger className="bg-muted h-11 text-[11px] font-black uppercase rounded-sm" onClick={() => triggerHaptic('light')}>
                 <SelectValue placeholder="Follow Your House" />
               </SelectTrigger>
               <SelectContent>
@@ -116,6 +150,72 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Championship Dashboard */}
+      {overallStandings && overallStandings.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" /> Championship Race
+            </h2>
+            <Link href="/standings" className="text-[9px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">View All</Link>
+          </div>
+          <Card className="premium-card bg-muted/5 border-primary/10 overflow-hidden">
+            <div className="p-6 md:p-10 space-y-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {overallStandings.slice(0, 4).map((h, i) => (
+                  <div key={h.house} className="space-y-1">
+                    <p className="text-[8px] font-black uppercase tracking-widest opacity-40">Rank #{i + 1}</p>
+                    <p className="text-lg font-black uppercase italic tracking-tighter leading-none">{h.house}</p>
+                    <p className="text-2xl font-black text-primary">{h.points} <span className="text-[10px] opacity-40 uppercase tracking-widest">Pts</span></p>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="h-[200px] w-full mt-10">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#888888" 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      tickFormatter={(v) => v.substring(0, 3).toUpperCase()}
+                    />
+                    <YAxis 
+                      stroke="#888888" 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      tickFormatter={(v) => `${v}`}
+                    />
+                    <Tooltip 
+                      cursor={{fill: 'rgba(124, 58, 237, 0.05)'}}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-card border border-border p-3 rounded-sm shadow-xl">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{payload[0].payload.name}</p>
+                              <p className="text-lg font-black">{payload[0].value} PTS</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="points" radius={[4, 4, 0, 0]}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={0.8} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </Card>
+        </section>
+      )}
+
       {/* Unified House Timeline */}
       {myHouse && myHouseTimeline.length > 0 && (
         <section className="space-y-6">
@@ -129,7 +229,7 @@ export default function Home() {
               <CarouselContent className="-ml-4">
                 {myHouseTimeline.map((item: any) => (
                   <CarouselItem key={item.id} className="pl-4 basis-[85%] sm:basis-[45%] md:basis-[30%] lg:basis-[25%]">
-                    <Link href={`/events/${item.sport}`} className="block h-full">
+                    <Link href={`/events/${item.sport}`} className="block h-full" onClick={() => triggerHaptic('light')}>
                       <Card className={cn(
                         "premium-card h-full group",
                         item.type === 'trial' ? "border-accent/20 bg-accent/5" : "border-primary/10 bg-primary/5"
@@ -177,7 +277,7 @@ export default function Home() {
             {liveMatches.map((match) => {
               const isMyMatch = match.teamA === myHouse || match.teamB === myHouse;
               return (
-                <Link key={match.id} href={`/events/${match.sport}`}>
+                <Link key={match.id} href={`/events/${match.sport}`} onClick={() => triggerHaptic('medium')}>
                   <Card className={cn(
                     "premium-card group",
                     isMyMatch && "border-primary bg-primary/5"
@@ -230,7 +330,7 @@ export default function Home() {
           {EVENTS.map((event) => {
             const IconComp = ICON_MAP[event.icon];
             return (
-              <Link key={event.id} href={`/events/${event.slug}`}>
+              <Link key={event.id} href={`/events/${event.slug}`} onClick={() => triggerHaptic('light')}>
                 <Card className="premium-card group h-full">
                   <CardContent className="p-0">
                     <div className="flex h-36 md:h-44">

@@ -1,25 +1,32 @@
 
 "use client";
 
-import { useState, memo } from 'react';
+import { useState, memo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { generateMatchRecap } from '@/ai/flows/ai-match-recap-tool';
+import { generateMatchAudio } from '@/ai/flows/ai-match-audio-recap';
 import { Match } from '@/lib/types';
-import { Sparkles, Loader2, Share2, X } from 'lucide-react';
+import { Sparkles, Loader2, Share2, X, Play, Volume2, Pause } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { triggerHaptic } from '@/lib/haptics';
 
 const OFFICIAL_URL = "https://sportify-in-paradox2026.vercel.app/";
 
 export const MatchRecapButton = memo(function MatchRecapButton({ match }: { match: Match }) {
   const [loading, setLoading] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
   const [recap, setRecap] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [open, setOpen] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (loading) return;
+    triggerHaptic('medium');
     setLoading(true);
     setOpen(true);
     try {
@@ -39,8 +46,40 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
     }
   };
 
+  const handlePlayAudio = async () => {
+    if (!recap || audioLoading) return;
+    triggerHaptic('light');
+    
+    if (audioUrl) {
+      if (isPlaying) {
+        audioRef.current?.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current?.play();
+        setIsPlaying(true);
+      }
+      return;
+    }
+
+    setAudioLoading(true);
+    try {
+      const { audioDataUri } = await generateMatchAudio({ text: recap });
+      setAudioUrl(audioDataUri);
+      setIsPlaying(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Audio Error",
+        description: "Failed to generate radio recap."
+      });
+    } finally {
+      setAudioLoading(false);
+    }
+  };
+
   const handleShareRecap = () => {
     if (!recap) return;
+    triggerHaptic('success');
     const text = `🎙️ *AI MATCH RECAP: ${match.teamA} vs ${match.teamB}* 🎙️\n\n"${recap}"\n\nCheck full stats and highlights on the Official Sportify Portal:\n🔗 ${OFFICIAL_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -61,7 +100,7 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
         <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none shadow-2xl bg-card rounded-t-3xl sm:rounded-3xl">
           <div className="relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-primary/20">
-              {loading && <div className="h-full bg-primary animate-progress-indefinite" />}
+              {(loading || audioLoading) && <div className="h-full bg-primary animate-progress-indefinite" />}
             </div>
             
             <DialogHeader className="p-8 pb-6 bg-gradient-to-br from-primary to-primary/80 text-white">
@@ -99,6 +138,36 @@ export const MatchRecapButton = memo(function MatchRecapButton({ match }: { matc
                     </p>
                     <span className="absolute -bottom-10 -right-2 text-6xl text-primary/10 font-black italic select-none rotate-180">"</span>
                   </div>
+
+                  {recap && !loading && (
+                    <div className="mt-8 flex flex-col items-center gap-4">
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="w-full h-16 rounded-2xl gap-3 text-xs font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 group"
+                        onClick={handlePlayAudio}
+                        disabled={audioLoading}
+                      >
+                        {audioLoading ? (
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        ) : isPlaying ? (
+                          <Pause className="h-5 w-5 text-primary fill-primary" />
+                        ) : (
+                          <Volume2 className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                        )}
+                        {audioLoading ? "Tuning Radio..." : isPlaying ? "Pause Radio" : "Listen to Radio Recap"}
+                      </Button>
+                      {audioUrl && (
+                        <audio 
+                          ref={audioRef} 
+                          src={audioUrl} 
+                          onEnded={() => setIsPlaying(false)}
+                          className="hidden" 
+                        />
+                      )}
+                    </div>
+                  )}
+
                   <div className="mt-12 flex items-center justify-end gap-2 opacity-40">
                     <div className="h-px w-8 bg-muted-foreground" />
                     <p className="text-[9px] font-black uppercase tracking-widest">AI Official Analysis</p>
