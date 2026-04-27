@@ -12,7 +12,7 @@ import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { triggerHaptic } from '@/lib/haptics';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -103,6 +104,7 @@ export default function EventPage() {
   const isKampusRun = sport === 'kampus-run';
 
   const handleAddToCalendar = (match: Match) => {
+    triggerHaptic('light');
     const title = encodeURIComponent(`Sportify: ${event.name} - ${match.teamA} vs ${match.teamB}`);
     const details = encodeURIComponent(`Match #${match.matchNumber} at ${match.venue}.`);
     const location = encodeURIComponent(match.venue);
@@ -126,15 +128,14 @@ export default function EventPage() {
   };
 
   const handleAddTrialToCalendar = (trial: Trial) => {
+    triggerHaptic('light');
     const title = encodeURIComponent(`Sportify Trial: ${event.name} (${trial.house})`);
     const details = encodeURIComponent(`Selection trials for ${event.name} - ${trial.house} House. Venue: ${trial.venue}.`);
     const location = encodeURIComponent(trial.venue);
-    
     const dateStr = trial.date.replace(/-/g, '');
     const timeParts = trial.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     let hourStr = '00';
     let minStr = '00';
-    
     if (timeParts) {
       let hours = parseInt(timeParts[1]);
       const minutes = timeParts[2];
@@ -144,24 +145,20 @@ export default function EventPage() {
       hourStr = hours.toString().padStart(2, '0');
       minStr = minutes;
     }
-    
     const startTime = `${dateStr}T${hourStr}${minStr}00`;
-    
     let endHours = parseInt(hourStr);
     let endMins = parseInt(minStr) + 30;
     if (endMins >= 60) {
       endHours += 1;
       endMins -= 60;
     }
-    const endHourStr = endHours.toString().padStart(2, '0');
-    const endMinStr = endMins.toString().padStart(2, '0');
-    const endTime = `${dateStr}T${endHourStr}${endMinStr}00`;
-
+    const endTime = `${dateStr}T${endHours.toString().padStart(2, '0')}${endMins.toString().padStart(2, '0')}00`;
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
     window.open(url, '_blank');
   };
 
   const handleShareMatch = (match: Match) => {
+    triggerHaptic('light');
     const currentSport = event.name.toUpperCase();
     let hypedText = '';
     if (match.status === 'Completed') {
@@ -311,9 +308,21 @@ export default function EventPage() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-32">
       <div className="text-center space-y-4 px-4 pt-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted/20 rounded-full border border-border">
-          {IconComp && <IconComp className="h-3.5 w-3.5 text-primary" />}
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Stream</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted/20 rounded-full border border-border">
+            {IconComp && <IconComp className="h-3.5 w-3.5 text-primary" />}
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary">Official Stream</p>
+          </div>
+          {event.rulebookUrl && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 rounded-sm text-[8px] font-black uppercase gap-1.5 border-primary/20 hover:bg-primary/5"
+              onClick={() => { triggerHaptic('light'); window.open(event.rulebookUrl, '_blank'); }}
+            >
+              <BookOpen className="h-3 w-3" /> Official Rulebook
+            </Button>
+          )}
         </div>
         <h1 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase text-foreground leading-none tracking-tighter italic">
           {event.name}
@@ -336,7 +345,7 @@ export default function EventPage() {
               <Input placeholder="Search house..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 h-11 bg-muted/10 border-none text-xs font-black uppercase" />
             </div>
             <div className="flex items-center gap-2 shrink-0 bg-muted/20 px-4 py-2 rounded-sm border border-border/50">
-              <Switch checked={focusMode} onCheckedChange={setFocusMode} disabled={!myHouse} />
+              <Switch checked={focusMode} onCheckedChange={(v) => { triggerHaptic('light'); setFocusMode(v); }} disabled={!myHouse} />
               <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Follow {myHouse || 'House'}</Label>
             </div>
           </div>
@@ -390,7 +399,7 @@ export default function EventPage() {
                           variant="outline" 
                           size="sm" 
                           className="h-8 rounded-sm text-[8px] font-black uppercase gap-1.5 border-primary/20"
-                          onClick={() => window.open(OAT_MAPS_LINK, '_blank')}
+                          onClick={() => { triggerHaptic('light'); window.open(OAT_MAPS_LINK, '_blank'); }}
                         >
                           <ExternalLink className="h-3 w-3" /> Get Directions
                         </Button>

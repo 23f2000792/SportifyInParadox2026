@@ -13,6 +13,7 @@ export interface SportEvent {
   reportingTime?: string;
   flagOffTime?: string;
   notes?: string;
+  rulebookUrl?: string;
 }
 
 export interface BadmintonMatchResult {
