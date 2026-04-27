@@ -814,27 +814,50 @@ export default function AdminPage() {
 
         <TabsContent value="standings" className="space-y-12">
           <Card className="premium-card">
-            <CardHeader><CardTitle className="text-[10px] font-black uppercase text-primary">Assign House to Group</CardTitle></CardHeader>
+            <CardHeader className="border-b border-border/50">
+              <CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <ListOrdered className="h-4 w-4" /> Assign House to Group
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleAddOrUpdateStanding} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Select value={newStanding.team} onValueChange={v => setNewStanding({...newStanding, team: v})}>
-                  <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
-                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                </Select>
-                <Select value={newStanding.group} onValueChange={v => setNewStanding({...newStanding, group: v})}>
-                  <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Group" /></SelectTrigger>
-                  <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g}>Group {g}</SelectItem>)}</SelectContent>
-                </Select>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input type="number" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="P" />
-                  <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="W" />
+              <form onSubmit={handleAddOrUpdateStanding} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Team</Label>
+                  <Select value={newStanding.team} onValueChange={v => setNewStanding({...newStanding, team: v})}>
+                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
+                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="D" />
-                  <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="L" />
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Group</Label>
+                  <Select value={newStanding.group} onValueChange={v => setNewStanding({...newStanding, group: v})}>
+                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Group" /></SelectTrigger>
+                    <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g}>Group {g}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
-                <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="Points" />
-                <Button type="submit" className="md:col-span-3 h-11 uppercase font-black text-[10px]">Assign House</Button>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Played</Label>
+                  <Input type="number" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Wins</Label>
+                  <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Draws</Label>
+                  <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Losses</Label>
+                  <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Points</Label>
+                  <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                </div>
+                <div className="flex items-end">
+                  <Button type="submit" className="w-full h-11 uppercase font-black text-[10px] tracking-widest">{editingStandingId ? 'Update' : 'Assign'}</Button>
+                </div>
               </form>
             </CardContent>
           </Card>

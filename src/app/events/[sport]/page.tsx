@@ -160,14 +160,7 @@ export default function EventPage() {
   const handleShareMatch = (match: Match) => {
     triggerHaptic('light');
     const currentSport = event.name.toUpperCase();
-    let hypedText = '';
-    if (match.status === 'Completed') {
-      hypedText = `🏆 FINAL RESULT ALERT: ${currentSport}\n⚔️ ${match.teamA} ${match.scoreA} - ${match.scoreB} ${match.teamB}\nWinner: ${match.winner || 'N/A'}\n📍 Venue: ${match.venue}`;
-    } else if (match.status === 'Live') {
-      hypedText = `🔥 LIVE ACTION ALERT: ${currentSport}\n⚔️ ${match.teamA} ${match.scoreA} - ${match.scoreB} ${match.teamB}\nStatus: LIVE NOW!\n📍 Venue: ${match.venue}`;
-    } else {
-      hypedText = `🏟️ MATCH FIXTURE: ${currentSport}\n⚔️ ${match.teamA} vs ${match.teamB}\n📍 Phase: ${match.phase}\n⏰ Time: ${match.time} • ${match.date}\n🏟️ Venue: ${match.venue}`;
-    }
+    let hypedText = `🏟️ MATCH INFO: ${currentSport}\n⚔️ ${match.teamA} vs ${match.teamB}\nStatus: ${match.status.toUpperCase()}\n📍 Venue: ${match.venue}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
   };
 
