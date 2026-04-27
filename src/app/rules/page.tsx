@@ -57,7 +57,7 @@ export default function RulesPage() {
                   </div>
                   <Button 
                     variant="outline" 
-                    className="w-full h-14 text-[10px] font-black uppercase tracking-widest gap-2 rounded-sm border-primary/20 hover:bg-primary/10 shadow-lg shadow-primary/5"
+                    className="w-full h-14 text-[10px] font-black uppercase tracking-widest gap-2 rounded-sm border-primary/20 hover:bg-accent hover:text-accent-foreground shadow-lg shadow-primary/5 transition-all duration-200"
                     onClick={() => handleOpenRulebook(event.rulebookUrl)}
                   >
                     <ExternalLink className="h-4 w-4" /> Open Official {event.name} Rulebook
