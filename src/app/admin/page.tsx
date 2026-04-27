@@ -946,15 +946,27 @@ export default function AdminPage() {
                   <Label className="text-[9px] font-black uppercase opacity-50">Wins</Label>
                   <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" />
                 </div>
-                <div className="flex items-end gap-2 md:col-span-2">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Draws</Label>
+                  <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Losses</Label>
+                  <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-50">Points</Label>
+                  <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" />
+                </div>
+                <div className="flex items-end gap-2 md:col-span-1">
                   <Button type="submit" className="flex-1 h-11 uppercase font-black text-[10px] tracking-widest">
-                    {editingStandingId ? 'Save Changes' : 'Assign House'}
+                    {editingStandingId ? 'Save' : 'Assign'}
                   </Button>
                   {editingStandingId && (
                     <Button type="button" variant="outline" onClick={() => {
                       setEditingStandingId(null);
                       setNewStanding({ team: '', played: 0, won: 0, drawn: 0, lost: 0, points: 0, group: 'A' });
-                    }} className="h-11 uppercase font-black text-[10px]">Cancel</Button>
+                    }} className="h-11 uppercase font-black text-[10px]">X</Button>
                   )}
                 </div>
               </form>
@@ -976,7 +988,7 @@ export default function AdminPage() {
                       <div key={s.id} className="premium-card p-4 flex items-center justify-between bg-muted/5 group hover:bg-muted/10">
                         <div className="min-w-0">
                           <p className="text-[11px] font-black uppercase tracking-tight truncate">{s.team}</p>
-                          <p className="text-[8px] opacity-40 uppercase font-black tracking-widest mt-0.5">P: {s.played} • W: {s.won} • PTS: {s.points}</p>
+                          <p className="text-[8px] opacity-40 uppercase font-black tracking-widest mt-0.5">P: {s.played} • W: {s.won} • D: {s.drawn} • L: {s.lost} • PTS: {s.points}</p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary" onClick={() => {
