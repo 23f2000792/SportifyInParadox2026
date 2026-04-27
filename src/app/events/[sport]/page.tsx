@@ -30,6 +30,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 const OAT_MAPS_LINK = "https://maps.app.goo.gl/smHmEL9hih1NqRvW6";
+const OFFICIAL_PORTAL_URL = "https://sportify-in-paradox2026.vercel.app/";
 
 export default function EventPage() {
   const params = useParams();
@@ -166,8 +167,17 @@ export default function EventPage() {
   const handleShareMatch = (match: Match) => {
     triggerHaptic('light');
     const currentSport = event.name.toUpperCase();
-    let hypedText = `🏟️ MATCH INFO: ${currentSport}\n⚔️ ${match.teamA} vs ${match.teamB}\nStatus: ${match.status.toUpperCase()}\n📍 Venue: ${match.venue}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(hypedText)}`, '_blank');
+    
+    let msg = "";
+    if (match.status === 'Live') {
+      msg = `🔥 *LIVE ACTION ALERT: ${currentSport}* 🔥\n\n⚔️ *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n📍 Venue: ${match.venue}\n\nCatch every play on the Official Sportify Portal:\n🔗 ${OFFICIAL_PORTAL_URL}`;
+    } else if (match.status === 'Completed') {
+      msg = `🏆 *MATCH RESULT: ${currentSport}* 🏆\n\n🏁 *${match.teamA}* ${match.scoreA} - ${match.scoreB} *${match.teamB}*\n🏅 Winner: *${match.winner || 'N/A'}*\n\nView full standings and highlights:\n🔗 ${OFFICIAL_PORTAL_URL}`;
+    } else {
+      msg = `🗓️ *MATCH SCHEDULE: ${currentSport}* 🗓️\n\n⚔️ *${match.teamA}* vs *${match.teamB}*\n⏰ Time: ${match.time}\n📅 Date: ${match.date}\n📍 Venue: ${match.venue}\n\nStay updated with the official broadcast:\n🔗 ${OFFICIAL_PORTAL_URL}`;
+    }
+    
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const renderRunCategory = (title: string, category: string, gender: 'M' | 'F', ageGroup: string = 'All') => {

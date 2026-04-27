@@ -625,6 +625,7 @@ export default function AdminPage() {
           {!isKampusRun && <TabsTrigger value="fixtures" className="shrink-0 text-[10px] font-black uppercase px-6 h-full data-[state=active]:bg-background">Fixtures</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="trials" className="shrink-0 text-[10px] font-black uppercase px-6 h-full data-[state=active]:bg-background">Trials</TabsTrigger>}
           {!isKampusRun && <TabsTrigger value="standings" className="shrink-0 text-[10px] font-black uppercase px-6 h-full data-[state=active]:bg-background">Standings</TabsTrigger>}
+          {!isKampusRun && <TabsTrigger value="archives" className="shrink-0 text-[10px] font-black uppercase px-6 h-full data-[state=active]:bg-background">Archives</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="control" className="space-y-6">
@@ -804,11 +805,28 @@ export default function AdminPage() {
             </CardContent>
           </Card>
           <div className="grid grid-cols-1 gap-3">
-            {matches?.map(m => (
+            {matches?.filter(m => m.status !== 'Completed').map(m => (
               <div key={m.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
                 <div>
                   <p className="text-[11px] font-black uppercase">{m.teamA} vs {m.teamB} (#{m.matchNumber})</p>
                   <p className="text-[8px] opacity-40 uppercase font-black">{m.date} • {m.time}</p>
+                </div>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => { triggerHaptic('light'); setNewMatch(m); setEditingMatchId(m.id); }}><Edit2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDoc(doc(db!, 'matches', m.id))}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="archives" className="space-y-4">
+          <div className="grid grid-cols-1 gap-3">
+            {matches?.filter(m => m.status === 'Completed').reverse().map(m => (
+              <div key={m.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
+                <div>
+                  <p className="text-[11px] font-black uppercase">{m.teamA} {m.scoreA} - {m.scoreB} {m.teamB} (#{m.matchNumber})</p>
+                  <p className="text-[8px] opacity-40 uppercase font-black">{m.date} • Winner: {m.winner || 'N/A'}</p>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => { triggerHaptic('light'); setNewMatch(m); setEditingMatchId(m.id); }}><Edit2 className="h-4 w-4" /></Button>
@@ -831,7 +849,7 @@ export default function AdminPage() {
                 <Input placeholder="Venue" value={newTrial.venue} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
                 <Input type="date" value={newTrial.date} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
                 <Input placeholder="Time" value={newTrial.time} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
-                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">Publish Selection Schedule</Button>
+                <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingTrialId ? 'Update Trial' : 'Publish Selection Schedule'}</Button>
               </form>
             </CardContent>
           </Card>
@@ -881,17 +899,17 @@ export default function AdminPage() {
                     <Input type="number" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[9px] font-black uppercase opacity-40">Wins</Label>
+                    <Label className="text-[9px] font-black uppercase opacity-40">Won</Label>
                     <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-[9px] font-black uppercase opacity-40">Draws</Label>
+                    <Label className="text-[9px] font-black uppercase opacity-40">Drawn</Label>
                     <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[9px] font-black uppercase opacity-40">Losses</Label>
+                    <Label className="text-[9px] font-black uppercase opacity-40">Lost</Label>
                     <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
