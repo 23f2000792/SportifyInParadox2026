@@ -371,12 +371,18 @@ export default function AdminPage() {
 
   const handleEditMatch = (m: Match) => {
     triggerHaptic('light');
-    setNewMatch(m);
-    setEditingMatchId(m.id);
-    setActiveTab(m.status === 'Completed' ? 'archives' : (m.status === 'Live' ? 'control' : 'fixtures'));
-    // For consistency, if editing we always show the form. Let's force it to fixtures/control where the form is.
-    if (m.status === 'Upcoming' || m.status === 'Completed') setActiveTab('fixtures');
-    else setActiveTab('control');
+    
+    if (m.status === 'Live' || m.status === 'Completed') {
+      // If live or completed, target the Results update form in 'control' tab
+      setSelectedMatchId(m.id);
+      setActiveTab('control');
+    } else {
+      // If upcoming, target the Scheduling form in 'fixtures' tab
+      setNewMatch(m);
+      setEditingMatchId(m.id);
+      setActiveTab('fixtures');
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -728,6 +734,10 @@ export default function AdminPage() {
                   <SelectContent>
                     {matches?.filter(m => m.status !== 'Completed').map(m => (
                       <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">{m.teamA} vs {m.teamB}</SelectItem>
+                    ))}
+                    {/* Also allow selection of completed matches for direct editing from the control tab */}
+                    {matches?.filter(m => m.status === 'Completed').map(m => (
+                      <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase opacity-60">Result: {m.teamA} vs {m.teamB}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
