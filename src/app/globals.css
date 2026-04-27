@@ -97,8 +97,18 @@ button:active, a:active {
   100% { transform: translateX(100%); }
 }
 
+@keyframes broadcast-pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 .animate-progress-indefinite {
   animation: progress-indefinite 1.5s infinite linear;
+}
+
+.animate-broadcast-pulse {
+  animation: broadcast-pulse 2s infinite ease-in-out;
 }
 
 .text-hype {

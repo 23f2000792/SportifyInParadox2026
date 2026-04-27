@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useMemo } from 'react';
-import { Bell, Megaphone, Clock } from 'lucide-react';
+import { Bell, Megaphone, Clock, History } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,6 +10,8 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Broadcast } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { triggerHaptic } from '@/lib/haptics';
 
 export function NotificationCenter() {
   const db = useFirestore();
@@ -40,9 +41,13 @@ export function NotificationCenter() {
     }
   };
 
+  const handleOpen = () => {
+    triggerHaptic('light');
+  };
+
   return (
     <Popover>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild onClick={handleOpen}>
         <Button
           variant="ghost"
           size="icon"
@@ -106,8 +111,12 @@ export function NotificationCenter() {
             </div>
           )}
         </ScrollArea>
-        <div className="p-3 border-t border-border bg-muted/10 text-center">
-          <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/20">Official Sportify Feed</p>
+        <div className="p-2 border-t border-border bg-muted/10 flex items-center justify-center">
+          <Link href="/broadcasts" onClick={() => triggerHaptic('light')} className="w-full">
+            <Button variant="ghost" className="w-full h-8 gap-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary">
+              <History className="h-3 w-3" /> View Archive
+            </Button>
+          </Link>
         </div>
       </PopoverContent>
     </Popover>

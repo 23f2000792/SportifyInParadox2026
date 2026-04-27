@@ -1,15 +1,15 @@
-
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle, Bell } from 'lucide-react';
+import { Settings, Zap, Trophy, CircleDot, Target, Radio, Home, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENTS } from '@/lib/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { Button } from '@/components/ui/button';
+import { triggerHaptic } from '@/lib/haptics';
 
 const LOGO_URL = "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970";
 
@@ -23,6 +23,10 @@ const ICON_MAP: Record<string, any> = {
 export function Navbar() {
   const pathname = usePathname();
 
+  const handleNavClick = () => {
+    triggerHaptic('light');
+  };
+
   return (
     <>
       {/* Top Header - Main Navigation */}
@@ -30,7 +34,7 @@ export function Navbar() {
         <div className="container mx-auto h-full px-4 flex items-center justify-between gap-4">
           
           {/* Left: Logo & Branding */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
+          <Link href="/" onClick={handleNavClick} className="flex items-center gap-3 shrink-0">
             <div className="relative h-11 w-11 overflow-hidden rounded-sm bg-black p-1 border border-white/10">
               <Image 
                 src={LOGO_URL}
@@ -51,6 +55,7 @@ export function Navbar() {
             <div className="flex h-full items-center gap-1 xl:gap-4">
               <Link 
                 href="/" 
+                onClick={handleNavClick}
                 className={cn(
                   "relative h-full flex items-center px-4 text-[10px] font-black uppercase tracking-widest transition-all",
                   pathname === "/" ? "text-primary" : "text-muted-foreground hover:text-foreground"
@@ -65,6 +70,7 @@ export function Navbar() {
                   <Link
                     key={event.id}
                     href={`/events/${event.slug}`}
+                    onClick={handleNavClick}
                     className={cn(
                       "relative h-full flex items-center px-4 text-[10px] font-black uppercase tracking-widest transition-all text-center",
                       isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
@@ -95,6 +101,7 @@ export function Navbar() {
             
             <Link
               href="/admin"
+              onClick={handleNavClick}
               className={cn(
                 "h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center transition-all border rounded-sm",
                 pathname.startsWith("/admin") 
@@ -110,7 +117,7 @@ export function Navbar() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background border-t border-border h-16 flex items-center justify-around px-2 pb-safe shadow-lg">
-        <Link href="/" className={cn("flex flex-col items-center gap-1", pathname === "/" ? "text-primary" : "text-muted-foreground/40")}>
+        <Link href="/" onClick={handleNavClick} className={cn("flex flex-col items-center gap-1", pathname === "/" ? "text-primary" : "text-muted-foreground/40")}>
           <Home className="h-4 w-4" />
           <span className="text-[7px] font-black uppercase tracking-widest">Home</span>
         </Link>
@@ -121,6 +128,7 @@ export function Navbar() {
             <Link
               key={event.id}
               href={`/events/${event.slug}`}
+              onClick={handleNavClick}
               className={cn("flex flex-col items-center gap-1", isActive ? "text-primary" : "text-muted-foreground/40")}
             >
               {IconComp && <IconComp className="h-4 w-4" />}
