@@ -1,8 +1,9 @@
+// Scripts for firebase and firebase-messaging
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
-importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-messaging-compat.js');
-
-// Standard Firebase config for the Service Worker
+// Initialize the Firebase app in the service worker by passing in the messagingSenderId.
+// These values are public and safe to include in the service worker.
 firebase.initializeApp({
   apiKey: "AIzaSyC3WscspmJTDO4TSmjaBm1zjD7nZm7Dndc",
   authDomain: "studio-2095008967-a581a.firebaseapp.com",
@@ -21,7 +22,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification.body,
     icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
-    badge: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
+    badge: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
+    data: payload.data
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

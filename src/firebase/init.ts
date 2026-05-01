@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -9,14 +8,15 @@ import {
   getFirestore
 } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
-import { getMessaging, Messaging, isSupported } from 'firebase/messaging';
+import { getMessaging, Messaging } from 'firebase/messaging';
 import { firebaseConfig } from './config';
 
 /**
  * Defensive Singleton Registry for Firebase Services.
  */
 
-export const VAPID_KEY = "BMVONelA74Tj0E3AOslLx0SnCqBQJEBegudVfkXYBfDJ8RNKdy4tbj5u140YPD4oKFwjX6TIltDXSAn62pJiAJg";
+// Updated VAPID Key provided by user
+export const VAPID_KEY = "BNMnnZBI9XVPREVNQP68srGciyyULwP_GaQXX8Y5JngkyJl1yOsef7BmB1ksZ--hha8p_aE-HmivqBvVyiXMvxc";
 
 let cachedInstances: { 
   app: FirebaseApp, 

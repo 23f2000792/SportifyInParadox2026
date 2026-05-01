@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -82,21 +81,12 @@ export function useNotifications() {
         const messaging = getMessaging(app);
         
         // Ensure Service Worker is active and ready
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+          scope: '/'
+        });
         
-        // Wait for SW to be active if it's currently installing
-        if (!registration.active) {
-          await new Promise((resolve) => {
-            const worker = registration.installing || registration.waiting;
-            if (worker) {
-              worker.addEventListener('statechange', (e: any) => {
-                if (e.target.state === 'activated') resolve(null);
-              });
-            } else {
-              resolve(null);
-            }
-          });
-        }
+        // Wait for SW to be active
+        await navigator.serviceWorker.ready;
         
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
