@@ -131,6 +131,18 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["message", "active", "timestamp"]
+    },
+    "FCMToken": {
+      "title": "FCM Token",
+      "description": "Device token for push notifications",
+      "type": "object",
+      "properties": {
+        "token": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "platform": { "type": "string" },
+        "userAgent": { "type": "string" }
+      },
+      "required": ["token", "createdAt"]
     }
   },
   "auth": {
@@ -168,6 +180,10 @@
     "/broadcasts/{broadcastId}": {
       "schema": "Broadcast",
       "description": "Collection of global announcements"
+    },
+    "/fcmTokens/{token}": {
+      "schema": "FCMToken",
+      "description": "Collection of device tokens for push notifications"
     }
   }
 }

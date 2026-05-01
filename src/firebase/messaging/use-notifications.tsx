@@ -42,11 +42,13 @@ export function useNotifications() {
               title: payload.notification.title || 'Sportify Update',
               description: payload.notification.body,
             });
-            // Also show native notification for consistency
-            new Notification(payload.notification.title || 'Sportify Update', {
-              body: payload.notification.body,
-              icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
-            });
+            // Show native notification for consistency if browser allows
+            if (Notification.permission === 'granted') {
+              new Notification(payload.notification.title || 'Sportify Update', {
+                body: payload.notification.body,
+                icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
+              });
+            }
           }
         });
       }
@@ -83,18 +85,23 @@ export function useNotifications() {
         // Register service worker explicitly to ensure it's found
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         
+        // Wait for service worker to be active
+        await navigator.serviceWorker.ready;
+
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: registration
         });
 
         if (token) {
+          // Save token to Firestore - permissions are now updated in firestore.rules
           await setDoc(doc(db, 'fcmTokens', token), {
             token,
             createdAt: serverTimestamp(),
             platform: navigator.platform,
             userAgent: navigator.userAgent
           });
+          
           localStorage.setItem('fcm_token', token);
           setIsSubscribed(true);
           toast({
@@ -118,7 +125,7 @@ export function useNotifications() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to enable notifications.",
+        description: error.message || "Failed to enable notifications. Please check your browser permissions.",
       });
       return false;
     } finally {
