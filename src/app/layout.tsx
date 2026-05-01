@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {Navbar} from '@/components/Navbar';
@@ -5,6 +6,7 @@ import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
 import {LiveScoreWatcher} from '@/components/LiveScoreWatcher';
 import {OfflineBanner} from '@/components/OfflineBanner';
+import {VasudevAI} from '@/components/VasudevAI';
 
 export const metadata: Metadata = {
   title: 'Sportify Paradox 2026',
@@ -74,6 +76,7 @@ export default function RootLayout({
               </p>
             </footer>
           </div>
+          <VasudevAI />
           <Toaster />
         </FirebaseClientProvider>
       </body>
