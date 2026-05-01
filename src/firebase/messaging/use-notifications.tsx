@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -20,10 +21,12 @@ export function useNotifications() {
 
       const messaging = getMessaging(app);
       
+      // Register the Service Worker explicitly for native-style notifications
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
         scope: '/'
       });
       
+      // Wait for service worker to be ready
       await navigator.serviceWorker.ready;
       
       const token = await getToken(messaging, {
@@ -46,12 +49,7 @@ export function useNotifications() {
     }
   }, [app, db]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      registerToken();
-    }
-  }, [registerToken]);
-
+  // Handle foreground messages with a standard native-feel notification
   useEffect(() => {
     let unsubscribe: () => void;
     
@@ -61,10 +59,18 @@ export function useNotifications() {
           const messaging = getMessaging(app);
           unsubscribe = onMessage(messaging, (payload) => {
             if (payload.notification) {
-              toast({
-                title: payload.notification.title || 'Sportify Update',
-                description: payload.notification.body,
-              });
+              // On some browsers, we can trigger a native notification even in foreground
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(payload.notification.title || 'Sportify Update', {
+                  body: payload.notification.body,
+                  icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
+                });
+              } else {
+                toast({
+                  title: payload.notification.title || 'Sportify Update',
+                  description: payload.notification.body,
+                });
+              }
             }
           });
         } catch (e) {
