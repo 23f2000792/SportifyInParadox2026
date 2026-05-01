@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen, Navigation, GitCommit } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen, Navigation, GitCommit, Star } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -465,19 +464,16 @@ export default function EventPage() {
                 </div>
 
                 <div className="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-4 relative pt-10">
-                  {/* Connectors (Desktop) */}
                   <div className="hidden md:block absolute top-[165px] left-[25%] right-[25%] h-px bg-border/40 z-0" />
                   <div className="hidden md:block absolute top-[165px] left-[25%] h-10 w-px bg-border/40" />
                   <div className="hidden md:block absolute top-[165px] right-[25%] h-10 w-px bg-border/40" />
                   
-                  {/* Semi Finals */}
                   <div className="w-full md:w-[280px] space-y-8 z-10">
                     <h3 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mb-6">Semi Finals</h3>
                     {renderBracketMatch(knockoutMatches.semis[0], "Semi Final #1")}
                     {renderBracketMatch(knockoutMatches.semis[1], "Semi Final #2")}
                   </div>
 
-                  {/* Final */}
                   <div className="w-full md:w-[320px] pt-12 md:pt-0 z-10">
                     <div className="text-center space-y-4 mb-6">
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 rounded-full border border-yellow-500/20">
@@ -489,7 +485,6 @@ export default function EventPage() {
                   </div>
                 </div>
 
-                {/* Third Place */}
                 <div className="max-w-[280px] mx-auto pt-10 border-t border-border/40">
                   <h3 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Third Place Playoff</h3>
                   {renderBracketMatch(knockoutMatches.third[0], "Consolation Match")}
