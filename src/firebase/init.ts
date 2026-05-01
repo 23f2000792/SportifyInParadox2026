@@ -15,7 +15,7 @@ import { firebaseConfig } from './config';
  * Defensive Singleton Registry for Firebase Services.
  */
 
-// Authoritative VAPID Key
+// Authoritative VAPID Key for native-style push notifications
 export const VAPID_KEY = "BNMnnZBI9XVPREVNQP68srGciyyULwP_GaQXX8Y5JngkyJl1yOsef7BmB1ksZ--hha8p_aE-HmivqBvVyiXMvxc";
 
 let cachedInstances: { 
