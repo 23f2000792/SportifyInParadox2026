@@ -25,6 +25,12 @@ service cloud.firestore {
       return data.assignedSport == 'all' || data.assignedSport == sportSlug;
     }
 
+    // Public Token Registration (must be accessible to all devices)
+    match /fcmTokens/{token} {
+      allow read: if false;
+      allow create, update, delete: if true;
+    }
+
     match /events/{eventId} {
       allow read: if true;
       allow write: if isSuperAdmin() || (isAdmin() && canManageSport(eventId));
@@ -52,10 +58,6 @@ service cloud.firestore {
     match /broadcasts/{broadcastId} {
       allow read: if true;
       allow write: if isAdmin();
-    }
-    match /fcmTokens/{token} {
-      allow read: if false;
-      allow write: if true;
     }
   }
 }
