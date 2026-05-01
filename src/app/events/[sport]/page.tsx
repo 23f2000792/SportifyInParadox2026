@@ -12,7 +12,7 @@ import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen, Navigation } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { triggerHaptic } from '@/lib/haptics';
+import { CountdownTimer } from '@/components/CountdownTimer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const ICON_MAP: Record<string, any> = {
   Zap: Zap,
@@ -134,36 +136,6 @@ export default function EventPage() {
     window.open(url, '_blank');
   };
 
-  const handleAddTrialToCalendar = (trial: Trial) => {
-    triggerHaptic('light');
-    const title = encodeURIComponent(`Sportify Trial: ${event.name} (${trial.house})`);
-    const details = encodeURIComponent(`Selection trials for ${event.name} - ${trial.house} House. Venue: ${trial.venue}.`);
-    const location = encodeURIComponent(trial.venue);
-    const dateStr = trial.date.replace(/-/g, '');
-    const timeParts = trial.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
-    let hourStr = '00';
-    let minStr = '00';
-    if (timeParts) {
-      let hours = parseInt(timeParts[1]);
-      const minutes = timeParts[2];
-      const ampm = timeParts[3].toUpperCase();
-      if (ampm === 'PM' && hours < 12) hours += 12;
-      if (ampm === 'AM' && hours === 12) hours = 0;
-      hourStr = hours.toString().padStart(2, '0');
-      minStr = minutes;
-    }
-    const startTime = `${dateStr}T${hourStr}${minStr}00`;
-    let endHours = parseInt(hourStr);
-    let endMins = parseInt(minStr) + 30;
-    if (endMins >= 60) {
-      endHours += 1;
-      endMins -= 60;
-    }
-    const endTime = `${dateStr}T${endHours.toString().padStart(2, '0')}${endMins.toString().padStart(2, '0')}00`;
-    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${startTime}/${endTime}`;
-    window.open(url, '_blank');
-  };
-
   const handleShareMatch = (match: Match) => {
     triggerHaptic('light');
     const currentSport = event.name.toUpperCase();
@@ -239,12 +211,38 @@ export default function EventPage() {
           <div className="flex items-center gap-2">
             <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Match #{match.matchNumber}</span>
             <Badge variant="outline" className="text-[8px] uppercase font-black">{match.phase}</Badge>
+            {match.status === 'Upcoming' && <CountdownTimer targetDate={match.date} targetTime={match.time} />}
           </div>
-          {match.status === 'Upcoming' && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10" onClick={() => handleAddToCalendar(match)}>
-              <Calendar className="h-3.5 w-3.5" />
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => triggerHaptic('light')}>
+                  <Navigation className="h-3.5 w-3.5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[90vw] sm:max-w-md bg-card border-none rounded-3xl p-8">
+                <DialogHeader>
+                  <DialogTitle className="text-hype text-xl mb-4">Venue: {match.venue}</DialogTitle>
+                </DialogHeader>
+                <div className="relative aspect-video w-full bg-muted rounded-2xl overflow-hidden border border-border">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                    <MapPin className="h-10 w-10 text-primary" />
+                    <p className="text-[10px] font-black uppercase tracking-widest ml-2">Ground Intelligence View</p>
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-col gap-3">
+                  <Button variant="outline" className="h-12 rounded-xl text-[10px] font-black uppercase gap-2 border-primary/20" onClick={() => window.open(OAT_MAPS_LINK, '_blank')}>
+                    <ExternalLink className="h-4 w-4" /> Open in Google Maps
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            {match.status === 'Upcoming' && (
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10" onClick={() => handleAddToCalendar(match)}>
+                <Calendar className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="p-6 flex items-center justify-between gap-4">
           <div className={cn(

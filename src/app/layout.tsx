@@ -6,6 +6,7 @@ import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
 import {LiveScoreWatcher} from '@/components/LiveScoreWatcher';
 import {OfflineBanner} from '@/components/OfflineBanner';
+import {ParadoxAssistant} from '@/components/ParadoxAssistant';
 
 export const metadata: Metadata = {
   title: 'Sportify Paradox 2026',
@@ -69,6 +70,7 @@ export default function RootLayout({
             <main className="flex-grow container mx-auto px-4 py-8 md:py-12 max-w-5xl pb-safe">
               {children}
             </main>
+            <ParadoxAssistant />
             <footer className="py-10 border-t border-border bg-black/5 dark:bg-black/40 text-center space-y-2 mb-20 md:mb-0">
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
                 Sportify in Paradox 2026 • Official Sports Direction
