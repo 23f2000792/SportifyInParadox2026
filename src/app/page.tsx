@@ -156,14 +156,19 @@ export default function Home() {
                   <Card className={cn("premium-card group", (match.teamA === myHouse || match.teamB === myHouse) && "border-primary bg-primary/5")}>
                     <CardContent className="p-4 md:p-8 flex items-center justify-between gap-4">
                       <div className="space-y-3 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                          <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live</span>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                            <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live</span>
+                          </div>
+                          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest border-l border-border pl-4">
+                            {match.sport.replace('-', ' ')}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 md:gap-6">
-                          <p className="text-[13px] md:text-3xl font-black uppercase tracking-tighter flex-1 text-right">{match.teamA}</p>
-                          <span className="text-xl md:text-4xl font-black text-primary bg-muted px-3 py-1 rounded-md border border-border">{match.scoreA}:{match.scoreB}</span>
-                          <p className="text-[13px] md:text-3xl font-black uppercase tracking-tighter flex-1 text-left">{match.teamB}</p>
+                          <p className="text-[13px] md:text-3xl font-black uppercase tracking-tighter flex-1 text-right truncate">{match.teamA}</p>
+                          <span className="text-xl md:text-4xl font-black text-primary bg-muted px-3 py-1 rounded-md border border-border min-w-[70px] text-center">{match.scoreA}:{match.scoreB}</span>
+                          <p className="text-[13px] md:text-3xl font-black uppercase tracking-tighter flex-1 text-left truncate">{match.teamB}</p>
                         </div>
                       </div>
                       <ChevronRight className="h-6 w-6 text-muted-foreground/20 group-hover:text-primary transition-all" />
