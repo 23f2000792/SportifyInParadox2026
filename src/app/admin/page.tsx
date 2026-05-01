@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -20,7 +19,7 @@ import {
   collection, doc, query, where, serverTimestamp, 
   addDoc, updateDoc, deleteDoc, orderBy, limit, setDoc
 } from 'firebase/firestore';
-import { Match, RunResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS, Broadcast, AdminUser, SportEvent, BadmintonMatchResult, ChampionshipStanding } from '@/lib/types';
+import { Match, RunResult, SportType, Trial, Standing, HOUSES, MatchPhase, GROUPS, Broadcast, AdminUser, SportEvent, BadmintonMatchResult } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
@@ -62,11 +61,6 @@ export default function AdminPage() {
     { type: 'MD', score: '0-0', winner: '' },
     { type: 'XD', score: '0-0', winner: '' }
   ]);
-
-  // --- Championship Points State ---
-  const [newChampionship, setNewChampionship] = useState<Partial<ChampionshipStanding>>({
-    house: '', gold: 0, silver: 0, bronze: 0, points: 0
-  });
 
   // --- Kampus Run Results State ---
   const [runResult, setRunResult] = useState<Partial<RunResult>>({
@@ -122,12 +116,6 @@ export default function AdminPage() {
     return query(collection(db, 'standings'), where('sport', '==', selectedSportSlug));
   }, [db, selectedSportSlug]);
   const { data: standings } = useCollection<Standing>(standingsQuery);
-
-  const championshipQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, 'championship'), orderBy('points', 'desc'));
-  }, [db]);
-  const { data: championshipStandings } = useCollection<ChampionshipStanding>(championshipQuery);
 
   const runResultsQuery = useMemo(() => {
     if (!db || selectedSportSlug !== 'kampus-run') return null;
@@ -272,19 +260,6 @@ export default function AdminPage() {
     handlePostBroadcast(undefined, msg);
   };
 
-  const handleSaveChampionship = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!db || !newChampionship.house) return;
-    triggerHaptic('medium');
-    const docId = newChampionship.house.toLowerCase().replace(/\s+/g, '-');
-    setDoc(doc(db, 'championship', docId), {
-      ...newChampionship,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    setNewChampionship({ house: '', gold: 0, silver: 0, bronze: 0, points: 0 });
-    toast({ title: "Championship tally updated." });
-  };
-
   const handleSaveAdmin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !newAdmin.uid || !newAdmin.email) return;
@@ -373,11 +348,9 @@ export default function AdminPage() {
     triggerHaptic('light');
     
     if (m.status === 'Live' || m.status === 'Completed') {
-      // If live or completed, target the Results update form in 'control' tab
       setSelectedMatchId(m.id);
       setActiveTab('control');
     } else {
-      // If upcoming, target the Scheduling form in 'fixtures' tab
       setNewMatch(m);
       setEditingMatchId(m.id);
       setActiveTab('fixtures');
@@ -525,36 +498,6 @@ export default function AdminPage() {
                         <Button variant="ghost" size="icon" className="text-primary" onClick={() => handleEditAdmin(a)}><Edit2 className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAdmin(a.uid)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="premium-card">
-              <CardHeader><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><BarChart3 className="h-4 w-4" /> Championship Points</CardTitle></CardHeader>
-              <CardContent className="p-6">
-                <form onSubmit={handleSaveChampionship} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">House</Label>
-                    <Select value={newChampionship.house} onValueChange={v => setNewChampionship({...newChampionship, house: v})}>
-                      <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Gold</Label><Input type="number" value={newChampionship.gold} onChange={e => setNewChampionship({...newChampionship, gold: Number(e.target.value)})} className="bg-muted/20 h-11" /></div>
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Silver</Label><Input type="number" value={newChampionship.silver} onChange={e => setNewChampionship({...newChampionship, silver: Number(e.target.value)})} className="bg-muted/20 h-11" /></div>
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Bronze</Label><Input type="number" value={newChampionship.bronze} onChange={e => setNewChampionship({...newChampionship, bronze: Number(e.target.value)})} className="bg-muted/20 h-11" /></div>
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Total Points</Label><Input type="number" value={newChampionship.points} onChange={e => setNewChampionship({...newChampionship, points: Number(e.target.value)})} className="bg-muted/20 h-11" /></div>
-                  <Button type="submit" className="md:col-span-2 lg:col-span-5 h-11 uppercase font-black text-[10px]">Update Tally</Button>
-                </form>
-                <div className="space-y-3">
-                  {championshipStandings?.map(s => (
-                    <div key={s.id} className="flex items-center justify-between p-4 bg-muted/10 rounded-sm border border-border/40">
-                      <div>
-                        <p className="text-[11px] font-black uppercase">{s.house}</p>
-                        <p className="text-[8px] opacity-40 font-bold uppercase">G: {s.gold} • S: {s.silver} • B: {s.bronze} • PTS: {s.points}</p>
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={() => setNewChampionship(s)}><Edit2 className="h-4 w-4" /></Button>
                     </div>
                   ))}
                 </div>
@@ -735,7 +678,6 @@ export default function AdminPage() {
                     {matches?.filter(m => m.status !== 'Completed').map(m => (
                       <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase">{m.teamA} vs {m.teamB}</SelectItem>
                     ))}
-                    {/* Also allow selection of completed matches for direct editing from the control tab */}
                     {matches?.filter(m => m.status === 'Completed').map(m => (
                       <SelectItem key={m.id} value={m.id} className="text-[10px] font-black uppercase opacity-60">Result: {m.teamA} vs {m.teamB}</SelectItem>
                     ))}
