@@ -3,14 +3,13 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, Activity, ClipboardList, CalendarClock, Star, BarChart3, Medal } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, ChevronRight, Radio, MapPin, CalendarClock, Star } from 'lucide-react';
 import { EVENTS } from '@/lib/mock-data';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useCollection, useFirestore, useNotifications } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 import { Match, HOUSES, Trial } from '@/lib/types';
 import Loading from '@/app/loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { triggerHaptic } from '@/lib/haptics';
 import {
@@ -28,18 +27,21 @@ const ICON_MAP: Record<string, any> = {
 
 export default function Home() {
   const db = useFirestore();
+  const { requestPermission } = useNotifications();
   const [myHouse, setMyHouse] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('feed');
 
   useEffect(() => {
     const saved = localStorage.getItem('followedHouse');
     if (saved) setMyHouse(saved);
   }, []);
 
-  const handleFollowHouse = (house: string) => {
+  const handleFollowHouse = async (house: string) => {
     triggerHaptic('success');
     setMyHouse(house);
     localStorage.setItem('followedHouse', house);
+    
+    // Seamlessly request notification permission when following a house
+    await requestPermission();
   };
 
   const liveMatchesQuery = useMemo(() => {
@@ -112,7 +114,7 @@ export default function Home() {
       </div>
 
       <div className="space-y-12">
-        {/* Unified House Timeline (Horizontal Swipe) */}
+        {/* House Schedule Carousel */}
         {myHouse && myHouseTimeline.length > 0 && (
           <section className="space-y-6">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2 px-2">
@@ -148,7 +150,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* Live Feed */}
+        {/* Live Matches */}
         {liveMatches && liveMatches.length > 0 && (
           <section className="space-y-6">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2 px-2">
@@ -184,7 +186,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* Sport Grid */}
+        {/* Sports Explorer */}
         <section className="space-y-6">
           <h2 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/40 px-2">Explore Tournament</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

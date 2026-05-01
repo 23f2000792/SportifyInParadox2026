@@ -15,7 +15,7 @@ import { firebaseConfig } from './config';
  * Defensive Singleton Registry for Firebase Services.
  */
 
-// Updated VAPID Key provided by user
+// Authoritative VAPID Key
 export const VAPID_KEY = "BNMnnZBI9XVPREVNQP68srGciyyULwP_GaQXX8Y5JngkyJl1yOsef7BmB1ksZ--hha8p_aE-HmivqBvVyiXMvxc";
 
 let cachedInstances: { 
@@ -49,7 +49,6 @@ export function initializeFirebase() {
 
   const auth = getAuth(app);
   
-  // Messaging will be initialized on demand in the hook to ensure isSupported is checked
   const instances = { app, db, auth, messaging: null as Messaging | null };
   
   cachedInstances = instances;

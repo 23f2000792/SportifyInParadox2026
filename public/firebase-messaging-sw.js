@@ -1,9 +1,6 @@
-// Scripts for firebase and firebase-messaging
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
-// Initialize the Firebase app in the service worker by passing in the messagingSenderId.
-// These values are public and safe to include in the service worker.
 firebase.initializeApp({
   apiKey: "AIzaSyC3WscspmJTDO4TSmjaBm1zjD7nZm7Dndc",
   authDomain: "studio-2095008967-a581a.firebaseapp.com",
@@ -15,16 +12,35 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification.title || 'Sportify Update';
+  const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
     icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
     badge: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
-    data: payload.data
+    data: {
+      url: '/'
+    }
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
 });
