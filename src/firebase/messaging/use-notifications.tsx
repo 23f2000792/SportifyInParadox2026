@@ -2,10 +2,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getToken, onMessage } from 'firebase/messaging';
+import { getToken, onMessage, getMessaging, isSupported } from 'firebase/messaging';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { useFirestore } from '../provider';
-import { initializeFirebase, VAPID_KEY } from '../init';
+import { useFirestore, useFirebaseApp } from '../provider';
+import { VAPID_KEY } from '../init';
 import { useToast } from '@/hooks/use-toast';
 
 export function useNotifications() {
@@ -13,6 +13,7 @@ export function useNotifications() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const db = useFirestore();
+  const app = useFirebaseApp();
   const { toast } = useToast();
 
   const checkSubscription = useCallback(() => {
@@ -29,20 +30,32 @@ export function useNotifications() {
 
   // Handle foreground messages
   useEffect(() => {
-    const instances = initializeFirebase();
-    if (instances?.messaging) {
-      const unsubscribe = onMessage(instances.messaging, (payload) => {
-        console.log('Message received in foreground: ', payload);
-        if (payload.notification) {
-          new Notification(payload.notification.title || 'Sportify Update', {
-            body: payload.notification.body,
-            icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
-          });
-        }
-      });
-      return () => unsubscribe();
-    }
-  }, []);
+    let unsubscribe: () => void;
+    
+    isSupported().then(supported => {
+      if (supported && typeof window !== 'undefined') {
+        const messaging = getMessaging(app);
+        unsubscribe = onMessage(messaging, (payload) => {
+          console.log('Message received in foreground: ', payload);
+          if (payload.notification) {
+            toast({
+              title: payload.notification.title || 'Sportify Update',
+              description: payload.notification.body,
+            });
+            // Also show native notification for consistency
+            new Notification(payload.notification.title || 'Sportify Update', {
+              body: payload.notification.body,
+              icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
+            });
+          }
+        });
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [app, toast]);
 
   const requestPermission = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -60,42 +73,52 @@ export function useNotifications() {
       setPermission(status);
 
       if (status === 'granted') {
-        const instances = initializeFirebase();
-        if (instances?.messaging) {
-          const token = await getToken(instances.messaging, {
-            vapidKey: VAPID_KEY,
-          });
+        const supported = await isSupported();
+        if (!supported) {
+          throw new Error('Messaging is not supported on this browser.');
+        }
 
-          if (token) {
-            await setDoc(doc(db, 'fcmTokens', token), {
-              token,
-              createdAt: serverTimestamp(),
-              platform: navigator.platform,
-              userAgent: navigator.userAgent
-            });
-            localStorage.setItem('fcm_token', token);
-            setIsSubscribed(true);
-            toast({
-              title: "Alerts Enabled",
-              description: "Official Sportify updates will now be pushed to this device.",
-            });
-            return true;
-          }
+        const messaging = getMessaging(app);
+        
+        // Register service worker explicitly to ensure it's found
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        
+        const token = await getToken(messaging, {
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: registration
+        });
+
+        if (token) {
+          await setDoc(doc(db, 'fcmTokens', token), {
+            token,
+            createdAt: serverTimestamp(),
+            platform: navigator.platform,
+            userAgent: navigator.userAgent
+          });
+          localStorage.setItem('fcm_token', token);
+          setIsSubscribed(true);
+          toast({
+            title: "Alerts Enabled",
+            description: "Official Sportify updates will now be pushed to this device.",
+          });
+          return true;
+        } else {
+          throw new Error('Failed to retrieve FCM token.');
         }
       } else {
         toast({
           variant: "destructive",
           title: "Permission Denied",
-          description: "Please enable notifications in your browser settings to receive alerts.",
+          description: "Please enable notifications in settings to receive live alerts.",
         });
       }
       return status === 'granted';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error requesting notification permission:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to enable notifications.",
+        description: error.message || "Failed to enable notifications.",
       });
       return false;
     } finally {
@@ -108,7 +131,6 @@ export function useNotifications() {
     try {
       const token = localStorage.getItem('fcm_token');
       if (token) {
-        // Try to delete from firestore first
         await deleteDoc(doc(db, 'fcmTokens', token));
         localStorage.removeItem('fcm_token');
       }
@@ -122,7 +144,7 @@ export function useNotifications() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not disable alerts. " + (error.message || "Please try again."),
+        description: "Could not disable alerts. Please try again.",
       });
     } finally {
       setLoading(false);

@@ -49,18 +49,9 @@ export function initializeFirebase() {
 
   const auth = getAuth(app);
   
-  // Messaging initialization is async and conditional
-  let messaging: Messaging | null = null;
+  // Messaging will be initialized on demand in the hook to ensure isSupported is checked
+  const instances = { app, db, auth, messaging: null as Messaging | null };
   
-  const instances = { app, db, auth, messaging };
-  
-  // We'll initialize messaging separately in the hook to handle the Promise/Support check
-  isSupported().then(supported => {
-    if (supported) {
-      instances.messaging = getMessaging(app);
-    }
-  });
-
   cachedInstances = instances;
   _window.__FIREBASE_SINGLETON__ = cachedInstances;
 
