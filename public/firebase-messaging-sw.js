@@ -2,7 +2,7 @@
 importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-messaging-compat.js');
 
-// These values must match your firebaseConfig in src/firebase/config.ts
+// Standard Firebase config for the Service Worker
 firebase.initializeApp({
   apiKey: "AIzaSyC3WscspmJTDO4TSmjaBm1zjD7nZm7Dndc",
   authDomain: "studio-2095008967-a581a.firebaseapp.com",
@@ -14,6 +14,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   const notificationTitle = payload.notification.title || 'Sportify Update';

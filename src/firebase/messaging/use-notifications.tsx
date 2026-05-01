@@ -82,13 +82,20 @@ export function useNotifications() {
         const messaging = getMessaging(app);
         
         // Ensure Service Worker is active and ready
-        console.log('Registering Service Worker...');
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         
-        // Wait for SW to be active
-        let sw = registration.active || registration.installing || registration.waiting;
-        if (!sw) {
-           await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait for SW to be active if it's currently installing
+        if (!registration.active) {
+          await new Promise((resolve) => {
+            const worker = registration.installing || registration.waiting;
+            if (worker) {
+              worker.addEventListener('statechange', (e: any) => {
+                if (e.target.state === 'activated') resolve(null);
+              });
+            } else {
+              resolve(null);
+            }
+          });
         }
         
         const token = await getToken(messaging, {
@@ -97,6 +104,7 @@ export function useNotifications() {
         });
 
         if (token) {
+          // Save to Firestore with permissive rules
           await setDoc(doc(db, 'fcmTokens', token), {
             token,
             createdAt: serverTimestamp(),
@@ -118,7 +126,7 @@ export function useNotifications() {
         toast({
           variant: "destructive",
           title: "Permission Denied",
-          description: "Please enable notifications in your browser settings to receive live alerts.",
+          description: "Please enable notifications in settings to receive live alerts.",
         });
       }
       return status === 'granted';
@@ -127,7 +135,7 @@ export function useNotifications() {
       toast({
         variant: "destructive",
         title: "Setup Failed",
-        description: error.message || "Failed to connect to notification server. Please try again.",
+        description: error.message || "Insufficient permissions or connection error.",
       });
       return false;
     } finally {
@@ -135,7 +143,7 @@ export function useNotifications() {
     }
   };
 
-  const unsubscribe = async () => {
+  const unsubscribeToken = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('fcm_token');
@@ -146,7 +154,7 @@ export function useNotifications() {
       setIsSubscribed(false);
       toast({
         title: "Alerts Disabled",
-        description: "You will no longer receive push notifications on this device.",
+        description: "You will no longer receive push notifications.",
       });
     } catch (error: any) {
       console.error('Unsubscribe error:', error);
@@ -160,5 +168,5 @@ export function useNotifications() {
     }
   };
 
-  return { permission, isSubscribed, requestPermission, unsubscribe, loading };
+  return { permission, isSubscribed, requestPermission, unsubscribe: unsubscribeToken, loading };
 }

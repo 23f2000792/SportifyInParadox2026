@@ -25,10 +25,10 @@ service cloud.firestore {
       return data.assignedSport == 'all' || data.assignedSport == sportSlug;
     }
 
-    // Public Token Registration (must be accessible to all devices)
+    // Public Token Registration (must be accessible to all devices for push alerts)
     match /fcmTokens/{token} {
       allow read: if false;
-      allow create, update, delete: if true;
+      allow write: if true;
     }
 
     match /events/{eventId} {
