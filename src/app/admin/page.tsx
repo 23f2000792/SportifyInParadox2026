@@ -467,16 +467,16 @@ export default function AdminPage() {
               <CardHeader><CardTitle className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Manage Access</CardTitle></CardHeader>
               <CardContent className="p-6">
                 <form onSubmit={handleSaveAdmin} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">UID</Label><Input value={newAdmin.uid} onChange={e => setNewAdmin({...newAdmin, uid: e.target.value})} className="bg-muted/20 h-11" required disabled={!!editingAdminUid} /></div>
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Email</Label><Input type="email" value={newAdmin.email} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">UID</Label><Input value={newAdmin.uid ?? ''} onChange={e => setNewAdmin({...newAdmin, uid: e.target.value})} className="bg-muted/20 h-11" required disabled={!!editingAdminUid} /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Email</Label><Input type="email" value={newAdmin.email ?? ''} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} className="bg-muted/20 h-11" required /></div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Role</Label>
-                    <Select value={newAdmin.role} onValueChange={v => setNewAdmin({...newAdmin, role: v as any})}>
+                    <Select value={newAdmin.role ?? 'admin'} onValueChange={v => setNewAdmin({...newAdmin, role: v as any})}>
                       <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="super-admin">Super Admin</SelectItem></SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase">Assigned Sport</Label>
-                    <Select value={newAdmin.assignedSport} onValueChange={v => setNewAdmin({...newAdmin, assignedSport: v})}>
+                    <Select value={newAdmin.assignedSport ?? 'all'} onValueChange={v => setNewAdmin({...newAdmin, assignedSport: v})}>
                       <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Sports</SelectItem>
@@ -518,7 +518,7 @@ export default function AdminPage() {
               <CardContent className="p-6">
                 <form onSubmit={handlePostBroadcast} className="flex flex-col gap-3">
                   <Input 
-                    value={broadcastMessage} 
+                    value={broadcastMessage ?? ''} 
                     onChange={e => setBroadcastMessage(e.target.value)} 
                     placeholder="Type announcement..." 
                     className="bg-muted/20 h-12 text-xs font-black uppercase" 
@@ -614,19 +614,19 @@ export default function AdminPage() {
                   <form onSubmit={handleAddRunResult} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase">Participant Name</Label>
-                      <Input value={runResult.name} onChange={e => setRunResult({...runResult, name: e.target.value})} className="bg-muted/20 h-11" required />
+                      <Input value={runResult.name ?? ''} onChange={e => setRunResult({...runResult, name: e.target.value})} className="bg-muted/20 h-11" required />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase">Position</Label>
-                      <Input type="number" value={runResult.position} onChange={e => setRunResult({...runResult, position: Number(e.target.value)})} className="bg-muted/20 h-11" required />
+                      <Input type="number" value={runResult.position ?? 1} onChange={e => setRunResult({...runResult, position: Number(e.target.value)})} className="bg-muted/20 h-11" required />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase">Time</Label>
-                      <Input value={runResult.time} onChange={e => setRunResult({...runResult, time: e.target.value})} className="bg-muted/20 h-11" required />
+                      <Input value={runResult.time ?? ''} onChange={e => setRunResult({...runResult, time: e.target.value})} className="bg-muted/20 h-11" required />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase">Gender</Label>
-                      <Select value={runResult.gender} onValueChange={v => setRunResult({...runResult, gender: v as any})}>
+                      <Select value={runResult.gender ?? 'M'} onValueChange={v => setRunResult({...runResult, gender: v as any})}>
                         <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="M">Male</SelectItem>
@@ -636,7 +636,7 @@ export default function AdminPage() {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase">Age Group</Label>
-                      <Select value={runResult.ageGroup} onValueChange={v => setRunResult({...runResult, ageGroup: v})}>
+                      <Select value={runResult.ageGroup ?? '18-25'} onValueChange={v => setRunResult({...runResult, ageGroup: v})}>
                         <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="18-25">18-25</SelectItem>
@@ -646,7 +646,7 @@ export default function AdminPage() {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase">Category</Label>
-                      <Select value={runResult.category} onValueChange={v => setRunResult({...runResult, category: v})}>
+                      <Select value={runResult.category ?? '5km'} onValueChange={v => setRunResult({...runResult, category: v})}>
                         <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="3km">3KM</SelectItem>
@@ -673,7 +673,7 @@ export default function AdminPage() {
           ) : (
             <Card className="premium-card">
               <CardContent className="p-6 md:p-12 space-y-10">
-                <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+                <Select value={selectedMatchId ?? ''} onValueChange={setSelectedMatchId}>
                   <SelectTrigger className="bg-muted/20 h-12 font-black uppercase"><SelectValue placeholder="Select Match" /></SelectTrigger>
                   <SelectContent>
                     {matches?.filter(m => m.status !== 'Completed').map(m => (
@@ -689,17 +689,17 @@ export default function AdminPage() {
                     <div className="flex flex-col md:flex-row items-center justify-between gap-10">
                       <div className="w-full md:flex-1 space-y-4">
                         <Label className="text-[10px] font-black uppercase block text-center opacity-60">{activeMatch?.teamA}</Label>
-                        <Input type="number" value={scoreA} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
+                        <Input type="number" value={scoreA ?? 0} onChange={e => setScoreA(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
                       </div>
                       <div className="w-full md:flex-1 space-y-4">
                         <Label className="text-[10px] font-black uppercase block text-center opacity-60">{activeMatch?.teamB}</Label>
-                        <Input type="number" value={scoreB} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
+                        <Input type="number" value={scoreB ?? 0} onChange={e => setScoreB(Number(e.target.value))} className="text-center text-4xl font-black h-20 bg-muted/20 border-none" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1.5">
                         <Label className="text-[9px] font-black uppercase opacity-50">Match Status</Label>
-                        <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+                        <Select value={status ?? 'Live'} onValueChange={(v: any) => setStatus(v)}>
                           <SelectTrigger className="h-11 bg-muted/20"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Upcoming">Upcoming</SelectItem>
@@ -710,7 +710,7 @@ export default function AdminPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-[9px] font-black uppercase opacity-50">Winner (If Completed)</Label>
-                        <Select value={matchWinner} onValueChange={setMatchWinner}>
+                        <Select value={matchWinner ?? ''} onValueChange={setMatchWinner}>
                           <SelectTrigger className="h-11 bg-muted/20"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value={activeMatch?.teamA || 'A'}>{activeMatch?.teamA}</SelectItem>
@@ -726,8 +726,8 @@ export default function AdminPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {badmintonResults.map((res, idx) => (
                             <div key={res.type} className="flex gap-2">
-                              <Input placeholder="Score" value={res.score} onChange={(e) => updateBadmintonResult(idx, 'score', e.target.value)} className="h-10 bg-muted/20 text-[10px] font-black uppercase" />
-                              <Select value={res.winner} onValueChange={(v) => updateBadmintonResult(idx, 'winner', v)}>
+                              <Input placeholder="Score" value={res.score ?? '0-0'} onChange={(e) => updateBadmintonResult(idx, 'score', e.target.value)} className="h-10 bg-muted/20 text-[10px] font-black uppercase" />
+                              <Select value={res.winner ?? ''} onValueChange={(v) => updateBadmintonResult(idx, 'winner', v)}>
                                 <SelectTrigger className="h-10 bg-muted/20 text-[9px] font-black uppercase"><SelectValue placeholder="Winner" /></SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value={activeMatch?.teamA || 'Team A'}>{activeMatch?.teamA}</SelectItem>
@@ -753,9 +753,9 @@ export default function AdminPage() {
               <CardHeader><CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Clock className="h-4 w-4" /> Edit Race Info</CardTitle></CardHeader>
               <CardContent className="p-6">
                 <form onSubmit={handleUpdateRaceSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Reporting Time</Label><Input placeholder="e.g. 05:00 AM" value={raceSchedule.reportingTime} onChange={e => setRaceSchedule({...raceSchedule, reportingTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Flag Off Time</Label><Input placeholder="e.g. 05:30 AM" value={raceSchedule.flagOffTime} onChange={e => setRaceSchedule({...raceSchedule, flagOffTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
-                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes</Label><Textarea placeholder="Instructions..." value={raceSchedule.notes} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Reporting Time</Label><Input placeholder="e.g. 05:00 AM" value={raceSchedule.reportingTime ?? ''} onChange={e => setRaceSchedule({...raceSchedule, reportingTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Flag Off Time</Label><Input placeholder="e.g. 05:30 AM" value={raceSchedule.flagOffTime ?? ''} onChange={e => setRaceSchedule({...raceSchedule, flagOffTime: e.target.value})} className="bg-muted/20 h-11" required /></div>
+                  <div className="md:col-span-2 space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-50">Race Notes</Label><Textarea placeholder="Instructions..." value={raceSchedule.notes ?? ''} onChange={e => setRaceSchedule({...raceSchedule, notes: e.target.value})} className="bg-muted/20 min-h-[100px]" /></div>
                   <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">Update Race Info</Button>
                 </form>
               </CardContent>
@@ -768,19 +768,19 @@ export default function AdminPage() {
             <CardHeader><CardTitle className="text-[10px] font-black uppercase text-primary">Schedule Match</CardTitle></CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleAddMatch} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input placeholder="Match #" value={newMatch.matchNumber} onChange={e => setNewMatch({...newMatch, matchNumber: e.target.value})} className="bg-muted/20 h-11" required />
-                <Select value={newMatch.teamA} onValueChange={v => setNewMatch({...newMatch, teamA: v})}>
+                <Input placeholder="Match #" value={newMatch.matchNumber ?? ''} onChange={e => setNewMatch({...newMatch, matchNumber: e.target.value})} className="bg-muted/20 h-11" required />
+                <Select value={newMatch.teamA ?? ''} onValueChange={v => setNewMatch({...newMatch, teamA: v})}>
                   <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Team A" /></SelectTrigger>
                   <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                 </Select>
-                <Select value={newMatch.teamB} onValueChange={v => setNewMatch({...newMatch, teamB: v})}>
+                <Select value={newMatch.teamB ?? ''} onValueChange={v => setNewMatch({...newMatch, teamB: v})}>
                   <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Team B" /></SelectTrigger>
                   <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                 </Select>
-                <Input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Time" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Venue" value={newMatch.venue} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Venue Location URL" value={newMatch.venueUrl} onChange={e => setNewMatch({...newMatch, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
+                <Input type="date" value={newMatch.date ?? ''} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Time" value={newMatch.time ?? ''} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Venue" value={newMatch.venue ?? ''} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Venue Location URL" value={newMatch.venueUrl ?? ''} onChange={e => setNewMatch({...newMatch, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingMatchId ? 'Update Fixture' : 'Schedule Match'}</Button>
               </form>
             </CardContent>
@@ -823,14 +823,14 @@ export default function AdminPage() {
             <CardHeader><CardTitle className="text-[10px] font-black uppercase text-primary">Schedule Selection Trials</CardTitle></CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleAddOrUpdateTrial} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Select value={newTrial.house} onValueChange={v => setNewTrial({...newTrial, house: v})}>
+                <Select value={newTrial.house ?? ''} onValueChange={v => setNewTrial({...newTrial, house: v})}>
                   <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
                   <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                 </Select>
-                <Input placeholder="Venue" value={newTrial.venue} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Venue Location URL" value={newTrial.venueUrl} onChange={e => setNewTrial({...newTrial, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
-                <Input type="date" value={newTrial.date} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Time" value={newTrial.time} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Venue" value={newTrial.venue ?? ''} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Venue Location URL" value={newTrial.venueUrl ?? ''} onChange={e => setNewTrial({...newTrial, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
+                <Input type="date" value={newTrial.date ?? ''} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Time" value={newTrial.time ?? ''} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingTrialId ? 'Update Trial' : 'Publish Selection Schedule'}</Button>
               </form>
             </CardContent>
@@ -864,39 +864,39 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase opacity-40">Team</Label>
-                    <Select value={newStanding.team} onValueChange={v => setNewStanding({...newStanding, team: v})}>
+                    <Select value={newStanding.team ?? ''} onValueChange={v => setNewStanding({...newStanding, team: v})}>
                       <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
                       <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase opacity-40">Group</Label>
-                    <Select value={newStanding.group} onValueChange={v => setNewStanding({...newStanding, group: v})}>
+                    <Select value={newStanding.group ?? 'A'} onValueChange={v => setNewStanding({...newStanding, group: v})}>
                       <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Group" /></SelectTrigger>
                       <SelectContent>{GROUPS.map(g => <SelectItem key={g} value={g}>Group {g}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase opacity-40">Played</Label>
-                    <Input type="number" value={newStanding.played} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                    <Input type="number" value={newStanding.played ?? 0} onChange={e => setNewStanding({...newStanding, played: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase opacity-40">Won</Label>
-                    <Input type="number" value={newStanding.won} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                    <Input type="number" value={newStanding.won ?? 0} onChange={e => setNewStanding({...newStanding, won: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase opacity-40">Drawn</Label>
-                    <Input type="number" value={newStanding.drawn} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                    <Input type="number" value={newStanding.drawn ?? 0} onChange={e => setNewStanding({...newStanding, drawn: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase opacity-40">Lost</Label>
-                    <Input type="number" value={newStanding.lost} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                    <Input type="number" value={newStanding.lost ?? 0} onChange={e => setNewStanding({...newStanding, lost: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase opacity-40">Points</Label>
-                    <Input type="number" value={newStanding.points} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
+                    <Input type="number" value={newStanding.points ?? 0} onChange={e => setNewStanding({...newStanding, points: Number(e.target.value)})} className="bg-muted/20 h-11" placeholder="0" />
                   </div>
                   <div className="flex items-end">
                     <Button type="submit" className="w-full h-11 uppercase font-black text-[10px] tracking-widest">{editingStandingId ? 'Update Standing' : 'Assign to Group'}</Button>
