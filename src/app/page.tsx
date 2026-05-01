@@ -112,35 +112,39 @@ export default function Home() {
       </div>
 
       <div className="space-y-12">
-        {/* Unified House Timeline */}
+        {/* Unified House Timeline (Horizontal Swipe) */}
         {myHouse && myHouseTimeline.length > 0 && (
           <section className="space-y-6">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2 px-2">
               <CalendarClock className="h-4 w-4" /> House Schedule
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myHouseTimeline.map((item: any) => (
-                <Link key={item.id} href={`/events/${item.sport}`} className="block" onClick={() => triggerHaptic('light')}>
-                  <Card className={cn(
-                    "premium-card h-full group",
-                    item.type === 'trial' ? "border-accent/20 bg-accent/5" : "border-primary/10 bg-primary/5"
-                  )}>
-                    <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
-                      <div>
-                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
-                        <p className="text-base font-black italic uppercase text-foreground leading-tight line-clamp-2 mt-1">
-                          {item.type === 'match' ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}` : `SELECTION TRIAL`}
-                        </p>
-                      </div>
-                      <div className="space-y-1 border-t border-border/10 pt-3">
-                        <p className="text-[10px] font-black text-foreground">{item.time} • {item.date}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 truncate"><MapPin className="h-3 w-3 shrink-0" /> {item.venue}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+            <Carousel opts={{ align: "start" }} className="w-full">
+              <CarouselContent>
+                {myHouseTimeline.map((item: any) => (
+                  <CarouselItem key={item.id} className="basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                    <Link href={`/events/${item.sport}`} className="block h-full" onClick={() => triggerHaptic('light')}>
+                      <Card className={cn(
+                        "premium-card h-full group",
+                        item.type === 'trial' ? "border-accent/20 bg-accent/5" : "border-primary/10 bg-primary/5"
+                      )}>
+                        <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                          <div>
+                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{item.sport.replace('-', ' ')}</p>
+                            <p className="text-base font-black italic uppercase text-foreground leading-tight line-clamp-2 mt-1">
+                              {item.type === 'match' ? `VS ${item.teamA === myHouse ? item.teamB : item.teamA}` : `SELECTION TRIAL`}
+                            </p>
+                          </div>
+                          <div className="space-y-1 border-t border-border/10 pt-3">
+                            <p className="text-[10px] font-black text-foreground">{item.time} • {item.date}</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 truncate"><MapPin className="h-3 w-3 shrink-0" /> {item.venue}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
           </section>
         )}
 
