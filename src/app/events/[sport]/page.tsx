@@ -12,7 +12,7 @@ import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen, Navigation } from 'lucide-react';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen, Navigation, GitCommit } from 'lucide-react';
 import { MatchRecapButton } from '@/components/MatchRecapButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -99,6 +99,15 @@ export default function EventPage() {
       return acc;
     }, {} as Record<string, Standing[]>);
   }, [standings]);
+
+  const knockoutMatches = useMemo(() => {
+    if (!rawMatches) return { semis: [], finals: [], third: [] };
+    return {
+      semis: rawMatches.filter(m => m.phase === 'semi-final').sort((a, b) => a.matchNumber.localeCompare(b.matchNumber)),
+      finals: rawMatches.filter(m => m.phase === 'final'),
+      third: rawMatches.filter(m => m.phase === 'third-place')
+    };
+  }, [rawMatches]);
 
   if (matchesLoading || trialsLoading || runLoading || standingsLoading) return <EventLoading />;
 
@@ -299,6 +308,38 @@ export default function EventPage() {
     );
   };
 
+  const renderBracketMatch = (match: Match | undefined, label: string) => {
+    if (!match) return (
+      <div className="p-4 bg-muted/10 border border-border/40 border-dashed rounded-sm opacity-30">
+        <p className="text-[8px] font-black uppercase tracking-widest mb-2">{label}</p>
+        <div className="h-10 flex items-center justify-center">
+          <span className="text-[10px] font-bold italic">TBD</span>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="relative group">
+        <Card className={cn("premium-card border-l-4", match.status === 'Live' ? "border-l-primary" : "border-l-muted-foreground/20")}>
+          <div className="px-3 py-1.5 bg-muted/20 border-b border-border flex justify-between items-center">
+            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">{label}</span>
+            {match.status === 'Live' && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
+          </div>
+          <div className="p-3 space-y-2">
+            <div className={cn("flex justify-between items-center", match.winner === match.teamA ? "text-primary" : "")}>
+              <span className="text-xs font-black uppercase truncate max-w-[100px]">{match.teamA}</span>
+              <span className="text-xs font-black tabular-nums">{match.scoreA}</span>
+            </div>
+            <div className={cn("flex justify-between items-center", match.winner === match.teamB ? "text-primary" : "")}>
+              <span className="text-xs font-black uppercase truncate max-w-[100px]">{match.teamB}</span>
+              <span className="text-xs font-black tabular-nums">{match.scoreB}</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-32">
       <div className="text-center space-y-4 px-4 pt-4">
@@ -347,7 +388,7 @@ export default function EventPage() {
       )}
 
       <Tabs defaultValue={isKampusRun ? "results" : "live"} className="w-full">
-        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-sm max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
+        <TabsList className="flex w-full bg-muted/20 border border-border p-1 h-14 rounded-sm max-w-3xl mx-auto mb-8 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center">
           {isKampusRun ? (
             <>
               <TabsTrigger value="results" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Rankings</TabsTrigger>
@@ -355,11 +396,12 @@ export default function EventPage() {
             </>
           ) : (
             <>
-              <TabsTrigger value="live" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Live Feed</TabsTrigger>
-              <TabsTrigger value="upcoming" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Fixtures</TabsTrigger>
-              <TabsTrigger value="trials" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">House Trials</TabsTrigger>
-              <TabsTrigger value="standings" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Standings</TabsTrigger>
-              <TabsTrigger value="completed" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-8 h-full data-[state=active]:bg-background">Archives</TabsTrigger>
+              <TabsTrigger value="live" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Live Feed</TabsTrigger>
+              <TabsTrigger value="upcoming" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Fixtures</TabsTrigger>
+              <TabsTrigger value="bracket" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Bracket</TabsTrigger>
+              <TabsTrigger value="trials" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">House Trials</TabsTrigger>
+              <TabsTrigger value="standings" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Standings</TabsTrigger>
+              <TabsTrigger value="completed" className="shrink-0 text-[10px] font-black uppercase whitespace-nowrap px-6 h-full data-[state=active]:bg-background">Archives</TabsTrigger>
             </>
           )}
         </TabsList>
@@ -413,7 +455,53 @@ export default function EventPage() {
             <TabsContent value="live" className="space-y-4 px-4">
               {filteredMatches.filter(m => m.status === 'Live').length > 0 ? filteredMatches.filter(m => m.status === 'Live').map(renderMatchCard) : <div className="py-20 text-center opacity-40 uppercase font-black text-[10px] tracking-widest">No Live Action</div>}
             </TabsContent>
-            <TabsContent value="upcoming" className="space-y-4 px-4">{filteredMatches.filter(m => m.status === 'Upcoming').map(renderMatchCard)}</TabsContent>
+            <TabsContent value="upcoming" className="space-y-4 px-4">{filteredMatches.filter(m => m.status === 'Upcoming' && m.phase === 'group').map(renderMatchCard)}</TabsContent>
+            <TabsContent value="bracket" className="px-4 pb-20">
+              <div className="max-w-4xl mx-auto space-y-12">
+                <div className="text-center space-y-2">
+                  <Trophy className="h-10 w-10 text-primary mx-auto mb-4" />
+                  <h2 className="text-2xl font-black uppercase italic tracking-tighter">Road to the Trophy</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Knockout Stage Progression</p>
+                </div>
+
+                <div className="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-4 relative pt-10">
+                  {/* Connectors (Desktop) */}
+                  <div className="hidden md:block absolute top-[165px] left-[25%] right-[25%] h-px bg-border/40 z-0" />
+                  <div className="hidden md:block absolute top-[165px] left-[25%] h-10 w-px bg-border/40" />
+                  <div className="hidden md:block absolute top-[165px] right-[25%] h-10 w-px bg-border/40" />
+                  
+                  {/* Semi Finals */}
+                  <div className="w-full md:w-[280px] space-y-8 z-10">
+                    <h3 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mb-6">Semi Finals</h3>
+                    {renderBracketMatch(knockoutMatches.semis[0], "Semi Final #1")}
+                    {renderBracketMatch(knockoutMatches.semis[1], "Semi Final #2")}
+                  </div>
+
+                  {/* Final */}
+                  <div className="w-full md:w-[320px] pt-12 md:pt-0 z-10">
+                    <div className="text-center space-y-4 mb-6">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 rounded-full border border-yellow-500/20">
+                        <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-yellow-500">Championship</p>
+                      </div>
+                    </div>
+                    {renderBracketMatch(knockoutMatches.finals[0], "Grand Final")}
+                  </div>
+                </div>
+
+                {/* Third Place */}
+                <div className="max-w-[280px] mx-auto pt-10 border-t border-border/40">
+                  <h3 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4">Third Place Playoff</h3>
+                  {renderBracketMatch(knockoutMatches.third[0], "Consolation Match")}
+                </div>
+
+                <div className="p-6 bg-muted/10 rounded-sm border border-border text-center">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground leading-relaxed">
+                    Tournament bracket is updated in real-time. Winners of Semi-Finals proceed to the Grand Final, while others compete for the Third Place title.
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
             <TabsContent value="completed" className="space-y-4 px-4">{filteredMatches.filter(m => m.status === 'Completed').reverse().map(renderMatchCard)}</TabsContent>
             <TabsContent value="trials" className="space-y-4 px-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
