@@ -1,11 +1,12 @@
+
 'use client';
 
 import { useMemo } from 'react';
-import { Bell, Megaphone, Clock, History } from 'lucide-react';
+import { Bell, Megaphone, Clock, History, BellRing, BellOff, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useNotifications } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Broadcast } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,6 +16,7 @@ import { triggerHaptic } from '@/lib/haptics';
 
 export function NotificationCenter() {
   const db = useFirestore();
+  const { isSubscribed, requestPermission, unsubscribe, loading: navLoading } = useNotifications();
 
   const broadcastQuery = useMemo(() => {
     if (!db) return null;
@@ -45,6 +47,15 @@ export function NotificationCenter() {
     triggerHaptic('light');
   };
 
+  const handleToggleAlerts = async () => {
+    triggerHaptic('medium');
+    if (isSubscribed) {
+      await unsubscribe();
+    } else {
+      await requestPermission();
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild onClick={handleOpen}>
@@ -54,7 +65,7 @@ export function NotificationCenter() {
           className="relative h-9 w-9 rounded-xl border border-border bg-white/[0.03] hover:bg-white/[0.06] text-muted-foreground hover:text-primary transition-all"
         >
           <Bell className="h-[18px] w-[18px]" />
-          {hasActive && (
+          {(hasActive || isSubscribed) && (
             <span className="absolute top-2.5 right-2.5 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -68,6 +79,26 @@ export function NotificationCenter() {
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Live Bulletins</h3>
             <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Sportify Broadcast</span>
           </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={cn(
+              "w-full h-8 text-[9px] font-black uppercase tracking-widest gap-2 rounded-sm transition-all",
+              isSubscribed ? "bg-primary/10 border-primary/20 text-primary" : "border-border"
+            )}
+            onClick={handleToggleAlerts}
+            disabled={navLoading}
+          >
+            {navLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : isSubscribed ? (
+              <BellRing className="h-3 w-3" />
+            ) : (
+              <BellOff className="h-3 w-3" />
+            )}
+            {isSubscribed ? "Push Alerts Enabled" : "Enable Push Alerts"}
+          </Button>
         </div>
 
         <ScrollArea className="h-[300px]">

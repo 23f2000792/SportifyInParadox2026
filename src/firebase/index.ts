@@ -16,3 +16,4 @@ export { FirebaseClientProvider } from './client-provider';
 export { useCollection } from './firestore/use-collection';
 export { useDoc } from './firestore/use-doc';
 export { useUser } from './auth/use-user';
+export { useNotifications } from './messaging/use-notifications';

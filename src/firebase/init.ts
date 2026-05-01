@@ -9,16 +9,20 @@ import {
   getFirestore
 } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
+import { getMessaging, Messaging, isSupported } from 'firebase/messaging';
 import { firebaseConfig } from './config';
 
 /**
  * Defensive Singleton Registry for Firebase Services.
  */
 
+export const VAPID_KEY = "BMVONelA74Tj0E3AOslLx0SnCqBQJEBegudVfkXYBfDJ8RNKdy4tbj5u140YPD4oKFwjX6TIltDXSAn62pJiAJg";
+
 let cachedInstances: { 
   app: FirebaseApp, 
   db: Firestore, 
-  auth: Auth
+  auth: Auth,
+  messaging: Messaging | null
 } | null = null;
 
 export function initializeFirebase() {
@@ -44,8 +48,20 @@ export function initializeFirebase() {
   }
 
   const auth = getAuth(app);
+  
+  // Messaging initialization is async and conditional
+  let messaging: Messaging | null = null;
+  
+  const instances = { app, db, auth, messaging };
+  
+  // We'll initialize messaging separately in the hook to handle the Promise/Support check
+  isSupported().then(supported => {
+    if (supported) {
+      instances.messaging = getMessaging(app);
+    }
+  });
 
-  cachedInstances = { app, db, auth };
+  cachedInstances = instances;
   _window.__FIREBASE_SINGLETON__ = cachedInstances;
 
   return cachedInstances;
