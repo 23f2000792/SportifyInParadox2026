@@ -778,19 +778,52 @@ export default function AdminPage() {
             <CardHeader><CardTitle className="text-[10px] font-black uppercase text-primary">Schedule Match</CardTitle></CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleAddMatch} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input placeholder="Match #" value={newMatch.matchNumber ?? ''} onChange={e => setNewMatch({...newMatch, matchNumber: e.target.value})} className="bg-muted/20 h-11" required />
-                <Select value={newMatch.teamA ?? ''} onValueChange={v => setNewMatch({...newMatch, teamA: v})}>
-                  <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Team A" /></SelectTrigger>
-                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                </Select>
-                <Select value={newMatch.teamB ?? ''} onValueChange={v => setNewMatch({...newMatch, teamB: v})}>
-                  <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Team B" /></SelectTrigger>
-                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input type="date" value={newMatch.date ?? ''} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Time" value={newMatch.time ?? ''} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Venue" value={newMatch.venue ?? ''} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Venue Location URL" value={newMatch.venueUrl ?? ''} onChange={e => setNewMatch({...newMatch, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Match Number</Label>
+                  <Input placeholder="Match #" value={newMatch.matchNumber ?? ''} onChange={e => setNewMatch({...newMatch, matchNumber: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Tournament Phase</Label>
+                  <Select value={newMatch.phase ?? 'group'} onValueChange={v => setNewMatch({...newMatch, phase: v as any})}>
+                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="group">Group Stage</SelectItem>
+                      <SelectItem value="semi-final">Semi-Final</SelectItem>
+                      <SelectItem value="third-place">Third Place Playoff</SelectItem>
+                      <SelectItem value="final">Grand Final</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Team A</Label>
+                  <Select value={newMatch.teamA ?? ''} onValueChange={v => setNewMatch({...newMatch, teamA: v})}>
+                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Team A" /></SelectTrigger>
+                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Team B</Label>
+                  <Select value={newMatch.teamB ?? ''} onValueChange={v => setNewMatch({...newMatch, teamB: v})}>
+                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Team B" /></SelectTrigger>
+                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Date</Label>
+                  <Input type="date" value={newMatch.date ?? ''} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Time</Label>
+                  <Input placeholder="Time (e.g. 05:00 PM)" value={newMatch.time ?? ''} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Venue</Label>
+                  <Input placeholder="Venue Name" value={newMatch.venue ?? ''} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Maps URL</Label>
+                  <Input placeholder="Google Maps URL" value={newMatch.venueUrl ?? ''} onChange={e => setNewMatch({...newMatch, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
+                </div>
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingMatchId ? 'Update Fixture' : 'Schedule Match'}</Button>
               </form>
             </CardContent>
@@ -800,7 +833,7 @@ export default function AdminPage() {
               <div key={m.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
                 <div>
                   <p className="text-[11px] font-black uppercase">{m.teamA} vs {m.teamB} (#{m.matchNumber})</p>
-                  <p className="text-[8px] opacity-40 uppercase font-black">{m.date} • {m.time}</p>
+                  <p className="text-[8px] opacity-40 uppercase font-black">{m.phase} • {m.date} • {m.time}</p>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => handleEditMatch(m)}><Edit2 className="h-4 w-4" /></Button>
@@ -817,7 +850,7 @@ export default function AdminPage() {
               <div key={m.id} className="premium-card p-4 flex items-center justify-between bg-muted/5">
                 <div>
                   <p className="text-[11px] font-black uppercase">{m.teamA} {m.scoreA} - {m.scoreB} {m.teamB} (#{m.matchNumber})</p>
-                  <p className="text-[8px] opacity-40 uppercase font-black">{m.date} • Winner: {m.winner || 'N/A'}</p>
+                  <p className="text-[8px] opacity-40 uppercase font-black">{m.phase} • {m.date} • Winner: {m.winner || 'N/A'}</p>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => handleEditMatch(m)}><Edit2 className="h-4 w-4" /></Button>
@@ -833,14 +866,29 @@ export default function AdminPage() {
             <CardHeader><CardTitle className="text-[10px] font-black uppercase text-primary">Schedule Selection Trials</CardTitle></CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleAddOrUpdateTrial} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Select value={newTrial.house ?? ''} onValueChange={v => setNewTrial({...newTrial, house: v})}>
-                  <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
-                  <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input placeholder="Venue" value={newTrial.venue ?? ''} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Venue Location URL" value={newTrial.venueUrl ?? ''} onChange={e => setNewTrial({...newTrial, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
-                <Input type="date" value={newTrial.date ?? ''} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
-                <Input placeholder="Time" value={newTrial.time ?? ''} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">House</Label>
+                  <Select value={newTrial.house ?? ''} onValueChange={v => setNewTrial({...newTrial, house: v})}>
+                    <SelectTrigger className="bg-muted/20 h-11"><SelectValue placeholder="Select House" /></SelectTrigger>
+                    <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Venue</Label>
+                  <Input placeholder="Venue Name" value={newTrial.venue ?? ''} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Maps URL</Label>
+                  <Input placeholder="Google Maps URL" value={newTrial.venueUrl ?? ''} onChange={e => setNewTrial({...newTrial, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Date</Label>
+                  <Input type="date" value={newTrial.date ?? ''} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase opacity-40">Time</Label>
+                  <Input placeholder="Time" value={newTrial.time ?? ''} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
+                </div>
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingTrialId ? 'Update Trial' : 'Publish Selection Schedule'}</Button>
               </form>
             </CardContent>
