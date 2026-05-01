@@ -7,6 +7,7 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#7c3aed",
+  "gcm_sender_id": "103953800507",
   "icons": [
     {
       "src": "https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970",

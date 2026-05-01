@@ -1,7 +1,8 @@
 
-importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-messaging-compat.js');
 
+// These values must match your firebaseConfig in src/firebase/config.ts
 firebase.initializeApp({
   apiKey: "AIzaSyC3WscspmJTDO4TSmjaBm1zjD7nZm7Dndc",
   authDomain: "studio-2095008967-a581a.firebaseapp.com",
@@ -19,7 +20,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification.body,
     icon: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970',
-    data: payload.data
+    badge: 'https://ik.imagekit.io/qaugsnc1c/sportify_logo1.png?updatedAt=1762330168970'
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

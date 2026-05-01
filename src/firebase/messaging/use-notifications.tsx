@@ -82,16 +82,21 @@ export function useNotifications() {
         const messaging = getMessaging(app);
         
         // Ensure Service Worker is active and ready
+        console.log('Registering Service Worker...');
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        await navigator.serviceWorker.ready;
-
+        
+        // Wait for SW to be active
+        let sw = registration.active || registration.installing || registration.waiting;
+        if (!sw) {
+           await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: registration
         });
 
         if (token) {
-          // Save token to Firestore using the new open rules
           await setDoc(doc(db, 'fcmTokens', token), {
             token,
             createdAt: serverTimestamp(),
@@ -122,7 +127,7 @@ export function useNotifications() {
       toast({
         variant: "destructive",
         title: "Setup Failed",
-        description: "Failed to connect to notification server. Please try again.",
+        description: error.message || "Failed to connect to notification server. Please try again.",
       });
       return false;
     } finally {
