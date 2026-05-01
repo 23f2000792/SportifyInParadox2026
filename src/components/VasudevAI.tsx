@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -5,13 +6,13 @@ import { Sparkles, Send, Loader2, Bot, X, Trophy, Calendar, Info, ShieldCheck, F
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { vasudevAssistant } from '@/ai/flows/vasudev-ai-flow';
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, limit, orderBy } from 'firebase/firestore';
 import { Match, Standing } from '@/lib/types';
+import ReactMarkdown from 'react-markdown';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -24,12 +25,11 @@ export function VasudevAI() {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: "Namaste, Warrior! I am Vasudev.ai, your companion on this journey to greatness. Whether you seek the path to victory or the wisdom of the rules, I am here by your side. How shall we conquer today?" 
+      content: "Namaste, Warrior! I am **Vasudev.ai**, your divine companion on this journey to greatness. Whether you seek the path to victory or the wisdom of the tournament laws, I am here by your side. How shall we conquer today?" 
     }
   ]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
   const db = useFirestore();
 
   // Fetch real-time context to feed into the AI
@@ -92,18 +92,22 @@ export function VasudevAI() {
   };
 
   const suggestions = [
-    { label: "One-Step Penalty Rule", value: "What are the rules for football penalties?", icon: ShieldCheck },
-    { label: "Path to Victory", value: "Who is leading the championship standings?", icon: Trophy },
+    { label: "Penalty Rule", value: "What are the rules for football penalties?", icon: ShieldCheck },
+    { label: "Victory's Path", value: "Who is leading the championship standings?", icon: Trophy },
     { label: "The Zero Hour", value: "When is the Kampus Run flag-off?", icon: Calendar },
     { label: "Match Dharma", value: "Are there any live matches right now?", icon: Flame },
   ];
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <>
+      {/* Floating Trigger Button */}
+      {!open && (
         <Button 
-          className="fixed bottom-20 right-4 md:bottom-8 md:right-8 h-16 w-16 rounded-full shadow-[0_0_40px_rgba(124,58,237,0.5)] z-[45] group p-0 bg-primary hover:bg-primary/90 border-2 border-white/20 transition-all hover:scale-110 active:scale-90"
-          onClick={() => triggerHaptic('light')}
+          className="fixed bottom-20 right-4 md:bottom-8 md:right-8 h-16 w-16 rounded-full shadow-[0_0_40px_rgba(124,58,237,0.5)] z-[60] group p-0 bg-primary hover:bg-primary/90 border-2 border-white/20 transition-all hover:scale-110 active:scale-90"
+          onClick={() => {
+            triggerHaptic('light');
+            setOpen(true);
+          }}
         >
           <div className="relative h-full w-full flex items-center justify-center">
             <Bot className="h-8 w-8 text-white group-hover:rotate-12 transition-transform" />
@@ -113,89 +117,115 @@ export function VasudevAI() {
             </div>
           </div>
         </Button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="h-[90vh] sm:h-[700px] p-0 border-t-primary border-t-4 rounded-t-[3rem] bg-background/98 backdrop-blur-3xl shadow-2xl overflow-hidden">
-        <SheetHeader className="p-8 border-b border-border bg-gradient-to-br from-primary/10 via-background to-transparent relative rounded-t-[3rem]">
-          <div className="flex items-center gap-5">
-            <div className="h-14 w-14 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/30 group">
-              <Bot className="h-8 w-8 text-white group-hover:scale-110 transition-transform" />
-            </div>
-            <div>
-              <SheetTitle className="text-3xl font-black italic uppercase tracking-tighter text-primary leading-none">Vasudev.ai</SheetTitle>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-50 mt-1">Your Divine Sports Companion</p>
-            </div>
-          </div>
-          <SheetClose className="absolute right-8 top-10 opacity-40 hover:opacity-100 hover:rotate-90 transition-all">
-            <X className="h-7 w-7" />
-          </SheetClose>
-        </SheetHeader>
+      )}
 
-        <div className="flex flex-col h-[calc(90vh-140px)] sm:h-[560px]">
+      {/* Square Popup Container */}
+      {open && (
+        <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 w-[92vw] sm:w-[400px] h-[600px] max-h-[85vh] bg-card/98 backdrop-blur-3xl shadow-2xl rounded-3xl border-t-primary border-t-4 z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-10 duration-300">
+          
+          {/* Header */}
+          <div className="p-6 border-b border-border bg-gradient-to-br from-primary/10 via-background to-transparent relative shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-xl shadow-primary/30">
+                <Bot className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black italic uppercase tracking-tighter text-primary leading-none">Vasudev.ai</h3>
+                <p className="text-[8px] font-black uppercase tracking-[0.3em] opacity-50 mt-1">Divine Companion</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                triggerHaptic('light');
+                setOpen(false);
+              }}
+              className="absolute right-6 top-8 opacity-40 hover:opacity-100 hover:rotate-90 transition-all p-1"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
           {/* Suggestions Horizontal Scroll */}
-          <div className="flex gap-2 p-4 bg-muted/5 border-b border-border/50 overflow-x-auto no-scrollbar scroll-smooth">
+          <div className="flex gap-2 p-3 bg-muted/5 border-b border-border/50 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
             {suggestions.map((s, idx) => (
               <Button 
                 key={idx} 
                 variant="outline" 
                 size="sm" 
-                className="shrink-0 h-9 text-[9px] font-black uppercase rounded-full gap-2 border-primary/20 bg-background/50 hover:bg-primary/5 hover:border-primary/40 transition-all" 
+                className="shrink-0 h-8 text-[8px] font-black uppercase rounded-full gap-1.5 border-primary/20 bg-background/50 hover:bg-primary/5 transition-all px-3" 
                 onClick={() => handleSend(s.value)}
                 disabled={loading}
               >
-                <s.icon className="h-3.5 w-3.5 text-primary" />
+                <s.icon className="h-3 w-3 text-primary" />
                 {s.label}
               </Button>
             ))}
           </div>
 
-          <ScrollArea className="flex-grow px-6 py-6">
-            <div className="flex flex-col gap-8 max-w-2xl mx-auto pb-20">
+          {/* Messages Area */}
+          <ScrollArea className="flex-grow p-4 md:p-6">
+            <div className="flex flex-col gap-6 max-w-full pb-10">
               {messages.map((m, i) => (
                 <div key={i} className={cn(
-                  "flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-500",
+                  "flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-400",
                   m.role === 'user' ? "items-end" : "items-start"
                 )}>
                   <div className={cn(
-                    "max-w-[88%] md:max-w-[85%] p-5 rounded-[2rem] text-sm md:text-base font-bold leading-relaxed shadow-sm transition-all",
+                    "max-w-[90%] p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm transition-all whitespace-pre-wrap",
                     m.role === 'user' 
-                      ? "bg-primary text-white rounded-tr-none shadow-primary/20" 
-                      : "bg-muted/40 border border-border/60 rounded-tl-none italic text-foreground shadow-inner"
+                      ? "bg-primary text-white rounded-tr-none shadow-primary/20 font-bold" 
+                      : "bg-muted/40 border border-border/60 rounded-tl-none italic text-foreground shadow-inner text-justify"
                   )}>
-                    {m.content}
+                    {m.role === 'assistant' ? (
+                      <ReactMarkdown 
+                        components={{
+                          ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 mb-2 mt-2">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1 mb-2 mt-2">{children}</ol>,
+                          li: ({ children }) => <li className="text-[13px] leading-snug">{children}</li>,
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          strong: ({ children }) => <strong className="font-black text-primary uppercase text-[12px]">{children}</strong>
+                        }}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
+                    ) : (
+                      m.content
+                    )}
                   </div>
                   {m.role === 'assistant' && (
-                    <span className="text-[8px] font-black uppercase tracking-widest opacity-20 ml-5 mt-2">Vasudev Guidance</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest opacity-20 ml-2 mt-1">Vasudev Guidance</span>
                   )}
                 </div>
               ))}
               {loading && (
-                <div className="flex items-center gap-4 text-primary py-3 px-6 bg-primary/5 rounded-full w-fit animate-pulse border border-primary/10">
+                <div className="flex items-center gap-3 text-primary py-2 px-4 bg-primary/5 rounded-full w-fit animate-pulse border border-primary/10">
                   <div className="relative">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-accent animate-pulse" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Sparkles className="absolute -top-1 -right-1 h-2.5 w-2.5 text-accent animate-pulse" />
                   </div>
-                  <span className="text-[11px] font-black uppercase tracking-[0.2em]">Consulting the Heavens...</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em]">Consulting the heavens...</span>
                 </div>
               )}
               <div ref={scrollRef} />
             </div>
           </ScrollArea>
 
-          <div className="p-8 border-t border-border bg-background/50 backdrop-blur-md mb-safe">
-            <form onSubmit={handleSend} className="max-w-2xl mx-auto flex gap-4">
+          {/* Input Area */}
+          <div className="p-4 border-t border-border bg-background/50 backdrop-blur-md shrink-0">
+            <form onSubmit={handleSend} className="flex gap-2">
               <Input 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask me anything, my friend..."
-                className="flex-grow h-16 bg-muted/20 border-border/50 rounded-[1.5rem] font-bold text-base px-8 focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:bg-muted/10 transition-all placeholder:opacity-30"
+                className="flex-grow h-12 bg-muted/20 border-border/50 rounded-xl font-bold text-sm px-4 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:bg-muted/10 transition-all"
               />
-              <Button type="submit" size="icon" className="h-16 w-16 rounded-[1.5rem] shrink-0 shadow-2xl shadow-primary/30 transition-all active:scale-90 bg-primary hover:bg-primary/90" disabled={loading}>
-                <Send className="h-7 w-7 text-white" />
+              <Button type="submit" size="icon" className="h-12 w-12 rounded-xl shrink-0 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-90" disabled={loading}>
+                <Send className="h-5 w-5 text-white" />
               </Button>
             </form>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      )}
+    </>
   );
 }
