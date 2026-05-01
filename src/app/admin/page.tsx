@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { EVENTS } from '@/lib/mock-data';
 import { 
   Plus, Trophy, Timer, Trash2, Zap, CircleDot, Target, Minus, 
-  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock, UserPlus, ShieldCheck, Info, LogOut, CalendarDays, BarChart3
+  Megaphone, Star, MapPin, ClipboardList, ListOrdered, Settings, Medal, Share2, Edit2, X, Radio, Clock, UserPlus, ShieldCheck, Info, LogOut, CalendarDays, BarChart3, Navigation
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useUser, useAuth, useDoc } from '@/firebase';
@@ -443,6 +443,13 @@ export default function AdminPage() {
   const isSuperAdmin = adminProfile.role === 'super-admin';
   const isSportSpecificAdmin = adminProfile.role === 'admin' && adminProfile.assignedSport !== 'all';
 
+  const SUB_MATCH_LABELS: Record<string, string> = {
+    'MS': "Men's Singles",
+    'WS': "Women's Singles",
+    'MD': "Men's Doubles",
+    'XD': "Mixed Doubles"
+  };
+
   if (!selectedSportSlug) {
     return (
       <div className="space-y-10 max-w-5xl mx-auto py-10 px-4">
@@ -723,17 +730,20 @@ export default function AdminPage() {
                     {selectedSportSlug === 'badminton' && (
                       <div className="space-y-6 bg-muted/10 p-6 rounded-sm border border-border">
                         <h3 className="text-xs font-black uppercase text-primary">Sub-Match Results</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                           {badmintonResults.map((res, idx) => (
-                            <div key={res.type} className="flex gap-2">
-                              <Input placeholder="Score" value={res.score ?? '0-0'} onChange={(e) => updateBadmintonResult(idx, 'score', e.target.value)} className="h-10 bg-muted/20 text-[10px] font-black uppercase" />
-                              <Select value={res.winner ?? ''} onValueChange={(v) => updateBadmintonResult(idx, 'winner', v)}>
-                                <SelectTrigger className="h-10 bg-muted/20 text-[9px] font-black uppercase"><SelectValue placeholder="Winner" /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value={activeMatch?.teamA || 'Team A'}>{activeMatch?.teamA}</SelectItem>
-                                  <SelectItem value={activeMatch?.teamB || 'Team B'}>{activeMatch?.teamB}</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <div key={res.type} className="space-y-2">
+                              <Label className="text-[9px] font-black uppercase text-muted-foreground">{SUB_MATCH_LABELS[res.type] || res.type}</Label>
+                              <div className="flex gap-2">
+                                <Input placeholder="Score" value={res.score ?? '0-0'} onChange={(e) => updateBadmintonResult(idx, 'score', e.target.value)} className="h-10 bg-muted/20 text-[10px] font-black uppercase flex-1" />
+                                <Select value={res.winner ?? ''} onValueChange={(v) => updateBadmintonResult(idx, 'winner', v)}>
+                                  <SelectTrigger className="h-10 bg-muted/20 text-[9px] font-black uppercase flex-[1.5]"><SelectValue placeholder="Winner" /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value={activeMatch?.teamA || 'Team A'}>{activeMatch?.teamA}</SelectItem>
+                                    <SelectItem value={activeMatch?.teamB || 'Team B'}>{activeMatch?.teamB}</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                           ))}
                         </div>
