@@ -231,7 +231,7 @@ export default function EventPage() {
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-3">
-                  <Button variant="outline" className="h-12 rounded-xl text-[10px] font-black uppercase gap-2 border-primary/20" onClick={() => window.open(OAT_MAPS_LINK, '_blank')}>
+                  <Button variant="outline" className="h-12 rounded-xl text-[10px] font-black uppercase gap-2 border-primary/20" onClick={() => window.open(match.venueUrl || OAT_MAPS_LINK, '_blank')}>
                     <ExternalLink className="h-4 w-4" /> Open in Google Maps
                   </Button>
                 </div>
@@ -435,13 +435,21 @@ export default function EventPage() {
                     <CardContent className="p-6 space-y-4">
                       <div className="flex justify-between items-start">
                         <Badge variant="outline" className="text-[9px] font-black uppercase text-primary border-primary/20">{trial.house}</Badge>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleAddTrialToCalendar(trial)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleAddToCalendar({ ...trial, teamA: trial.house, teamB: 'Trials', matchNumber: 'T' } as any)}>
                           <Calendar className="h-4 w-4" />
                         </Button>
                       </div>
                       <h3 className="text-lg font-black uppercase tracking-tighter">Selection Trials</h3>
                       <div className="space-y-1.5 border-t border-border pt-4">
-                        <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><MapPin className="h-3 w-3 shrink-0" /> {trial.venue}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2">
+                          <MapPin className="h-3 w-3 shrink-0" /> 
+                          <span className="truncate">{trial.venue}</span>
+                          {trial.venueUrl && (
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => window.open(trial.venueUrl, '_blank')}>
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </p>
                         <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-2"><Timer className="h-3 w-3 shrink-0" /> {trial.time} • {trial.date}</p>
                       </div>
                     </CardContent>

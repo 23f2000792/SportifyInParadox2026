@@ -2,9 +2,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, MessageCircle, Send, X, Loader2, Bot } from 'lucide-react';
+import { Sparkles, Send, Loader2, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -75,33 +74,35 @@ export function ParadoxAssistant() {
           <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Official Concierge</p>
         </SheetHeader>
 
-        <div className="flex flex-col h-full overflow-hidden pb-10">
-          <ScrollArea className="flex-grow p-6 space-y-4">
-            {messages.map((m, i) => (
-              <div key={i} className={cn(
-                "flex flex-col mb-4",
-                m.role === 'user' ? "items-end" : "items-start"
-              )}>
-                <div className={cn(
-                  "max-w-[85%] p-4 rounded-2xl text-xs font-bold leading-relaxed shadow-sm",
-                  m.role === 'user' 
-                    ? "bg-primary text-white rounded-tr-none" 
-                    : "bg-muted border border-border rounded-tl-none italic"
+        <div className="flex flex-col h-[calc(100%-120px)] sm:h-[480px]">
+          <ScrollArea className="flex-grow p-6">
+            <div className="flex flex-col gap-4">
+              {messages.map((m, i) => (
+                <div key={i} className={cn(
+                  "flex flex-col",
+                  m.role === 'user' ? "items-end" : "items-start"
                 )}>
-                  {m.content}
+                  <div className={cn(
+                    "max-w-[85%] p-4 rounded-2xl text-xs font-bold leading-relaxed shadow-sm",
+                    m.role === 'user' 
+                      ? "bg-primary text-white rounded-tr-none" 
+                      : "bg-muted border border-border rounded-tl-none italic text-foreground"
+                  )}>
+                    {m.content}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex items-center gap-2 text-primary animate-pulse">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Processing...</span>
-              </div>
-            )}
-            <div ref={scrollRef} />
+              ))}
+              {loading && (
+                <div className="flex items-center gap-2 text-primary animate-pulse py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Processing...</span>
+                </div>
+              )}
+              <div ref={scrollRef} />
+            </div>
           </ScrollArea>
 
-          <form onSubmit={handleSend} className="p-4 border-t border-border bg-background flex gap-2">
+          <form onSubmit={handleSend} className="p-4 border-t border-border bg-background flex gap-2 mb-safe">
             <Input 
               value={input}
               onChange={(e) => setInput(e.target.value)}

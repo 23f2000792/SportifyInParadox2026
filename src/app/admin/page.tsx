@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -78,12 +79,12 @@ export default function AdminPage() {
 
   // --- New Item States ---
   const [newMatch, setNewMatch] = useState<Partial<Match>>({
-    matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: ''
+    matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '', venueUrl: ''
   });
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
 
   const [newTrial, setNewTrial] = useState<Partial<Trial>>({
-    house: '', date: '', time: '', venue: '', notes: ''
+    house: '', date: '', time: '', venue: '', venueUrl: '', notes: ''
   });
   const [editingTrialId, setEditingTrialId] = useState<string | null>(null);
 
@@ -341,7 +342,7 @@ export default function AdminPage() {
       });
       toast({ title: "Fixture added." });
     }
-    setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '' });
+    setNewMatch({ matchNumber: '', teamA: '', teamB: '', phase: 'group', time: '', date: '', day: '', venue: '', venueUrl: '' });
   };
 
   const handleEditMatch = (m: Match) => {
@@ -378,7 +379,7 @@ export default function AdminPage() {
       });
       toast({ title: "Trial scheduled successfully." });
     }
-    setNewTrial({ house: '', date: '', time: '', venue: '', notes: '' });
+    setNewTrial({ house: '', date: '', time: '', venue: '', venueUrl: '', notes: '' });
   };
 
   const handleEditTrial = (t: Trial) => {
@@ -779,6 +780,7 @@ export default function AdminPage() {
                 <Input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="bg-muted/20 h-11" required />
                 <Input placeholder="Time" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="bg-muted/20 h-11" required />
                 <Input placeholder="Venue" value={newMatch.venue} onChange={e => setNewMatch({...newMatch, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Venue Location URL" value={newMatch.venueUrl} onChange={e => setNewMatch({...newMatch, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingMatchId ? 'Update Fixture' : 'Schedule Match'}</Button>
               </form>
             </CardContent>
@@ -826,6 +828,7 @@ export default function AdminPage() {
                   <SelectContent>{HOUSES.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                 </Select>
                 <Input placeholder="Venue" value={newTrial.venue} onChange={e => setNewTrial({...newTrial, venue: e.target.value})} className="bg-muted/20 h-11" required />
+                <Input placeholder="Venue Location URL" value={newTrial.venueUrl} onChange={e => setNewTrial({...newTrial, venueUrl: e.target.value})} className="bg-muted/20 h-11" />
                 <Input type="date" value={newTrial.date} onChange={e => setNewTrial({...newTrial, date: e.target.value})} className="bg-muted/20 h-11" required />
                 <Input placeholder="Time" value={newTrial.time} onChange={e => setNewTrial({...newTrial, time: e.target.value})} className="bg-muted/20 h-11" required />
                 <Button type="submit" className="md:col-span-2 h-12 uppercase font-black text-[10px]">{editingTrialId ? 'Update Trial' : 'Publish Selection Schedule'}</Button>

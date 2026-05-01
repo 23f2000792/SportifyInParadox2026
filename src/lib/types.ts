@@ -37,6 +37,7 @@ export interface Match {
   date: string;
   day: string;
   venue: string;
+  venueUrl?: string;
   courtNumber?: string;
   groundNumber?: string;
   group?: string;
@@ -53,6 +54,7 @@ export interface Trial {
   date: string;
   time: string;
   venue: string;
+  venueUrl?: string;
   notes?: string;
   updatedAt?: any;
 }
