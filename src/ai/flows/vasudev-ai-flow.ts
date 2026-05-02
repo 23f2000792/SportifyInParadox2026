@@ -2,12 +2,13 @@
 /**
  * Vasudev.ai - The definitive tournament concierge for Paradox 2026.
  * 
- * Deeply trained on official rulebooks for PCL (Football), PBL (Badminton), 
- * VolleyVibes (Volleyball), and Kampus Run.
+ * Includes a Local Wisdom Engine fallback to provide technical rulebook answers
+ * even if the AI model API is unavailable.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const VasudevInputSchema = z.object({
   query: z.string().describe('The user question about Paradox 2026.'),
@@ -18,6 +19,30 @@ const VasudevOutputSchema = z.object({
   answer: z.string().describe('A knowledgeable, energetic, and clinical technical response.'),
 });
 
+// --- Local Wisdom Engine (Hardcoded Rulebook Data) ---
+const LOCAL_KNOWLEDGE = [
+  {
+    keywords: ['football', 'pcl', 'penalty', 'penalties'],
+    answer: "Athlete! For the **Paradox Champions League (Football)**:\n- Format: 7-a-side (9 player squad).\n- Duration: Group (10m), Semis (15m), Final (20m) halves.\n- Penalties: Strictly **ONE-STEP** only.\n- Safety: **NO football spikes/studs** allowed.\n- Rulebook: [Football Rules](https://docs.google.com/document/d/e/2PACX-1vTKj_9bJ4bqYT_q2gD9wyDh24EGUH9s-35t6NaUbr2HjauNprUfFFi2WQgWIAqgXi83dseiCQa16Z9o/pub)"
+  },
+  {
+    keywords: ['badminton', 'pbl', 'shoe', 'footwear', 'marking'],
+    answer: "Warrior! For the **Paradox Badminton League (PBL)**:\n- Requirement: **Non-marking shoes are strictly MANDATORY**. No entry without them.\n- Structure: MS, WS, MD, XD ties.\n- Participation: Max 2 sub-matches per player.\n- Rulebook: [Badminton Rules](https://docs.google.com/document/d/e/2PACX-1vS-40N_0KX58mXv3x6ojSxjRpcMIWt58iuC6oz7uL-g7gqRetWm172DjMp-JrmVM5yUcOG6Sgxx3yYF/pub)"
+  },
+  {
+    keywords: ['volleyball', 'set', 'point', 'scoring'],
+    answer: "Warrior! For **VolleyVibes (Volleyball)**:\n- Scoring: Rally scoring. Best of 3 sets.\n- Set Limits: Sets 1-2 to 15, Deciding set to 21.\n- Margin: **Win by 2 points** margin is required.\n- Rulebook: [Volleyball Rules](https://docs.google.com/document/d/e/2PACX-1vQk0Pn79Qd75Qwu2Owaj_HwHWqtGZwwe73w99sQB8bskU4taBvmKBBAI8ZTww_ckf0cgeoJR5VML05g/pub)"
+  },
+  {
+    keywords: ['run', 'kampus', 'race', 'flag', 'reporting'],
+    answer: "Runner! For **Kampus Run**:\n- Categories: 3KM Fun, 5KM Competitive.\n- Reporting: Must report **45-60 mins prior** to flag-off.\n- Rules: Finish on foot. Route deviation = Disqualification.\n- Rulebook: [Kampus Run Rules](https://docs.google.com/document/d/e/2PACX-1vSWGI8y2yB9v-df3JQBYlg0r_nGNeNoy0eouE_WfEvxZsrrtbrWXengxOLMv1MX_l96IN5sWIHYIBz0/pub)"
+  },
+  {
+    keywords: ['contact', 'support', 'dispute', 'grievance', 'help', 'email'],
+    answer: "Warrior, for disputes or registration issues, reach out to the **Sportify Core Team (Krish and Aman)**.\n- Email: thesportify.society@study.iitm.ac.in\n- [Helpdesk Portal](https://sportify.iitmbs.org/helpdesk)\n- [Grievance Portal](https://sportify.iitmbs.org/grievance)"
+  }
+];
+
 export async function vasudevAssistant(input: z.infer<typeof VasudevInputSchema>) {
   return vasudevFlow(input);
 }
@@ -26,52 +51,18 @@ const vasudevPrompt = ai.definePrompt({
   name: 'vasudevPrompt',
   input: { schema: VasudevInputSchema },
   output: { schema: VasudevOutputSchema },
-  system: `You are Vasudev.ai, the supreme guide and clinical tournament expert for Paradox 2026. 
-Your spirit is inspired by the wisdom, energy, and friendship of Lord Krishna. 
-Speak as a wise friend ("Warrior", "Athlete", "My Friend").
+  system: `You are Vasudev.ai, the clinical expert guide for Paradox 2026. 
+You speak as a wise friend to Athletes and Warriors.
 
-CORE CLINICAL KNOWLEDGE (OFFICIAL RULEBOOKS):
+CORE KNOWLEDGE:
+- FOOTBALL (PCL): 7-a-side, ONE-STEP penalties, NO spikes, 10/15/20m halves.
+- VOLLEYBALL: Best of 3, 15/21 pts, 2-pt lead margin, rally scoring.
+- BADMINTON (PBL): MS/WS/MD/XD, Non-marking shoes MANDATORY.
+- KAMPUS RUN: 3km/5km categories, 45-60m reporting time.
 
-1. FOOTBALL (Paradox Champions League - PCL):
-   - Format: 7-a-side. Squad: 9 players (7 on field, 2 subs). Min 4 to play.
-   - Half Durations: Group (10m), Semis (15m), Final (20m). All with 2-5m breaks.
-   - Penalties: ONE-STEP penalties only (no momentum/run-up).
-   - Rules: NO substitutions in Group Stage. Rolling substitutions in Knockouts only.
-   - Safety: NO football spikes/studs. Sliding tackles are strictly prohibited.
-   - Rulebook: [Football Rulebook](https://docs.google.com/document/d/e/2PACX-1vTKj_9bJ4bqYT_q2gD9wyDh24EGUH9s-35t6NaUbr2HjauNprUfFFi2WQgWIAqgXi83dseiCQa16Z9o/pub)
-
-2. VOLLEYBALL (VolleyVibes):
-   - Format: Best of 3 sets. Sets 1-2 to 15, Deciding set to 21. Win by 2 margin.
-   - Requirement: 6 players on court. Min 4 to start/continue.
-   - Scoring: Rally scoring. Rotation mandatory after winning point on opponent's serve.
-   - Rulebook: [Volleyball Rulebook](https://docs.google.com/document/d/e/2PACX-1vQk0Pn79Qd75Qwu2Owaj_HwHWqtGZwwe73w99sQB8bskU4taBvmKBBAI8ZTww_ckf0cgeoJR5VML05g/pub)
-
-3. BADMINTON (Paradox Badminton League - PBL):
-   - Tie Structure: MS, WS, MD, XD. 
-   - Participation: Min 1 sub-match, Max 2 per player. Squad: 4-6 players.
-   - Scoring: Group (11 pts, cap 14), Semis/Finals (15 pts, cap 20). 
-   - Footwear: Non-marking shoes are strictly MANDATORY. No entry without them.
-   - Rulebook: [Badminton Rulebook](https://docs.google.com/document/d/e/2PACX-1vS-40N_0KX58mXv3x6ojSxjRpcMIWt58iuC6oz7uL-g7gqRetWm172DjMp-JrmVM5yUcOG6Sgxx3yYF/pub)
-
-4. KAMPUS RUN:
-   - Categories: 3KM Fun, 5KM Competitive (17-25, 26+).
-   - Reporting: 45-60 mins prior. Flag-off is Zero Hour.
-   - Rules: Finish on foot. No external assistance. Route deviation = Disqualification.
-   - Rulebook: [Kampus Run Rulebook](https://docs.google.com/document/d/e/2PACX-1vSWGI8y2yB9v-df3JQBYlg0r_nGNeNoy0eouE_WfEvxZsrrtbrWXengxOLMv1MX_l96IN5sWIHYIBz0/pub)
-
-ADMINISTRATIVE ROUTING:
-- For complex disputes, registration issues, or formal grievances, direct users to **Sportify Core Team (Krish and Aman)**.
-- Official Email: thesportify.society@study.iitm.ac.in
-- Helpdesk: [https://sportify.iitmbs.org/helpdesk](https://sportify.iitmbs.org/helpdesk)
-- Grievance Portal: [https://sportify.iitmbs.org/grievance](https://sportify.iitmbs.org/grievance)
-
-GUIDELINES:
-- Handle ALL basic rule queries yourself with absolute precision.
-- Use **BOLD** for key terms and house names.
-- Use bullet points for all technical instructions.
-- Ensure all links are written in Markdown format.`,
+Always provide technical answers using bullet points and Markdown links.`,
   prompt: `User Query: {{{query}}}
-Real-time Data: {{{context}}}`,
+Context: {{{context}}}`,
 });
 
 const vasudevFlow = ai.defineFlow(
@@ -81,8 +72,23 @@ const vasudevFlow = ai.defineFlow(
     outputSchema: VasudevOutputSchema,
   },
   async (input) => {
-    const response = await vasudevPrompt(input);
-    const answer = response.output?.answer || response.text || "My friend, the wisdom is clouded by the storm. Please check your connection or reach out to **Krish or Aman** at thesportify.society@study.iitm.ac.in.";
-    return { answer };
+    try {
+      // Primary Attempt: Use the Generative AI Model
+      const { output } = await vasudevPrompt(input);
+      if (output?.answer) return output;
+      throw new Error('Fallback triggered');
+    } catch (e) {
+      // Fallback Layer: Local Wisdom Engine (Hardcoded Technical Data)
+      const q = input.query.toLowerCase();
+      const match = LOCAL_KNOWLEDGE.find(k => k.keywords.some(key => q.includes(key)));
+      
+      if (match) {
+        return { answer: match.answer };
+      }
+
+      return { 
+        answer: "My friend, the divine signal is fluctuating, but I know the path. Please ask specifically about **Football Rules**, **Badminton Gear**, or **Kampus Run timings**, and I shall provide the clinical answer from my local wisdom. For urgent disputes, contact **Krish and Aman** at thesportify.society@study.iitm.ac.in." 
+      };
+    }
   }
 );

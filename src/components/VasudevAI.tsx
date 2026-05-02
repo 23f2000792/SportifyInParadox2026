@@ -84,7 +84,7 @@ export function VasudevAI() {
       setMessages((prev) => [...prev, { role: 'assistant', content: result.answer }]);
       triggerHaptic('success');
     } catch (error) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the signal is fluctuating like the wind. Please, check your connection or reach out to **Krish or Aman** at thesportify.society@study.iitm.ac.in if I cannot answer your call." }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the signal is fluctuating, but my wisdom remains. Please ask specifically about **Football Rules**, **Badminton Footwear**, or **Kampus Run** timings, and I shall answer even through the storm." }]);
     } finally {
       setLoading(false);
     }
