@@ -24,7 +24,7 @@ export function VasudevAI() {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: "Namaste, Warrior! I am **Vasudev.ai**, your divine companion for Paradox 2026. Whether you seek victory's path or the laws of the tournament, I am here by your side. How shall we conquer today?" 
+      content: "Namaste, Warrior! I am **Vasudev.ai**, your clinical guide for Paradox 2026. Whether you seek victory's path or the laws of the tournament, I am here. How shall we conquer today?" 
     }
   ]);
   const [loading, setLoading] = useState(false);
