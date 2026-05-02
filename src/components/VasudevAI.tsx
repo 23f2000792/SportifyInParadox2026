@@ -108,7 +108,7 @@ export function VasudevAI() {
           }}
         >
           <div className="relative h-full w-full flex items-center justify-center">
-            <Bot className="h-8 w-8 text-white group-hover:rotate-12 transition-transform" />
+            <Bot className="h-8 w-8 text-white group-rotate-12 transition-transform" />
             <div className="absolute -top-1 -right-1 flex h-5 w-5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
               <Sparkles className="relative inline-flex h-5 w-5 text-accent fill-accent" />
@@ -141,7 +141,7 @@ export function VasudevAI() {
             </button>
           </div>
 
-          <div className="flex gap-2 p-2 bg-muted/5 border-b border-border/50 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
+          <div className="flex gap-1.5 p-2 bg-muted/5 border-b border-border/50 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
             {suggestions.map((s, idx) => (
               <Button 
                 key={idx} 
