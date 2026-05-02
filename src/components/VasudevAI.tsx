@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { Sparkles, Send, Loader2, Bot, X, Trophy, Calendar, ShieldCheck, Flame } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Sparkles, Send, Loader2, Bot, X, Trophy, ShieldCheck, Flame, Info, MapPin, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -45,7 +45,7 @@ export function VasudevAI() {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: "Namaste, Warrior! I am **Vasudev.ai**, your technical concierge for Paradox 2026. I hold the clinical laws of every rulebook in this tournament. How shall I guide your path to victory today?" 
+      content: "Namaste, Warrior! I am **Vasudev.ai**, your standalone technical concierge for Paradox 2026. I hold the clinical laws of every rulebook locally. How shall I guide your path to victory today?" 
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ export function VasudevAI() {
     setLoading(true);
     triggerHaptic('medium');
 
-    // --- Local Engine Logic ---
+    // --- Standalone Logic (No AI Network Calls) ---
     setTimeout(() => {
       const q = userMsg.toLowerCase();
       const match = TECHNICAL_WISDOM.find(item => 
@@ -80,20 +80,20 @@ export function VasudevAI() {
       if (match) {
         response = match.answer;
       } else {
-        response = "Warrior, the technical path for that query is unclear in my records. Please ask about **Football Rules**, **Badminton Gear**, **Volleyball Scoring**, or **Kampus Run timings**. For administrative disputes, reach out to **Krish and Aman**.";
+        response = "Warrior, that technical path is not in my local records. Please ask about **Football Rules**, **Badminton Gear**, **Volleyball Scoring**, or **Kampus Run timings**. For administrative disputes, reach out to **Krish and Aman**.";
       }
 
       setMessages((prev) => [...prev, { role: 'assistant', content: response }]);
       setLoading(false);
       triggerHaptic('success');
-    }, 600); // Artificial delay for "thinking" feel
+    }, 400); 
   };
 
   const suggestions = [
-    { label: "PCL Penalty", value: "What is the penalty rule for football?", icon: ShieldCheck },
-    { label: "Badminton Shoes", value: "Are non-marking shoes mandatory?", icon: Trophy },
-    { label: "Volleyball Margin", value: "What is the win-by-two margin rule?", icon: Flame },
-    { label: "Support", value: "How do I contact Krish and Aman?", icon: Bot },
+    { label: "PCL Rules", value: "What are the football rules?", icon: ShieldCheck },
+    { label: "Badminton", value: "What shoes are mandatory for badminton?", icon: Trophy },
+    { label: "Volleyball", value: "How does volleyball scoring work?", icon: Flame },
+    { label: "Support", value: "How do I contact support?", icon: Bot },
   ];
 
   return (
@@ -126,7 +126,7 @@ export function VasudevAI() {
               </div>
               <div>
                 <h3 className="text-lg font-black italic uppercase tracking-tighter text-primary leading-none">Vasudev.ai</h3>
-                <p className="text-[7px] font-black uppercase tracking-[0.3em] opacity-50 mt-1">Dharma Concierge</p>
+                <p className="text-[7px] font-black uppercase tracking-[0.3em] opacity-50 mt-1">Local Wisdom Engine</p>
               </div>
             </div>
             <button 
@@ -196,14 +196,14 @@ export function VasudevAI() {
                     )}
                   </div>
                   {m.role === 'assistant' && (
-                    <span className="text-[6px] font-black uppercase tracking-widest opacity-20 ml-2 mt-1">Vasudev Wisdom</span>
+                    <span className="text-[6px] font-black uppercase tracking-widest opacity-20 ml-2 mt-1">Vasudev Engine v2.0</span>
                   )}
                 </div>
               ))}
               {loading && (
                 <div className="flex items-center gap-2 text-primary py-2 px-3 bg-primary/5 rounded-full w-fit animate-pulse border border-primary/10">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em]">Consulting Dharma...</span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em]">Processing Locally...</span>
                 </div>
               )}
               <div ref={scrollRef} />
