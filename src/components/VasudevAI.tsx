@@ -44,7 +44,7 @@ export function VasudevAI() {
   const { data: standings } = useCollection<Standing>(standingsQuery);
 
   const appStateContext = useMemo(() => {
-    let ctx = "REAL-TIME DATA:\n";
+    let ctx = "REAL-TIME TOURNAMENT DATA:\n";
     if (recentMatches?.length) {
       recentMatches.forEach(m => {
         ctx += `- ${m.sport.toUpperCase()}: ${m.teamA} ${m.scoreA}-${m.scoreB} ${m.teamB} (${m.status})\n`;
