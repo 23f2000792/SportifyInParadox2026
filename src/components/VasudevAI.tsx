@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Sparkles, Send, Loader2, Bot, X, Trophy, Calendar, Info, ShieldCheck, Flame } from 'lucide-react';
+import { Sparkles, Send, Loader2, Bot, X, Trophy, Calendar, ShieldCheck, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,36 +32,30 @@ export function VasudevAI() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const db = useFirestore();
 
-  // Fetch real-time context to feed into the AI
   const matchesQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'matches'), orderBy('updatedAt', 'desc'), limit(10));
+    return query(collection(db, 'matches'), orderBy('updatedAt', 'desc'), limit(5));
   }, [db]);
   const standingsQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'standings'), limit(20));
+    return query(collection(db, 'standings'), limit(10));
   }, [db]);
 
   const { data: recentMatches } = useCollection<Match>(matchesQuery);
   const { data: standings } = useCollection<Standing>(standingsQuery);
 
   const appStateContext = useMemo(() => {
-    let ctx = "REAL-TIME TOURNAMENT DATA:\n";
-    
-    if (recentMatches && recentMatches.length > 0) {
-      ctx += "\nRECENT/LIVE MATCHES:\n";
+    let ctx = "REAL-TIME DATA:\n";
+    if (recentMatches?.length) {
       recentMatches.forEach(m => {
-        ctx += `- ${m.sport.toUpperCase()}: ${m.teamA} ${m.scoreA} - ${m.scoreB} ${m.teamB} (${m.status}, ${m.phase})\n`;
+        ctx += `- ${m.sport.toUpperCase()}: ${m.teamA} ${m.scoreA}-${m.scoreB} ${m.teamB} (${m.status})\n`;
       });
     }
-
-    if (standings && standings.length > 0) {
-      ctx += "\nSTANDINGS SUMMARY:\n";
-      standings.slice(0, 10).forEach(s => {
-        ctx += `- ${s.team} (${s.sport}): ${s.points} pts, Played: ${s.played}, Won: ${s.won}\n`;
+    if (standings?.length) {
+      standings.forEach(s => {
+        ctx += `- STANDING: ${s.team} has ${s.points} pts in ${s.sport}\n`;
       });
     }
-
     return ctx;
   }, [recentMatches, standings]);
 
@@ -69,7 +63,7 @@ export function VasudevAI() {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, loading]);
 
   const handleSend = async (e: React.FormEvent | string) => {
     if (typeof e !== 'string') e.preventDefault();
@@ -91,7 +85,7 @@ export function VasudevAI() {
       setMessages((prev) => [...prev, { role: 'assistant', content: result.answer }]);
       triggerHaptic('success');
     } catch (error) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the signal is fluctuating like the wind. Please, reach out to **Krish or Aman** at thesportify.society@study.iitm.ac.in if I cannot answer your call." }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the signal is fluctuating like the wind. Please, check your connection or reach out to **Krish or Aman** at thesportify.society@study.iitm.ac.in if I cannot answer your call." }]);
     } finally {
       setLoading(false);
     }
@@ -106,7 +100,6 @@ export function VasudevAI() {
 
   return (
     <>
-      {/* Floating Trigger Button */}
       {!open && (
         <Button 
           className="fixed bottom-20 right-4 md:bottom-8 md:right-8 h-16 w-16 rounded-full shadow-[0_0_40px_rgba(124,58,237,0.5)] z-[60] group p-0 bg-primary hover:bg-primary/90 border-2 border-white/20 transition-all hover:scale-110 active:scale-90"
@@ -125,11 +118,9 @@ export function VasudevAI() {
         </Button>
       )}
 
-      {/* Square Popup Container */}
       {open && (
         <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 w-[92vw] sm:w-[400px] h-[600px] max-h-[85vh] bg-card/98 backdrop-blur-3xl shadow-2xl rounded-3xl border-t-primary border-t-4 z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-10 duration-300">
           
-          {/* Header */}
           <div className="p-6 border-b border-border bg-gradient-to-br from-primary/10 via-background to-transparent relative shrink-0">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-xl shadow-primary/30">
@@ -151,7 +142,6 @@ export function VasudevAI() {
             </button>
           </div>
 
-          {/* Suggestions Horizontal Scroll */}
           <div className="flex gap-2 p-3 bg-muted/5 border-b border-border/50 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
             {suggestions.map((s, idx) => (
               <Button 
@@ -168,7 +158,6 @@ export function VasudevAI() {
             ))}
           </div>
 
-          {/* Messages Area */}
           <ScrollArea className="flex-grow p-4 md:p-6">
             <div className="flex flex-col gap-6 max-w-full pb-10">
               {messages.map((m, i) => (
@@ -226,7 +215,6 @@ export function VasudevAI() {
             </div>
           </ScrollArea>
 
-          {/* Input Area */}
           <div className="p-4 border-t border-border bg-background/50 backdrop-blur-md shrink-0">
             <form onSubmit={handleSend} className="flex gap-2">
               <Input 
