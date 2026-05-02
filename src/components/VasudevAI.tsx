@@ -24,7 +24,7 @@ export function VasudevAI() {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: "Namaste, Warrior! I am **Vasudev.ai**, your divine companion on this journey to greatness. Whether you seek the path to victory or the wisdom of the tournament laws, I am here by your side. How shall we conquer today?" 
+      content: "Namaste, Warrior! I am **Vasudev.ai**, your divine companion. Whether you seek victory's path or the laws of the tournament, I am here by your side. How shall we conquer today?" 
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -91,10 +91,10 @@ export function VasudevAI() {
   };
 
   const suggestions = [
-    { label: "Penalty Rule", value: "What are the rules for football penalties?", icon: ShieldCheck },
-    { label: "Victory's Path", value: "Who is leading the championship standings?", icon: Trophy },
-    { label: "The Zero Hour", value: "When is the Kampus Run flag-off?", icon: Calendar },
-    { label: "Match Dharma", value: "Are there any live matches right now?", icon: Flame },
+    { label: "PCL Rules", value: "What are the rules for football penalties in PCL?", icon: ShieldCheck },
+    { label: "PBL Shoes", value: "What footwear is mandatory for Badminton?", icon: Trophy },
+    { label: "Kampus Run", value: "When is the flag-off for Kampus Run?", icon: Calendar },
+    { label: "Support", value: "How do I contact Sportify for a dispute?", icon: Flame },
   ];
 
   return (
@@ -165,10 +165,10 @@ export function VasudevAI() {
                   m.role === 'user' ? "items-end" : "items-start"
                 )}>
                   <div className={cn(
-                    "max-w-[92%] p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm transition-all whitespace-pre-wrap",
+                    "max-w-[92%] p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm transition-all whitespace-pre-wrap text-justify",
                     m.role === 'user' 
                       ? "bg-primary text-white rounded-tr-none shadow-primary/20 font-bold" 
-                      : "bg-muted/40 border border-border/60 rounded-tl-none italic text-foreground shadow-inner text-justify"
+                      : "bg-muted/40 border border-border/60 rounded-tl-none italic text-foreground shadow-inner"
                   )}>
                     {m.role === 'assistant' ? (
                       <ReactMarkdown 
