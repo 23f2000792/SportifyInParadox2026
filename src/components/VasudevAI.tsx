@@ -33,8 +33,14 @@ export function VasudevAI() {
   const db = useFirestore();
 
   // Fetch real-time context to feed into the AI
-  const matchesQuery = useMemo(() => query(collection(db, 'matches'), orderBy('updatedAt', 'desc'), limit(10)), [db]);
-  const standingsQuery = useMemo(() => query(collection(db, 'standings'), limit(20)), [db]);
+  const matchesQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'matches'), orderBy('updatedAt', 'desc'), limit(10));
+  }, [db]);
+  const standingsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'standings'), limit(20));
+  }, [db]);
 
   const { data: recentMatches } = useCollection<Match>(matchesQuery);
   const { data: standings } = useCollection<Standing>(standingsQuery);
@@ -85,7 +91,7 @@ export function VasudevAI() {
       setMessages((prev) => [...prev, { role: 'assistant', content: result.answer }]);
       triggerHaptic('success');
     } catch (error) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the signal is fluctuating like the wind. Please, ask your question once more." }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the signal is fluctuating like the wind. Please, reach out to **Krish or Aman** at thesportify.society@study.iitm.ac.in if I cannot answer your call." }]);
     } finally {
       setLoading(false);
     }
@@ -183,7 +189,17 @@ export function VasudevAI() {
                           ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1 mb-2 mt-2">{children}</ol>,
                           li: ({ children }) => <li className="text-[13px] leading-snug">{children}</li>,
                           p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                          strong: ({ children }) => <strong className="font-black text-primary uppercase text-[12px]">{children}</strong>
+                          strong: ({ children }) => <strong className="font-black text-primary uppercase text-[12px]">{children}</strong>,
+                          a: ({ href, children }) => (
+                            <a 
+                              href={href} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-primary font-black underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all"
+                            >
+                              {children}
+                            </a>
+                          )
                         }}
                       >
                         {m.content}
