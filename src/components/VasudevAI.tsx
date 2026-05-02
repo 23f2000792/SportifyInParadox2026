@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -5,12 +6,8 @@ import { Sparkles, Send, Loader2, Bot, X, Trophy, Calendar, ShieldCheck, Flame }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { vasudevAssistant } from '@/ai/flows/vasudev-ai-flow';
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, limit, orderBy } from 'firebase/firestore';
-import { Match, Standing } from '@/lib/types';
 import ReactMarkdown from 'react-markdown';
 
 type Message = {
@@ -18,45 +15,41 @@ type Message = {
   content: string;
 };
 
+// --- Definitive Local Knowledge Engine (Technical Dataset) ---
+const TECHNICAL_WISDOM = [
+  {
+    keywords: ['football', 'pcl', 'penalty', 'penalties', 'one step', 'spike', 'stud', 'time', 'duration', 'half', 'squad', 'player'],
+    answer: "Athlete! Here is the technical directive for **Football (PCL)**:\n- **Format**: 7-a-side match structure.\n- **Squad**: Maximum of 9 players per house.\n- **Penalties**: Strictly **ONE-STEP** only. No run-ups allowed.\n- **Footwear**: **STRICTLY NO football spikes or studs**. Only flat soles or turf shoes are allowed on the ground.\n- **Match Duration**: Group Stage (10m halves), Semi-Finals (15m halves), Grand Final (20m halves).\n- **Substitutions**: Rolling substitutions allowed in knockouts only.\n- [View Football Rulebook](https://docs.google.com/document/d/e/2PACX-1vTKj_9bJ4bqYT_q2gD9wyDh24EGUH9s-35t6NaUbr2HjauNprUfFFi2WQgWIAqgXi83dseiCQa16Z9o/pub)"
+  },
+  {
+    keywords: ['badminton', 'pbl', 'shoe', 'footwear', 'marking', 'non-marking', 'ms', 'ws', 'md', 'xd', 'participation'],
+    answer: "Warrior! For the **Badminton League (PBL)**, note these clinical laws:\n- **Footwear**: **Non-marking shoes are strictly MANDATORY**. No athlete will be allowed on court without them.\n- **Tie Structure**: MS (Men's Singles), WS (Women's Singles), MD (Men's Doubles), XD (Mixed Doubles).\n- **Participation**: A player can compete in a maximum of **2 sub-matches** in a single tie.\n- **Scoring**: Standard rally scoring. Points vary based on stage (11, 15, or 21).\n- [View Badminton Rulebook](https://docs.google.com/document/d/e/2PACX-1vS-40N_0KX58mXv3x6ojSxjRpcMIWt58iuC6oz7uL-g7gqRetWm172DjMp-JrmVM5yUcOG6Sgxx3yYF/pub)"
+  },
+  {
+    keywords: ['volleyball', 'set', 'point', 'scoring', 'margin', '15', '21', 'rally', 'vibes'],
+    answer: "Spiker! For **VolleyVibes (Volleyball)**:\n- **Match Format**: Best of 3 sets.\n- **Scoring**: Sets 1 & 2 are played to 15 points. The deciding set (if needed) is played to 21 points.\n- **Win Margin**: A **2-point lead margin** is mandatory to win a set.\n- **Rotation**: Standard rotation rules apply. Rally scoring in effect.\n- [View Volleyball Rulebook](https://docs.google.com/document/d/e/2PACX-1vQk0Pn79Qd75Qwu2Owaj_HwHWqtGZwwe73w99sQB8bskU4taBvmKBBAI8ZTww_ckf0cgeoJR5VML05g/pub)"
+  },
+  {
+    keywords: ['run', 'kampus', 'race', 'flag', 'reporting', 'time', 'km', '3km', '5km', 'category'],
+    answer: "Runner! Technical specs for **Kampus Run**:\n- **Categories**: 3KM Fun Run and 5KM Competitive Run.\n- **Reporting**: You must report **45-60 mins prior** to the flag-off time at the OAT.\n- **Rule**: Runners must stay on the marked track. No outside assistance allowed.\n- **Timing**: Bib-based timing for the 5KM category.\n- [View Kampus Run Rulebook](https://docs.google.com/document/d/e/2PACX-1vSWGI8y2yB9v-df3JQBYlg0r_nGNeNoy0eouE_WfEvxZsrrtbrWXengxOLMv1MX_l96IN5sWIHYIBz0/pub)"
+  },
+  {
+    keywords: ['contact', 'support', 'dispute', 'grievance', 'help', 'email', 'krish', 'aman', 'problem', 'error'],
+    answer: "Warrior, for match disputes, registration errors, or technical grievances, contact the **Sportify Core Team**:\n- **Leads**: Krish and Aman\n- **Email**: thesportify.society@study.iitm.ac.in\n- **Portals**: [Helpdesk](https://sportify.iitmbs.org/helpdesk) | [Grievance Portal](https://sportify.iitmbs.org/grievance)"
+  }
+];
+
 export function VasudevAI() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: "Namaste, Warrior! I am **Vasudev.ai**, your clinical guide for Paradox 2026. Whether you seek victory's path or the technical laws of the tournament, I am here. How shall we conquer today?" 
+      content: "Namaste, Warrior! I am **Vasudev.ai**, your technical concierge for Paradox 2026. I hold the clinical laws of every rulebook in this tournament. How shall I guide your path to victory today?" 
     }
   ]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const db = useFirestore();
-
-  const matchesQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, 'matches'), orderBy('updatedAt', 'desc'), limit(5));
-  }, [db]);
-  const standingsQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, 'standings'), limit(10));
-  }, [db]);
-
-  const { data: recentMatches } = useCollection<Match>(matchesQuery);
-  const { data: standings } = useCollection<Standing>(standingsQuery);
-
-  const appStateContext = useMemo(() => {
-    let ctx = "REAL-TIME TOURNAMENT DATA:\n";
-    if (recentMatches?.length) {
-      recentMatches.forEach(m => {
-        ctx += `- ${m.sport.toUpperCase()}: ${m.teamA} ${m.scoreA}-${m.scoreB} ${m.teamB} (${m.status})\n`;
-      });
-    }
-    if (standings?.length) {
-      standings.forEach(s => {
-        ctx += `- STANDING: ${s.team} has ${s.points} pts in ${s.sport}\n`;
-      });
-    }
-    return ctx;
-  }, [recentMatches, standings]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -64,7 +57,7 @@ export function VasudevAI() {
     }
   }, [messages, loading]);
 
-  const handleSend = async (e: React.FormEvent | string) => {
+  const handleSend = (e: React.FormEvent | string) => {
     if (typeof e !== 'string') e.preventDefault();
     
     const userMsg = typeof e === 'string' ? e : input.trim();
@@ -76,18 +69,24 @@ export function VasudevAI() {
     setLoading(true);
     triggerHaptic('medium');
 
-    try {
-      const result = await vasudevAssistant({ 
-        query: userMsg,
-        context: appStateContext
-      });
-      setMessages((prev) => [...prev, { role: 'assistant', content: result.answer }]);
-      triggerHaptic('success');
-    } catch (error) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the divine signal is fluctuating, but my local wisdom is deep. Please ask specifically about **Football Rules**, **Badminton Gear**, or **Kampus Run** timings." }]);
-    } finally {
+    // --- Local Engine Logic ---
+    setTimeout(() => {
+      const q = userMsg.toLowerCase();
+      const match = TECHNICAL_WISDOM.find(item => 
+        item.keywords.some(keyword => q.includes(keyword))
+      );
+
+      let response = "";
+      if (match) {
+        response = match.answer;
+      } else {
+        response = "Warrior, the technical path for that query is unclear in my records. Please ask about **Football Rules**, **Badminton Gear**, **Volleyball Scoring**, or **Kampus Run timings**. For administrative disputes, reach out to **Krish and Aman**.";
+      }
+
+      setMessages((prev) => [...prev, { role: 'assistant', content: response }]);
       setLoading(false);
-    }
+      triggerHaptic('success');
+    }, 600); // Artificial delay for "thinking" feel
   };
 
   const suggestions = [
@@ -127,7 +126,7 @@ export function VasudevAI() {
               </div>
               <div>
                 <h3 className="text-lg font-black italic uppercase tracking-tighter text-primary leading-none">Vasudev.ai</h3>
-                <p className="text-[7px] font-black uppercase tracking-[0.3em] opacity-50 mt-1">Divine Concierge</p>
+                <p className="text-[7px] font-black uppercase tracking-[0.3em] opacity-50 mt-1">Dharma Concierge</p>
               </div>
             </div>
             <button 
@@ -197,7 +196,7 @@ export function VasudevAI() {
                     )}
                   </div>
                   {m.role === 'assistant' && (
-                    <span className="text-[6px] font-black uppercase tracking-widest opacity-20 ml-2 mt-1">Vasudev Guidance</span>
+                    <span className="text-[6px] font-black uppercase tracking-widest opacity-20 ml-2 mt-1">Vasudev Wisdom</span>
                   )}
                 </div>
               ))}
@@ -212,11 +211,11 @@ export function VasudevAI() {
           </ScrollArea>
 
           <div className="p-3 border-t border-border bg-background/50 backdrop-blur-md shrink-0">
-            <form onSubmit={handleSend} className="flex gap-2">
+            <form onSubmit={(e) => handleSend(e)} className="flex gap-2">
               <Input 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Seek technical laws, Warrior..."
+                placeholder="Ask technical laws..."
                 className="flex-grow h-11 bg-muted/20 border-border/50 rounded-xl font-bold text-xs px-4"
               />
               <Button type="submit" size="icon" className="h-11 w-11 rounded-xl shrink-0 bg-primary hover:bg-primary/90" disabled={loading}>

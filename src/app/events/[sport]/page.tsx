@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -11,8 +12,7 @@ import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Match, RunResult, Trial, Standing, GROUPS, SportEvent } from '@/lib/types';
 import EventLoading from './loading';
-import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen, Navigation, GitCommit, Star } from 'lucide-react';
-import { MatchRecapButton } from '@/components/MatchRecapButton';
+import { Trophy, Zap, CircleDot, Target, MapPin, Search, Timer, Medal, Calendar, Share2, Clock, ExternalLink, BookOpen, Navigation, Star } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -300,7 +300,6 @@ export default function EventPage() {
             <Button variant="ghost" size="icon" className="h-7 w-7 opacity-30 hover:opacity-100" onClick={() => handleShareMatch(match)}>
               <Share2 className="h-3.5 w-3.5" />
             </Button>
-            {match.status === 'Completed' && <MatchRecapButton match={match} />}
           </div>
         </div>
       </Card>
