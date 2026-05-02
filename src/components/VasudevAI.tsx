@@ -24,7 +24,7 @@ export function VasudevAI() {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: "Namaste, Warrior! I am **Vasudev.ai**, your clinical guide for Paradox 2026. Whether you seek victory's path or the laws of the tournament, I am here. How shall we conquer today?" 
+      content: "Namaste, Warrior! I am **Vasudev.ai**, your clinical guide for Paradox 2026. Whether you seek victory's path or the technical laws of the tournament, I am here. How shall we conquer today?" 
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -84,17 +84,17 @@ export function VasudevAI() {
       setMessages((prev) => [...prev, { role: 'assistant', content: result.answer }]);
       triggerHaptic('success');
     } catch (error) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the signal is fluctuating, but my wisdom remains. Please ask specifically about **Football Rules**, **Badminton Footwear**, or **Kampus Run** timings, and I shall answer even through the storm." }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: "My friend, the divine signal is fluctuating, but my local wisdom is deep. Please ask specifically about **Football Rules**, **Badminton Gear**, or **Kampus Run** timings." }]);
     } finally {
       setLoading(false);
     }
   };
 
   const suggestions = [
-    { label: "PCL Rules", value: "What are the rules for football penalties in PCL?", icon: ShieldCheck },
-    { label: "PBL Shoes", value: "What footwear is mandatory for Badminton?", icon: Trophy },
-    { label: "Kampus Run", value: "When is the flag-off for Kampus Run?", icon: Calendar },
-    { label: "Support", value: "How do I contact Sportify for a dispute?", icon: Flame },
+    { label: "PCL Penalty", value: "What is the penalty rule for football?", icon: ShieldCheck },
+    { label: "Badminton Shoes", value: "Are non-marking shoes mandatory?", icon: Trophy },
+    { label: "Volleyball Margin", value: "What is the win-by-two margin rule?", icon: Flame },
+    { label: "Support", value: "How do I contact Krish and Aman?", icon: Bot },
   ];
 
   return (
@@ -127,7 +127,7 @@ export function VasudevAI() {
               </div>
               <div>
                 <h3 className="text-lg font-black italic uppercase tracking-tighter text-primary leading-none">Vasudev.ai</h3>
-                <p className="text-[7px] font-black uppercase tracking-[0.3em] opacity-50 mt-1">Divine Companion</p>
+                <p className="text-[7px] font-black uppercase tracking-[0.3em] opacity-50 mt-1">Divine Concierge</p>
               </div>
             </div>
             <button 
@@ -204,7 +204,7 @@ export function VasudevAI() {
               {loading && (
                 <div className="flex items-center gap-2 text-primary py-2 px-3 bg-primary/5 rounded-full w-fit animate-pulse border border-primary/10">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em]">Consulting Heavens...</span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em]">Consulting Dharma...</span>
                 </div>
               )}
               <div ref={scrollRef} />
@@ -216,7 +216,7 @@ export function VasudevAI() {
               <Input 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me anything, Warrior..."
+                placeholder="Seek technical laws, Warrior..."
                 className="flex-grow h-11 bg-muted/20 border-border/50 rounded-xl font-bold text-xs px-4"
               />
               <Button type="submit" size="icon" className="h-11 w-11 rounded-xl shrink-0 bg-primary hover:bg-primary/90" disabled={loading}>
