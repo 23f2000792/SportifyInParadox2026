@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -175,7 +174,7 @@ export function VasudevAI() {
                       <ReactMarkdown 
                         components={{
                           ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 mb-2 mt-2">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1 mb-2 mt-2">{children}</ol>,
+                          ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1 mb-2 mt-2">{children}</ul>,
                           li: ({ children }) => <li className="text-[13px] leading-snug">{children}</li>,
                           p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                           strong: ({ children }) => <strong className="font-black text-primary uppercase text-[12px]">{children}</strong>,
